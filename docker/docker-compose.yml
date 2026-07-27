@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: campusflow-postgres
+    environment:
+      POSTGRES_DB: campusflow
+      POSTGRES_USER: campusflow
+      POSTGRES_PASSWORD: campusflow123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U campusflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - campusflow-network
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: campusflow-app
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/campusflow
+      SPRING_DATASOURCE_USERNAME: campusflow
+      SPRING_DATASOURCE_PASSWORD: campusflow123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - campusflow-network
+    restart: unless-stopped
+
+networks:
+  campusflow-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

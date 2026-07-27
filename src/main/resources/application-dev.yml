@@ -1,0 +1,35 @@
+# Development Profile Configuration
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/campusflow_dev
+    username: campusflow
+    password: campusflow123
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: DEBUG
+    com.campusflow: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.springframework.security: DEBUG
+
+springdoc:
+  swagger-ui:
+    enabled: true

@@ -1,0 +1,35 @@
+# Production Profile Configuration
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH_ISSUER_URI}
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.campusflow: INFO
+    org.hibernate.SQL: WARN
+    org.springframework.security: WARN
+
+springdoc:
+  swagger-ui:
+    enabled: true

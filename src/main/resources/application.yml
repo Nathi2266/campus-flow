@@ -1,0 +1,102 @@
+# CampusFlow Application Configuration
+
+spring:
+  application:
+    name: campusflow
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  jpa:
+    open-in-view: false
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
+    hibernate:
+      ddl-auto: ${SPRING_JPA_DDL_AUTO:validate}
+      use-new-id-generator-mappings: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        query:
+          StrippedLeadingWhitespace: true
+          ignore_comments: true
+        generate_statistics: false
+        use_sql_comments: false
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/campusflow}
+    username: ${SPRING_DATASOURCE_USERNAME:campusflow}
+    password: ${SPRING_DATASOURCE_PASSWORD:campusflow123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:20}
+      minimum-idle: ${DATASOURCE_HIKARI_MINIMUM_IDLE:10}
+      max-lifetime: 1800000
+      idle-timeout: 600000
+      connection-timeout: 30000
+      validation-timeout: 5000
+      leak-detection-threshold: 60000
+      initialization-fail-timeout: -1
+      pool-name: CampusFlowHikariPool
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH_ISSUER_URI:http://localhost:8080}
+
+  actuator:
+    health:
+      db:
+        enabled: true
+      disk-space:
+        enabled: true
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics
+    endpoint:
+      health:
+        show-details: when-authorized
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-binding-errors: always
+
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    com.campusflow: DEBUG
+    org.hibernate.SQL: ${SPRING_JPA_SHOW_SQL:false}
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.security: INFO
+    org.flywaydb: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE:/var/log/campusflow/application.log}
+
+cache:
+  type: redis
+  redis:
+    time-to-live: 600000
+    cache-null-values: false
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    doc-expansion: list
