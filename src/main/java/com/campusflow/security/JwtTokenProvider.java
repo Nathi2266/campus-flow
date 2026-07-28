@@ -1,5 +1,6 @@
 package com.campusflow.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +33,8 @@ public class JwtTokenProvider {
 
     public JwtTokenProvider(
             @Value("${jwt.secret:campusflow-secret-key-2024-change-in-production}") String secret,
-            @Value("${jwt.access-token-expiration:900}") long accessTokenExpirationMs,
-            @Value("${jwt.refresh-token-expiration:604800}") long refreshTokenExpirationMs) {
+            @Value("${jwt.access-token-expiration:900000}") long accessTokenExpirationMs,
+            @Value("${jwt.refresh-token-expiration:604800000}") long refreshTokenExpirationMs) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpirationMs = accessTokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
@@ -44,12 +45,12 @@ public class JwtTokenProvider {
         Instant expiry = now.plus(accessTokenExpirationMs, ChronoUnit.MILLIS);
 
         return Jwts.builder()
-            .setSubject(String.valueOf(userId))
+            .subject(String.valueOf(userId))
             .claim("email", email)
             .claim("role", role)
             .claim("departmentId", departmentId)
-            .setIssuedAt(Date.from(now))
-            .setExpiration(Date.from(expiry))
+            .issuedAt(Date.from(now))
+            .expiration(Date.from(expiry))
             .signWith(key)
             .compact();
     }
@@ -59,20 +60,17 @@ public class JwtTokenProvider {
         Instant expiry = now.plus(refreshTokenExpirationMs, ChronoUnit.MILLIS);
 
         return Jwts.builder()
-            .setSubject(String.valueOf(userId))
+            .subject(String.valueOf(userId))
             .claim("type", "refresh")
-            .setIssuedAt(Date.from(now))
-            .setExpiration(Date.from(expiry))
+            .issuedAt(Date.from(now))
+            .expiration(Date.from(expiry))
             .signWith(key)
             .compact();
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token);
+            parseClaims(token);
             return true;
         } catch (Exception e) {
             log.warn("Invalid JWT token: {}", e.getMessage());
@@ -81,43 +79,37 @@ public class JwtTokenProvider {
     }
 
     public Long getUserIdFromToken(String token) {
-        return Long.parseLong(Jwts.parserBuilder()
-            .setSigningKey(key)
-            .build()
-            .parseClaimsJws(token)
-            .getBody()
-            .getSubject());
+        return Long.parseLong(parseClaims(token).getSubject());
     }
 
     public String getRoleFromToken(String token) {
-        return Jwts.parserBuilder()
-            .setSigningKey(key)
-            .build()
-            .parseClaimsJws(token)
-            .getBody()
-            .get("role", String.class);
+        return parseClaims(token).get("role", String.class);
     }
 
     public Long getDepartmentIdFromToken(String token) {
-        String deptId = Jwts.parserBuilder()
-            .setSigningKey(key)
-            .build()
-            .parseClaimsJws(token)
-            .getBody()
-            .get("departmentId", String.class);
-        return deptId != null ? Long.parseLong(deptId) : null;
+        Object deptId = parseClaims(token).get("departmentId");
+        if (deptId == null) {
+            return null;
+        }
+        if (deptId instanceof Number number) {
+            return number.longValue();
+        }
+        return Long.parseLong(deptId.toString());
     }
 
     public boolean isRefreshToken(String token) {
         try {
-            return "refresh".equals(Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("type", String.class));
+            return "refresh".equals(parseClaims(token).get("type", String.class));
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .getPayload();
     }
 }

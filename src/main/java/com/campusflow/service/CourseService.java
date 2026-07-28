@@ -185,7 +185,7 @@ public class CourseService {
             .lecturerName(course.getLecturer() != null ? course.getLecturer().getFirstName() + " " + course.getLecturer().getLastName() : null)
             .maxCapacity(course.getMaxCapacity())
             .enrolledCount(enrolledCount)
-            .active(course.isActive())
+            .active(Boolean.TRUE.equals(course.getActive()))
             .createdAt(course.getCreatedAt().toLocalDateTime())
             .updatedAt(course.getUpdatedAt().toLocalDateTime())
             .build();

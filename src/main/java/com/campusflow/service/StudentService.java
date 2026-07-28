@@ -49,6 +49,7 @@ public class StudentService {
             .firstName(request.getFirstName())
             .lastName(request.getLastName())
             .phoneNumber(request.getPhoneNumber())
+            .role(com.campusflow.domain.enums.UserRole.STUDENT)
             .build();
 
         // Create student
@@ -66,7 +67,7 @@ public class StudentService {
         // Set department
         Department department = departmentRepository.findById(request.getDepartmentId())
             .orElseThrow(() -> new NotFoundException("Department not found", "departmentId"));
-        student.setDepartment(department);
+        user.setDepartment(department);
 
         Student savedStudent = studentRepository.save(student);
 
@@ -87,7 +88,11 @@ public class StudentService {
         // Update fields
         student.setFirstName(request.getFirstName());
         student.setLastName(request.getLastName());
-        student.setPhoneNumber(request.getPhoneNumber());
+        if (student.getUser() != null) {
+            student.getUser().setPhoneNumber(request.getPhoneNumber());
+            student.getUser().setFirstName(request.getFirstName());
+            student.getUser().setLastName(request.getLastName());
+        }
 
         if (request.getAcademicStatus() != null) {
             student.setAcademicStatus(AcademicStatus.valueOf(request.getAcademicStatus()));
@@ -113,9 +118,9 @@ public class StudentService {
         Page<Student> studentPage;
         if (departmentId != null) {
             if (status != null) {
-                studentPage = studentRepository.findByDepartmentIdAndAcademicStatus(departmentId, status, pageable);
+                studentPage = studentRepository.findByUserDepartmentIdAndAcademicStatus(departmentId, status, pageable);
             } else {
-                studentPage = studentRepository.findByDepartmentId(departmentId, pageable);
+                studentPage = studentRepository.findByUserDepartmentId(departmentId, pageable);
             }
         } else if (status != null) {
             studentPage = studentRepository.findByAcademicStatus(status, pageable);
@@ -170,22 +175,23 @@ public class StudentService {
     }
 
     private StudentResponse toResponse(Student student) {
+        User user = student.getUser();
         return StudentResponse.builder()
             .id(student.getId())
-            .userId(student.getUser().getId())
+            .userId(user != null ? user.getId() : null)
             .studentNumber(student.getStudentNumber())
             .firstName(student.getFirstName())
             .lastName(student.getLastName())
-            .email(student.getUser().getEmail())
-            .phoneNumber(student.getPhoneNumber())
-            .departmentId(student.getDepartment().getId())
-            .departmentName(student.getDepartment().getName())
+            .email(user != null ? user.getEmail() : null)
+            .phoneNumber(user != null ? user.getPhoneNumber() : null)
+            .departmentId(user != null && user.getDepartment() != null ? user.getDepartment().getId() : null)
+            .departmentName(user != null && user.getDepartment() != null ? user.getDepartment().getName() : null)
             .enrollmentDate(student.getEnrollmentDate())
             .academicStatus(student.getAcademicStatus())
             .gpa(student.getGpa())
             .graduationDate(student.getGraduationDate())
-            .createdAt(student.getCreatedAt().toLocalDateTime())
-            .updatedAt(student.getUpdatedAt().toLocalDateTime())
+            .createdAt(student.getCreatedAt() != null ? student.getCreatedAt().toLocalDateTime() : null)
+            .updatedAt(student.getUpdatedAt() != null ? student.getUpdatedAt().toLocalDateTime() : null)
             .build();
     }
 

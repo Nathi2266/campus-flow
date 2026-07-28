@@ -9,6 +9,7 @@ import com.campusflow.dto.response.AuthResponse;
 import com.campusflow.dto.response.UserResponse;
 import com.campusflow.exception.NotFoundException;
 import com.campusflow.exception.ValidationException;
+import com.campusflow.repository.DepartmentRepository;
 import com.campusflow.repository.UserRepository;
 import com.campusflow.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDateTime;
 
 /**
  * Service class for Authentication.
@@ -33,6 +33,7 @@ import java.time.temporal.ChronoUnit;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -56,7 +57,7 @@ public class AuthService {
 
         // Set department if admin or lecturer
         if (request.getDepartmentId() != null && (userRole == UserRole.ADMIN || userRole == UserRole.LECTURER)) {
-            user.setDepartment(userRepository.findById(request.getDepartmentId())
+            user.setDepartment(departmentRepository.findById(request.getDepartmentId())
                 .orElseThrow(() -> new NotFoundException("Department not found", "departmentId")));
         }
 
@@ -71,7 +72,7 @@ public class AuthService {
         return AuthResponse.builder()
             .accessToken(accessToken)
             .refreshToken(refreshToken)
-            .expiresAt(Instant.now().plus(15, ChronoUnit.MINUTES))
+            .expiresAt(LocalDateTime.now().plusMinutes(15))
             .user(UserResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -100,7 +101,7 @@ public class AuthService {
         return AuthResponse.builder()
             .accessToken(accessToken)
             .refreshToken(refreshToken)
-            .expiresAt(Instant.now().plus(15, ChronoUnit.MINUTES))
+            .expiresAt(LocalDateTime.now().plusMinutes(15))
             .user(UserResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -123,7 +124,7 @@ public class AuthService {
         return AuthResponse.builder()
             .accessToken(accessToken)
             .refreshToken(refreshToken)
-            .expiresAt(Instant.now().plus(15, ChronoUnit.MINUTES))
+            .expiresAt(LocalDateTime.now().plusMinutes(15))
             .user(UserResponse.builder()
                 .id(1L)
                 .email("user@example.com")

@@ -5,22 +5,20 @@
 FROM maven:3.9-eclipse-temurin-21 AS builder
 WORKDIR /build
 
-# Copy only pom.xml for caching
-COPY pom.xml .
-RUN mvn -B dependency:go-offline
-
 # Copy source code
+COPY pom.xml .
 COPY src ./src
 
-# Build application with tests skipped
+# Build application
 RUN mvn -B clean package -DskipTests
 
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Create non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Create non-root user and install curl for healthchecks
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
+    && apk add --no-cache curl
 
 # Copy dependencies and application
 COPY --from=builder /build/target/*.jar app.jar
@@ -36,7 +34,7 @@ USER appuser
 EXPOSE 8080
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=5 \
     CMD /usr/local/bin/healthcheck || exit 1
 
 # JVM options

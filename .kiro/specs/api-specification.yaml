@@ -1,0 +1,1318 @@
+openapi: 3.0.3
+info:
+  title: CampusFlow API
+  version: 1.0.0
+  description: CampusFlow Student Management System API
+  contact:
+    name: API Support
+    email: api@campusflow.edu
+
+servers:
+  - url: http://localhost:8080/api
+    description: Local development server
+  - url: https://api.campusflow.edu
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Students
+    description: Student management endpoints
+  - name: Courses
+    description: Course management endpoints
+  - name: Enrollments
+    description: Student enrollment endpoints
+  - name: Reports
+    description: Reporting and analytics endpoints
+  - name: Departments
+    description: Department management endpoints
+
+paths:
+  # ==================== Authentication ====================
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register a new user
+      description: Create a new user account with the specified role
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: User already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login user
+      description: Authenticate user and return JWT tokens
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token
+      description: Refresh expired access token using refresh token
+      operationId: refresh
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout user
+      description: Revoke current refresh token
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Logout successful
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get current user
+      description: Get details of the currently authenticated user
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== Students ====================
+  /students:
+    get:
+      tags: [Students]
+      summary: List students
+      description: Retrieve paginated list of students
+      operationId: listStudents
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: sort
+          in: query
+          schema:
+            type: string
+            example: lastName,asc
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE, GRADUATED, SUSPENDED]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of students
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Students]
+      summary: Create student
+      description: Create a new student record
+      operationId: createStudent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentCreateRequest'
+      responses:
+        '201':
+          description: Student created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /students/{id}:
+    get:
+      tags: [Students]
+      summary: Get student by ID
+      description: Retrieve detailed information about a student
+      operationId: getStudent
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Student details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentResponse'
+        '404':
+          description: Student not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Students]
+      summary: Update student
+      description: Update student information
+      operationId: updateStudent
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentUpdateRequest'
+      responses:
+        '200':
+          description: Student updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentResponse'
+        '404':
+          description: Student not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Students]
+      summary: Delete student
+      description: Soft delete a student record
+      operationId: deleteStudent
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Student deleted successfully
+        '404':
+          description: Student not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /students/{id}/courses:
+    get:
+      tags: [Students]
+      summary: Get student courses
+      description: Retrieve courses enrolled by a student
+      operationId: getStudentCourses
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: activeOnly
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Student courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnrollmentResponse'
+        '404':
+          description: Student not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== Courses ====================
+  /courses:
+    get:
+      tags: [Courses]
+      summary: List courses
+      description: Retrieve paginated list of courses
+      operationId: listCourses
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+            example: name,asc
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: lecturerId
+          in: query
+          schema:
+            type: integer
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of courses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Courses]
+      summary: Create course
+      description: Create a new course
+      operationId: createCourse
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseCreateRequest'
+      responses:
+        '201':
+          description: Course created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /courses/{id}:
+    get:
+      tags: [Courses]
+      summary: Get course by ID
+      description: Retrieve detailed information about a course
+      operationId: getCourse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Course details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '404':
+          description: Course not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Courses]
+      summary: Update course
+      description: Update course information
+      operationId: updateCourse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseUpdateRequest'
+      responses:
+        '200':
+          description: Course updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '404':
+          description: Course not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Courses]
+      summary: Delete course
+      description: Soft delete a course
+      operationId: deleteCourse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Course deleted successfully
+        '404':
+          description: Course not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /courses/{id}/activate:
+    post:
+      tags: [Courses]
+      summary: Activate course
+      description: Activate a course for enrollment
+      operationId: activateCourse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Course activated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '404':
+          description: Course not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /courses/{id}/deactivate:
+    post:
+      tags: [Courses]
+      summary: Deactivate course
+      description: Deactivate a course to prevent new enrollments
+      operationId: deactivateCourse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Course deactivated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseResponse'
+        '404':
+          description: Course not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== Enrollments ====================
+  /enrollments:
+    get:
+      tags: [Enrollments]
+      summary: List enrollments
+      description: Retrieve paginated list of enrollments
+      operationId: listEnrollments
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: studentId
+          in: query
+          schema:
+            type: integer
+        - name: courseId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, COMPLETED, DROPPED, FAILED]
+      responses:
+        '200':
+          description: List of enrollments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Enrollments]
+      summary: Enroll student
+      description: Enroll a student in a course
+      operationId: enrollStudent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrollmentCreateRequest'
+      responses:
+        '201':
+          description: Student enrolled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentResponse'
+        '400':
+          description: Invalid request or constraint violation
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /enrollments/{id}:
+    get:
+      tags: [Enrollments]
+      summary: Get enrollment by ID
+      description: Retrieve detailed information about an enrollment
+      operationId: getEnrollment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Enrollment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnrollmentResponse'
+        '404':
+          description: Enrollment not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Enrollments]
+      summary: Drop course
+      description: Drop a course for a student
+      operationId: dropCourse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Course dropped successfully
+        '404':
+          description: Enrollment not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== Reports ====================
+  /reports/statistics:
+    get:
+      tags: [Reports]
+      summary: Get system statistics
+      description: Retrieve overall system statistics
+      operationId: getStatistics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: System statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+
+  /reports/students-per-course:
+    get:
+      tags: [Reports]
+      summary: Get students per course
+      description: Retrieve count of enrolled students per course
+      operationId: getStudentsPerCourse
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Students per course report
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudentsPerCourseResponse'
+
+  /reports/graduation-progress:
+    get:
+      tags: [Reports]
+      summary: Get graduation progress
+      description: Retrieve graduation progress report
+      operationId: getGraduationProgress
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: year
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Graduation progress report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraduationProgressResponse'
+
+  /reports/active-courses:
+    get:
+      tags: [Reports]
+      summary: Get active courses
+      description: Retrieve list of active courses with enrollment counts
+      operationId: getActiveCourses
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Active courses report
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActiveCourseResponse'
+
+  /reports/inactive-courses:
+    get:
+      tags: [Reports]
+      summary: Get inactive courses
+      description: Retrieve list of inactive courses
+      operationId: getInactiveCourses
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Inactive courses report
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CourseResponse'
+
+  # ==================== Departments ====================
+  /departments:
+    get:
+      tags: [Departments]
+      summary: List departments
+      description: Retrieve list of departments
+      operationId: listDepartments
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of departments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DepartmentResponse'
+
+  /departments/{id}:
+    get:
+      tags: [Departments]
+      summary: Get department by ID
+      description: Retrieve department details
+      operationId: getDepartment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Department details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentResponse'
+        '404':
+          description: Department not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ==================== Auth ====================
+    UserRegistrationRequest:
+      type: object
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+          example: student@campusflow.edu
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: SecurePass123!
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        role:
+          type: string
+          enum: [ADMIN, LECTURER, STUDENT]
+          example: STUDENT
+        departmentId:
+          type: integer
+          nullable: true
+          example: 1
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    RefreshRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          example: "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
+        tokenType:
+          type: string
+          example: "Bearer"
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2025-12-31T23:59:59Z"
+        user:
+          $ref: '#/components/schemas/UserResponse'
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          example: student@campusflow.edu
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        role:
+          type: string
+          enum: [ADMIN, LECTURER, STUDENT]
+          example: STUDENT
+        departmentId:
+          type: integer
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+
+    # ==================== Students ====================
+    StudentCreateRequest:
+      type: object
+      required:
+        - email
+        - firstName
+        - lastName
+        - departmentId
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        departmentId:
+          type: integer
+        phoneNumber:
+          type: string
+          nullable: true
+
+    StudentUpdateRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phoneNumber:
+          type: string
+          nullable: true
+        academicStatus:
+          type: string
+          enum: [ACTIVE, INACTIVE, GRADUATED, SUSPENDED]
+
+    StudentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 1
+        studentNumber:
+          type: string
+          example: "2024001"
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        email:
+          type: string
+          example: student@campusflow.edu
+        phoneNumber:
+          type: string
+          nullable: true
+        departmentId:
+          type: integer
+          example: 1
+        departmentName:
+          type: string
+          example: "Computer Science"
+        enrollmentDate:
+          type: string
+          format: date
+          example: "2024-01-15"
+        academicStatus:
+          type: string
+          enum: [ACTIVE, INACTIVE, GRADUATED, SUSPENDED]
+          example: ACTIVE
+        gpa:
+          type: number
+          format: decimal
+          nullable: true
+          example: 3.75
+        graduationDate:
+          type: string
+          format: date
+          nullable: true
+
+    # ==================== Courses ====================
+    CourseCreateRequest:
+      type: object
+      required:
+        - code
+        - name
+        - credits
+        - departmentId
+        - maxCapacity
+      properties:
+        code:
+          type: string
+          pattern: "^[A-Z]{2,4}\\d{3}$"
+          example: "CS101"
+        name:
+          type: string
+          example: "Introduction to Programming"
+        description:
+          type: string
+          nullable: true
+        credits:
+          type: integer
+          minimum: 1
+          maximum: 6
+          example: 3
+        departmentId:
+          type: integer
+        lecturerId:
+          type: integer
+          nullable: true
+        maxCapacity:
+          type: integer
+          minimum: 1
+          maximum: 500
+          example: 30
+
+    CourseUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        credits:
+          type: integer
+        lecturerId:
+          type: integer
+          nullable: true
+        maxCapacity:
+          type: integer
+
+    CourseResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        code:
+          type: string
+          example: "CS101"
+        name:
+          type: string
+          example: "Introduction to Programming"
+        description:
+          type: string
+          nullable: true
+        credits:
+          type: integer
+          example: 3
+        departmentId:
+          type: integer
+          example: 1
+        departmentName:
+          type: string
+          example: "Computer Science"
+        lecturerId:
+          type: integer
+          nullable: true
+        lecturerName:
+          type: string
+          nullable: true
+        maxCapacity:
+          type: integer
+          example: 30
+        enrolledCount:
+          type: integer
+          example: 25
+        active:
+          type: boolean
+          example: true
+
+    # ==================== Enrollments ====================
+    EnrollmentCreateRequest:
+      type: object
+      required:
+        - studentId
+        - courseId
+      properties:
+        studentId:
+          type: integer
+        courseId:
+          type: integer
+
+    EnrollmentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        studentId:
+          type: integer
+          example: 1
+        studentName:
+          type: string
+          example: "John Doe"
+        courseId:
+          type: integer
+          example: 1
+        courseCode:
+          type: string
+          example: "CS101"
+        courseName:
+          type: string
+          example: "Introduction to Programming"
+        enrollmentDate:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        status:
+          type: string
+          enum: [ACTIVE, COMPLETED, DROPPED, FAILED]
+          example: ACTIVE
+        grade:
+          type: string
+          nullable: true
+          example: "A"
+        notes:
+          type: string
+          nullable: true
+
+    # ==================== Reports ====================
+    StatisticsResponse:
+      type: object
+      properties:
+        totalStudents:
+          type: integer
+          example: 1500
+        totalCourses:
+          type: integer
+          example: 50
+        activeCourses:
+          type: integer
+          example: 45
+        totalEnrollments:
+          type: integer
+          example: 4500
+        totalDepartments:
+          type: integer
+          example: 5
+        graduationRate:
+          type: number
+          format: decimal
+          example: 0.85
+
+    StudentsPerCourseResponse:
+      type: object
+      properties:
+        courseId:
+          type: integer
+        courseCode:
+          type: string
+        courseName:
+          type: string
+        enrolledCount:
+          type: integer
+        maxCapacity:
+          type: integer
+        utilizationPercentage:
+          type: number
+          format: decimal
+
+    GraduationProgressResponse:
+      type: object
+      properties:
+        totalStudents:
+          type: integer
+        graduatedStudents:
+          type: integer
+        expectedGraduates:
+          type: integer
+        graduationRate:
+          type: number
+          format: decimal
+        averageGpa:
+          type: number
+          format: decimal
+        studentsByStatus:
+          type: object
+          additionalProperties:
+            type: integer
+
+    ActiveCourseResponse:
+      type: object
+      properties:
+        courseId:
+          type: integer
+        courseCode:
+          type: string
+        courseName:
+          type: string
+        lecturerName:
+          type: string
+        enrolledCount:
+          type: integer
+        maxCapacity:
+          type: integer
+
+    # ==================== Common ====================
+    PagedResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            type: object
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        isFirst:
+          type: boolean
+        isLast:
+          type: boolean
+        hasContent:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - error
+        - message
+        - timestamp
+      properties:
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: "Bad Request"
+        message:
+          type: string
+          example: "Invalid request parameters"
+        path:
+          type: string
+          example: "/api/students"
+        timestamp:
+          type: string
+          format: date-time

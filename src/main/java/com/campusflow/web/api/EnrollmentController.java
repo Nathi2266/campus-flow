@@ -36,8 +36,9 @@ public class EnrollmentController {
         @Parameter(description = "Course ID filter") @RequestParam(required = false) Long courseId,
         @Parameter(description = "Enrollment status filter") @RequestParam(required = false) String status
     ) {
-        // This would filter by the parameters
-        return ResponseEntity.ok().build();
+        PagedResponse<EnrollmentResponse> response =
+            enrollmentService.listEnrollments(page, size, studentId, courseId, status);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")

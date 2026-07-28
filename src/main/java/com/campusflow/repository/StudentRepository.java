@@ -28,13 +28,13 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     Optional<Student> findByUserId(Long userId);
 
-    Page<Student> findByDepartmentId(Long departmentId, Pageable pageable);
+    Page<Student> findByUserDepartmentId(Long departmentId, Pageable pageable);
 
     Page<Student> findByAcademicStatus(AcademicStatus status, Pageable pageable);
 
-    Page<Student> findByDepartmentIdAndAcademicStatus(Long departmentId, AcademicStatus status, Pageable pageable);
+    Page<Student> findByUserDepartmentIdAndAcademicStatus(Long departmentId, AcademicStatus status, Pageable pageable);
 
-    @Query("SELECT s FROM Student s WHERE s.department.id = :departmentId " +
+    @Query("SELECT s FROM Student s WHERE s.user.department.id = :departmentId " +
            "AND (s.firstName LIKE %:search% OR s.lastName LIKE %:search% OR s.studentNumber LIKE %:search%)")
     Page<Student> searchByDepartment(@Param("departmentId") Long departmentId,
                                      @Param("search") String search,

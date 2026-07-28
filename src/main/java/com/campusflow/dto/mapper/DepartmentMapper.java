@@ -4,6 +4,9 @@ import com.campusflow.domain.Department;
 import com.campusflow.dto.response.DepartmentResponse;
 import org.mapstruct.Mapper;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+
 /**
  * Mapper for Department entity and DTOs.
  *
@@ -14,4 +17,8 @@ import org.mapstruct.Mapper;
 public interface DepartmentMapper {
 
     DepartmentResponse toResponse(Department department);
+
+    default LocalDateTime map(OffsetDateTime value) {
+        return value == null ? null : value.toLocalDateTime();
+    }
 }

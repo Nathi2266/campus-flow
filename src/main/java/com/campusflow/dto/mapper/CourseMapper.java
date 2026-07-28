@@ -7,6 +7,10 @@ import com.campusflow.dto.request.CourseUpdateRequest;
 import com.campusflow.dto.response.CourseResponse;
 import org.mapstruct.*;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.List;
+
 /**
  * Mapper for Course entity and DTOs.
  *
@@ -20,13 +24,14 @@ public interface CourseMapper {
 
     Course toEntity(CourseUpdateRequest request, @MappingTarget Course course);
 
+    @Named("toResponse")
     CourseResponse toResponse(Course course);
 
-    @Mapping(source = "lecturer.firstName", target = "lecturerName", qualifiedByName = "fullName")
+    @Mapping(source = "lecturer", target = "lecturerName", qualifiedByName = "fullName")
     CourseResponse toResponseWithLecturer(Course course);
 
-    @IterableMapping(componentModel = MappingConstants.ComponentModel.SPRING)
-    java.util.List<CourseResponse> toResponseList(java.util.List<Course> courses);
+    @IterableMapping(qualifiedByName = "toResponse")
+    List<CourseResponse> toResponseList(List<Course> courses);
 
     @Named("fullName")
     default String fullName(User user) {
@@ -34,5 +39,9 @@ public interface CourseMapper {
             return null;
         }
         return user.getFirstName() + " " + user.getLastName();
+    }
+
+    default LocalDateTime map(OffsetDateTime value) {
+        return value == null ? null : value.toLocalDateTime();
     }
 }

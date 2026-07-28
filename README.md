@@ -33,15 +33,26 @@ CampusFlow is a comprehensive Student Management System for universities, built 
 
 ## Quick Start
 
+### Frontend (React)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+UI: http://localhost:5173 (proxies `/api` to Spring Boot on 8080)
+
 ### Running with Docker
 
 ```bash
-# Start the application and database
+# Start the application, database, and frontend
 docker-compose -f docker/docker-compose.yml up -d
 
-# Access the application
-# API: http://localhost:8080
-# Swagger UI: http://localhost:8080/swagger-ui.html
+# Access
+# API: http://localhost:8090
+# Frontend (compose): http://localhost:5173
+# Swagger UI: http://localhost:8090/swagger-ui.html
 
 # View logs
 docker-compose -f docker/docker-compose.yml logs -f

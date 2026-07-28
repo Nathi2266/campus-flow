@@ -1,11 +1,11 @@
 package com.campusflow.service;
 
 import com.campusflow.dto.response.*;
+import com.campusflow.repository.CourseRepository;
+import com.campusflow.repository.EnrollmentRepository;
+import com.campusflow.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -25,12 +25,11 @@ public class ReportService {
     private final CourseRepository courseRepository;
     private final EnrollmentRepository enrollmentRepository;
 
-    @Cacheable(value = "statistics", key = "'all'")
     public StatisticsResponse getStatistics() {
         StatisticsResponse response = new StatisticsResponse();
         response.setTotalStudents(studentRepository.count());
         response.setTotalCourses(courseRepository.count());
-        response.setActiveCourses(courseRepository.findByActive(true, PageRequest.of(0, 1)).getTotalElements().intValue());
+        response.setActiveCourses((int) courseRepository.findByActive(true, PageRequest.of(0, 1)).getTotalElements());
         response.setTotalEnrollments(enrollmentRepository.count());
         response.setTotalDepartments(1L); // Placeholder - would query departments
         response.setGraduationRate(BigDecimal.valueOf(0.85)); // Placeholder

@@ -1,14 +1,14 @@
 package com.campusflow.dto.mapper;
 
-import com.campusflow.domain.Department;
 import com.campusflow.domain.Student;
-import com.campusflow.domain.User;
 import com.campusflow.dto.request.StudentCreateRequest;
 import com.campusflow.dto.request.StudentUpdateRequest;
 import com.campusflow.dto.response.StudentResponse;
 import org.mapstruct.*;
 
-import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.List;
 
 /**
  * Mapper for Student entity and DTOs.
@@ -23,6 +23,7 @@ public interface StudentMapper {
 
     Student toEntity(StudentUpdateRequest request, @MappingTarget Student student);
 
+    @Named("toResponse")
     StudentResponse toResponse(Student student);
 
     @Mapping(source = "user.email", target = "email")
@@ -31,6 +32,10 @@ public interface StudentMapper {
     @Mapping(source = "user.department.name", target = "departmentName")
     StudentResponse toResponseWithUserAndDepartment(Student student);
 
-    @IterableMapping(componentModel = MappingConstants.ComponentModel.SPRING)
-    java.util.List<StudentResponse> toResponseList(java.util.List<Student> students);
+    @IterableMapping(qualifiedByName = "toResponse")
+    List<StudentResponse> toResponseList(List<Student> students);
+
+    default LocalDateTime map(OffsetDateTime value) {
+        return value == null ? null : value.toLocalDateTime();
+    }
 }

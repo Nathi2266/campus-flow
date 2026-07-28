@@ -5,6 +5,10 @@ import com.campusflow.dto.request.EnrollmentCreateRequest;
 import com.campusflow.dto.response.EnrollmentResponse;
 import org.mapstruct.*;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.List;
+
 /**
  * Mapper for Enrollment entity and DTOs.
  *
@@ -16,6 +20,7 @@ public interface EnrollmentMapper {
 
     Enrollment toEntity(EnrollmentCreateRequest request);
 
+    @Named("toResponse")
     EnrollmentResponse toResponse(Enrollment enrollment);
 
     @Mapping(source = "student.firstName", target = "studentName")
@@ -23,6 +28,10 @@ public interface EnrollmentMapper {
     @Mapping(source = "course.name", target = "courseName")
     EnrollmentResponse toResponseWithDetails(Enrollment enrollment);
 
-    @IterableMapping(componentModel = MappingConstants.ComponentModel.SPRING)
-    java.util.List<EnrollmentResponse> toResponseList(java.util.List<Enrollment> enrollments);
+    @IterableMapping(qualifiedByName = "toResponse")
+    List<EnrollmentResponse> toResponseList(List<Enrollment> enrollments);
+
+    default LocalDateTime map(OffsetDateTime value) {
+        return value == null ? null : value.toLocalDateTime();
+    }
 }

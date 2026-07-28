@@ -5,6 +5,9 @@ import com.campusflow.domain.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * User entity representing system users (Admin, Lecturer, Student).
  *

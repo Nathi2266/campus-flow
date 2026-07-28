@@ -98,6 +98,50 @@ public class EnrollmentService {
     }
 
     @Transactional(readOnly = true)
+    public PagedResponse<EnrollmentResponse> listEnrollments(
+        Integer page,
+        Integer size,
+        Long studentId,
+        Long courseId,
+        String status
+    ) {
+        Pageable pageable = createPageable(page, size, null);
+        Page<Enrollment> enrollmentPage;
+
+        EnrollmentStatus enrollmentStatus = null;
+        if (status != null && !status.isBlank()) {
+            try {
+                enrollmentStatus = EnrollmentStatus.valueOf(status.trim().toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                throw new ValidationException("Invalid enrollment status", "status", "INVALID_STATUS");
+            }
+        }
+
+        if (studentId != null && enrollmentStatus != null) {
+            enrollmentPage = enrollmentRepository.findByStudentIdAndStatus(studentId, enrollmentStatus, pageable);
+        } else if (studentId != null) {
+            enrollmentPage = enrollmentRepository.findByStudentId(studentId, pageable);
+        } else if (courseId != null && enrollmentStatus != null) {
+            enrollmentPage = enrollmentRepository.findByCourseIdAndStatus(courseId, enrollmentStatus, pageable);
+        } else if (courseId != null) {
+            enrollmentPage = enrollmentRepository.findByCourseId(courseId, pageable);
+        } else {
+            enrollmentPage = enrollmentRepository.findAll(pageable);
+        }
+
+        return PagedResponse.<EnrollmentResponse>builder()
+            .content(enrollmentPage.getContent().stream().map(this::toResponse).toList())
+            .page(enrollmentPage.getNumber())
+            .size(enrollmentPage.getSize())
+            .totalElements(enrollmentPage.getTotalElements())
+            .totalPages(enrollmentPage.getTotalPages())
+            .isFirst(enrollmentPage.isFirst())
+            .isLast(enrollmentPage.isLast())
+            .hasContent(enrollmentPage.hasContent())
+            .build();
+    }
+
+    @Transactional(readOnly = true)
     public PagedResponse<EnrollmentResponse> listStudentEnrollments(Long studentId, Integer page, Integer size, String sort) {
         Pageable pageable = createPageable(page, size, sort);
 
@@ -170,7 +214,9 @@ public class EnrollmentService {
             .courseId(enrollment.getCourse().getId())
             .courseCode(enrollment.getCourse().getCode())
             .courseName(enrollment.getCourse().getName())
-            .enrollmentDate(enrollment.getEnrollmentDate())
+            .enrollmentDate(enrollment.getEnrollmentDate() != null
+                ? enrollment.getEnrollmentDate().toLocalDateTime()
+                : null)
             .status(enrollment.getStatus())
             .grade(enrollment.getGrade())
             .notes(enrollment.getNotes())

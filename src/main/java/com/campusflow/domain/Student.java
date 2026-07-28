@@ -5,6 +5,9 @@ import com.campusflow.domain.enums.AcademicStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Student entity representing enrolled students.
  *
