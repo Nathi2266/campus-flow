@@ -30,6 +30,15 @@ logging:
     org.hibernate.SQL: WARN
     org.springframework.security: WARN
 
+jwt:
+  secret: ${JWT_SECRET}
+  allow-insecure-default: false
+
+cors:
+  allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS}
+
 springdoc:
+  api-docs:
+    enabled: false
   swagger-ui:
-    enabled: true
+    enabled: false

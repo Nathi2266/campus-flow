@@ -25,6 +25,8 @@ import java.util.Date;
 @Slf4j
 public class JwtTokenProvider {
 
+    private static final int MIN_SECRET_LENGTH = 32;
+
     private final SecretKey key;
 
     private final long accessTokenExpirationMs;
@@ -32,15 +34,24 @@ public class JwtTokenProvider {
     private final long refreshTokenExpirationMs;
 
     public JwtTokenProvider(
-            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.secret:}") String secret,
+            @Value("${jwt.allow-insecure-default:false}") boolean allowInsecureDefault,
             @Value("${jwt.access-token-expiration:900000}") long accessTokenExpirationMs,
             @Value("${jwt.refresh-token-expiration:604800000}") long refreshTokenExpirationMs) {
-        if (secret == null || secret.isBlank() || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
-            throw new IllegalStateException(
-                "jwt.secret must be set and at least 32 bytes (configure JWT_SECRET / jwt.secret)"
-            );
+        String resolved = secret != null ? secret.trim() : "";
+        if (resolved.isEmpty()) {
+            if (!allowInsecureDefault) {
+                throw new IllegalStateException(
+                    "jwt.secret must be set (env JWT_SECRET). Refusing to start without a signing secret.");
+            }
+            resolved = "campusflow-dev-only-secret-key-min-32-chars!!";
+            log.warn("Using insecure JWT default secret — set JWT_SECRET for any shared/prod environment");
         }
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        if (resolved.length() < MIN_SECRET_LENGTH) {
+            throw new IllegalStateException(
+                "jwt.secret must be at least " + MIN_SECRET_LENGTH + " characters");
+        }
+        this.key = Keys.hmacShaKeyFor(resolved.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpirationMs = accessTokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
     }

@@ -1,41 +1,46 @@
 # Project Overview
 
-## Product
+## Active product (this repository)
 
-**Khonofy** is a department-scoped time and task tracking platform for teams.
+**CampusFlow** is a campus student-management system (SMS) with roles `ADMIN` | `LECTURER` | `STUDENT`.
 
-Tagline: *Smart time tracking, task management & reporting for teams.*
+Authoritative CampusFlow specs:
+
+- Roles: `campusflow-roles.md`
+- Grades: `campusflow-grades.md`
+- Frontend: `campusflow-frontend.md`
+- Architecture: `campusflow-architecture.md`
+- Security: `security-implementation.md`
+- Schema: `database-schema.md`
+
+> Legacy Khonofy timesheet docs (`timesheets.md`, `roles-permissions.md` with staff/admin/superuser, etc.) remain in the tree for historical AEOS templates but **do not** govern this codebase.
 
 ## Purpose
 
-Khonofy supports a clear weekly rhythm:
+CampusFlow supports:
 
-1. Managers assign tasks with priorities, due dates, and hour estimates.
-2. Staff log time day by day (or in bulk / on a calendar).
-3. Staff submit a weekly timesheet for review.
-4. Admins approve or reject submissions, optionally with notes.
-5. Leadership reports on hours, completion, and estimate vs actual.
+1. Admins manage departments, users, students, and courses.
+2. Lecturers update own courses, view rosters, and enter grades.
+3. Students browse the course catalog, self-enroll/drop, and view grades.
+4. Leadership reviews reports and audit logs.
 
 ## Organizational boundary
 
-The main boundary is the **department**. Admins typically see and manage only their department; superusers have organization-wide visibility.
+Department is the soft tenancy boundary. Admins have org-wide access; lecturers are scoped to assigned courses; students see their own records.
 
 ## Core entities
 
 | Entity | Role |
 |--------|------|
-| User | Account, role, department, contact |
-| Department | Team boundary |
-| Task | Assigned work with estimate and status |
-| TimeEntry | Hours logged against a task on a date |
-| Timesheet | Weekly submission with review status |
-| Tag | Categorization for time entries |
-| TaskTemplate | Personal shortcuts for logging |
-| ActivityLog | Audit / activity history |
+| User | Account, role, department |
+| Department | Org boundary |
+| Student | Student profile linked 1:1 to User |
+| Course | Taught course with capacity and lecturer |
+| Enrollment | Student–course link with status and grade |
+| Token | Refresh token persistence |
+| AuditLog | Security / admin action history |
 
-## Related specs
+## Related
 
-- Personas: `personas.md`
-- Permissions: `roles-permissions.md`
-- Business rules index: `business-rules.md`
-- User flows: `user-flows.md`
+- Personas / capabilities: `campusflow-roles.md`
+- Deployment: `devops-deployment.md`, `docker/docker-compose.yml`, `docker/.env.example`

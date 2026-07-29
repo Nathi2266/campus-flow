@@ -4,14 +4,17 @@ import com.campusflow.domain.Department;
 import com.campusflow.domain.Student;
 import com.campusflow.domain.User;
 import com.campusflow.domain.enums.AcademicStatus;
+import com.campusflow.domain.enums.UserRole;
 import com.campusflow.dto.request.StudentCreateRequest;
 import com.campusflow.dto.request.StudentUpdateRequest;
+import com.campusflow.dto.response.PagedResponse;
 import com.campusflow.dto.response.StudentResponse;
 import com.campusflow.exception.NotFoundException;
 import com.campusflow.exception.ValidationException;
 import com.campusflow.repository.DepartmentRepository;
 import com.campusflow.repository.StudentRepository;
 import com.campusflow.repository.UserRepository;
+import com.campusflow.util.SecurityUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,19 +22,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-/**
- * Unit tests for StudentService.
- *
- * @author CampusFlow Team
- * @version 1.0.0
- */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("StudentService Unit Tests")
 class StudentServiceTest {
@@ -45,6 +47,12 @@ class StudentServiceTest {
     @Mock
     private DepartmentRepository departmentRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private SecurityUtils securityUtils;
+
     @InjectMocks
     private StudentService studentService;
 
@@ -52,6 +60,8 @@ class StudentServiceTest {
     private StudentUpdateRequest updateRequest;
     private Department department;
     private Student student;
+    private User adminUser;
+    private User studentUser;
 
     @BeforeEach
     void setUp() {
@@ -60,20 +70,29 @@ class StudentServiceTest {
             .name("Computer Science")
             .build();
 
+        studentUser = User.builder()
+            .id(1L)
+            .email("john.student@campusflow.edu")
+            .firstName("John")
+            .lastName("Student")
+            .role(UserRole.STUDENT)
+            .department(department)
+            .build();
+
         student = Student.builder()
             .id(1L)
-            .user(User.builder()
-                .id(1L)
-                .email("john.student@campusflow.edu")
-                .firstName("John")
-                .lastName("Student")
-                .build())
+            .user(studentUser)
             .studentNumber("2024001")
             .firstName("John")
             .lastName("Student")
             .enrollmentDate(java.time.LocalDate.now())
             .academicStatus(AcademicStatus.ACTIVE)
-            .department(department)
+            .build();
+
+        adminUser = User.builder()
+            .id(99L)
+            .email("admin@campusflow.edu")
+            .role(UserRole.ADMIN)
             .build();
 
         createRequest = StudentCreateRequest.builder()
@@ -92,140 +111,148 @@ class StudentServiceTest {
     }
 
     @Test
-    @DisplayName("Should create student successfully")
+    @DisplayName("Should create student with one-time temporary password")
     void testCreateStudent_Success() {
-        // Given
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
-        when(studentRepository.save(any(Student.class))).thenReturn(student);
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> {
+            User u = inv.getArgument(0);
+            u.setId(10L);
+            return u;
+        });
+        when(studentRepository.save(any(Student.class))).thenAnswer(inv -> {
+            Student s = inv.getArgument(0);
+            s.setId(1L);
+            return s;
+        });
 
-        // When
         StudentResponse response = studentService.createStudent(createRequest);
 
-        // Then
         assertNotNull(response);
         assertEquals("John", response.getFirstName());
-        assertEquals("Student", response.getLastName());
-        verify(userRepository).existsByEmail(anyString());
+        assertNotNull(response.getTemporaryPassword());
+        assertTrue(response.getTemporaryPassword().length() >= 12);
+        verify(passwordEncoder).encode(response.getTemporaryPassword());
+        verify(userRepository).save(any(User.class));
         verify(studentRepository).save(any(Student.class));
     }
 
     @Test
     @DisplayName("Should throw ValidationException when email already exists")
     void testCreateStudent_EmailAlreadyExists() {
-        // Given
         when(userRepository.existsByEmail(anyString())).thenReturn(true);
 
-        // When & Then
         ValidationException exception = assertThrows(
             ValidationException.class,
             () -> studentService.createStudent(createRequest)
         );
         assertEquals("Email already exists", exception.getMessage());
-        verify(userRepository).existsByEmail(anyString());
         verify(studentRepository, never()).save(any());
     }
 
     @Test
     @DisplayName("Should throw NotFoundException when department not found")
     void testCreateStudent_DepartmentNotFound() {
-        // Given
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(departmentRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // When & Then
         NotFoundException exception = assertThrows(
             NotFoundException.class,
             () -> studentService.createStudent(createRequest)
         );
         assertEquals("Department not found", exception.getMessage());
-        verify(departmentRepository).findById(1L);
         verify(studentRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("Should get student by ID")
+    @DisplayName("ADMIN can get student by ID")
     void testGetStudent_Success() {
-        // Given
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
 
-        // When
         StudentResponse response = studentService.getStudent(1L);
 
-        // Then
         assertNotNull(response);
         assertEquals("John", response.getFirstName());
-        verify(studentRepository).findById(1L);
+    }
+
+    @Test
+    @DisplayName("STUDENT cannot get another student by ID")
+    void testGetStudent_StudentForbidden() {
+        when(securityUtils.getCurrentUser()).thenReturn(studentUser);
+        when(studentRepository.findByUserId(1L)).thenReturn(Optional.of(student));
+
+        ValidationException ex = assertThrows(
+            ValidationException.class,
+            () -> studentService.getStudent(999L)
+        );
+        assertEquals("FORBIDDEN", ex.getErrorCode());
+        verify(studentRepository, never()).findById(999L);
+    }
+
+    @Test
+    @DisplayName("STUDENT list returns only own record")
+    void testListStudents_StudentScoped() {
+        when(securityUtils.getCurrentUser()).thenReturn(studentUser);
+        when(studentRepository.findByUserId(1L)).thenReturn(Optional.of(student));
+
+        PagedResponse<StudentResponse> response = studentService.listStudents(0, 20, null, null, null);
+
+        assertEquals(1, response.getContent().size());
+        assertEquals(1L, response.getContent().get(0).getId());
+        verify(studentRepository, never()).findAll(any(Pageable.class));
     }
 
     @Test
     @DisplayName("Should throw NotFoundException when student not found")
     void testGetStudent_NotFound() {
-        // Given
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
         when(studentRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // When & Then
         NotFoundException exception = assertThrows(
             NotFoundException.class,
             () -> studentService.getStudent(1L)
         );
         assertEquals("Student not found", exception.getMessage());
-        verify(studentRepository).findById(1L);
     }
 
     @Test
     @DisplayName("Should update student successfully")
     void testUpdateStudent_Success() {
-        // Given
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
         when(studentRepository.save(any(Student.class))).thenReturn(student);
 
-        // When
         StudentResponse response = studentService.updateStudent(1L, updateRequest);
 
-        // Then
         assertNotNull(response);
         assertEquals("Updated", response.getLastName());
-        verify(studentRepository).findById(1L);
         verify(studentRepository).save(any(Student.class));
     }
 
     @Test
     @DisplayName("Should soft delete student")
     void testDeleteStudent_Success() {
-        // Given
         when(studentRepository.findById(1L)).thenReturn(Optional.of(student));
         when(studentRepository.save(any(Student.class))).thenReturn(student);
 
-        // When
         studentService.deleteStudent(1L);
 
-        // Then
-        verify(studentRepository).findById(1L);
         verify(studentRepository).save(any(Student.class));
+        assertEquals(AcademicStatus.INACTIVE, student.getAcademicStatus());
     }
 
     @Test
-    @DisplayName("Should list students with pagination")
+    @DisplayName("ADMIN list students with pagination")
     void testListStudents_Success() {
-        // Given
-        java.util.List<Student> students = java.util.List.of(student);
-        org.springframework.data.domain.Page<Student> page = new org.springframework.data.domain.PageImpl<>(
-            students,
-            org.springframework.data.domain.PageRequest.of(0, 20),
-            students.size()
-        );
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(studentRepository.findAll(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(List.of(student), PageRequest.of(0, 20), 1));
 
-        when(studentRepository.findAll(any(org.springframework.data.domain.Pageable.class)))
-            .thenReturn(page);
+        PagedResponse<StudentResponse> response = studentService.listStudents(0, 20, null, null, null);
 
-        // When
-        com.campusflow.dto.response.PagedResponse<StudentResponse> response =
-            studentService.listStudents(0, 20, null, null, null);
-
-        // Then
         assertNotNull(response);
         assertEquals(1, response.getContent().size());
-        verify(studentRepository).findAll(any(org.springframework.data.domain.Pageable.class));
+        verify(studentRepository).findAll(any(Pageable.class));
     }
 }

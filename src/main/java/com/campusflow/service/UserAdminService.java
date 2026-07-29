@@ -1,5 +1,6 @@
 package com.campusflow.service;
 
+import com.campusflow.domain.AuditLog;
 import com.campusflow.domain.Student;
 import com.campusflow.domain.User;
 import com.campusflow.domain.enums.AcademicStatus;
@@ -11,9 +12,11 @@ import com.campusflow.dto.response.PagedResponse;
 import com.campusflow.dto.response.UserResponse;
 import com.campusflow.exception.NotFoundException;
 import com.campusflow.exception.ValidationException;
+import com.campusflow.repository.AuditLogRepository;
 import com.campusflow.repository.DepartmentRepository;
 import com.campusflow.repository.StudentRepository;
 import com.campusflow.repository.UserRepository;
+import com.campusflow.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +24,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
 
 /**
  * ADMIN user administration service.
@@ -35,6 +40,8 @@ public class UserAdminService {
     private final StudentRepository studentRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final AuditLogRepository auditLogRepository;
+    private final SecurityUtils securityUtils;
 
     @Transactional(readOnly = true)
     public PagedResponse<UserResponse> listUsers(Integer page, Integer size, String role) {
@@ -94,7 +101,15 @@ public class UserAdminService {
             user.setStudent(student);
         }
 
-        return userMapper.toResponse(user);
+        UserResponse response = userMapper.toResponse(user);
+        auditLogRepository.save(AuditLog.builder()
+            .user(securityUtils.getCurrentUser())
+            .action("USER_CREATE")
+            .entityType("USER")
+            .entityId(user.getId())
+            .details(Map.of("email", user.getEmail(), "role", role.name()))
+            .build());
+        return response;
     }
 
     public UserResponse updateUser(Long id, UserAdminUpdateRequest request) {
@@ -110,7 +125,15 @@ public class UserAdminService {
                 .orElseThrow(() -> new NotFoundException("Department not found", "departmentId")));
         }
 
-        return userMapper.toResponse(userRepository.save(user));
+        User saved = userRepository.save(user);
+        auditLogRepository.save(AuditLog.builder()
+            .user(securityUtils.getCurrentUser())
+            .action("USER_UPDATE")
+            .entityType("USER")
+            .entityId(saved.getId())
+            .details(Map.of("role", saved.getRole().name()))
+            .build());
+        return userMapper.toResponse(saved);
     }
 
     private UserRole parseRole(String role) {

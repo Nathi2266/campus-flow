@@ -1,28 +1,34 @@
 # Future Features
 
-<!-- Product ideas only. Promote into specs when scheduled for delivery. -->
-<!-- Source: Engineering Council 2026-07-28 — role-value backlog -->
 <!-- Product: CampusFlow (ADMIN | LECTURER | STUDENT) -->
 
-## Shipped (P0–P1) — 2026-07-28
+## Shipped
 
-- Real password verification + V3 seed hash (`Admin123!`)
-- `/auth/me` GET/PATCH, profile edit, refresh/logout via `tokens`
-- Method-level RBAC + list scoping
-- Public register = STUDENT only
-- Department CRUD + pickers; User admin; Audit viewer
-- Student/course edit + search; real report endpoints
-- Lecturer own-course update + grade entry + scoped lists
-- Student self-enroll/drop, course catalog, grades on dashboard
+### P0–P1 product (2026-07-28)
+- Auth, RBAC, departments/users/audit, grades, self-enroll, reports
 
-## P2 — Remaining
+### Production-readiness Cycle 1–2 (2026-07-29)
+- FE 401 → refresh → retry (single-flight)
+- JWT secret required (fail-fast; env `JWT_SECRET`); prod disables swagger
+- Logout without access token; CORS from env
+- Student API own-record scoping for STUDENT
+- Unique temporary password on student create (returned once)
+- V3 password migration limited to seed emails
+- Compose env wiring + `docker/.env.example`
+- Global student search; list pagination UI; ErrorBoundary
+- Audit on student CRUD, grade updates, user admin
+- Project overview points at CampusFlow specs
 
-- Notifications MVP (enrollment, grade, capacity) — FE shell exists
-- Settings persistence for notification prefs
+## Remaining (honest production backlog)
+
+### Still recommended before hard production cutover
+- Live Playwright E2E against compose stack
+- Login rate limiting / lockout
+- Prefer httpOnly cookie sessions long-term (localStorage XSS risk)
+- Broader BE integration tests (Auth refresh, Enrollment RBAC)
+- Cap/paginate department `findAll` and heavy reports at scale
+
+### P2 product
+- Notifications MVP + settings persistence
 - Report CSV export
-- Pagination UX polish on major lists
-- Broader audit coverage beyond login events
-
-## Spec hygiene (ongoing)
-
-- Prefer `campusflow-roles.md` / `campusflow-grades.md` over Khonofy staff/admin/superuser docs
+- Full purge of leftover Khonofy timesheet specs/hooks

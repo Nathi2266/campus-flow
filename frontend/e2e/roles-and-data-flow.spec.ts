@@ -83,6 +83,55 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await signOut(page)
   })
 
+  test('STUDENT: API cannot enumerate peer students (IDOR)', async ({ page }) => {
+    await loginAs(page, USERS.student.email, USERS.student.password)
+
+    const result = await page.evaluate(async () => {
+      const raw = localStorage.getItem('campusflow-auth')
+      const parsed = raw ? JSON.parse(raw) : null
+      const token = parsed?.state?.accessToken as string
+      const headers = { Authorization: `Bearer ${token}` }
+
+      const listRes = await fetch('/api/v1/students?page=0&size=50', { headers })
+      const listBody = await listRes.json()
+      const total = Number(listBody.totalElements ?? listBody.content?.length ?? 0)
+      const ownId = listBody.content?.[0]?.id as number | undefined
+      const peerId = ownId === 1 ? 2 : 1
+
+      const peerRes = await fetch(`/api/v1/students/${peerId}`, { headers })
+      const courseRoster = await fetch('/api/v1/enrollments/course/1?page=0&size=10', { headers })
+      return {
+        listStatus: listRes.status,
+        total,
+        peerStatus: peerRes.status,
+        rosterStatus: courseRoster.status,
+      }
+    })
+
+    expect(result.listStatus).toBe(200)
+    expect(result.total).toBeLessThanOrEqual(1)
+    expect(result.peerStatus).toBe(400)
+    expect(result.rosterStatus).toBe(400)
+    await signOut(page)
+  })
+
+  test('PROFILE: student can patch own name', async ({ page }) => {
+    await loginAs(page, USERS.student.email, USERS.student.password)
+    await page.getByTestId('nav-profile').click()
+    await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible()
+
+    const first = page.getByLabel('First name')
+    await expect(first).toBeVisible()
+    const current = await first.inputValue()
+    const next = current.endsWith('X') ? current.slice(0, -1) || 'Alice' : `${current}X`
+    await first.fill(next)
+    await page.getByRole('button', { name: /Save|Update/i }).click()
+    await expect(page.getByText(/updated|saved|success/i).first()).toBeVisible({ timeout: 15_000 })
+    await first.fill(current)
+    await page.getByRole('button', { name: /Save|Update/i }).click()
+    await signOut(page)
+  })
+
   test('DATA FLOW: admin seed → create student → create course → enroll', async ({ page }) => {
     const stamp = Date.now()
     const studentEmail = `e2e.student.${stamp}@campus.edu`
@@ -91,7 +140,6 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await loginAs(page, USERS.admin.email, USERS.admin.password)
     await expect(page.getByText('ADMIN', { exact: true })).toBeVisible()
 
-    // Create student
     await page.getByTestId('nav-students').click()
     await page.getByRole('button', { name: 'Add student' }).click()
     await page.getByLabel('First name').fill('Flow')
@@ -99,10 +147,17 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await page.getByLabel('Email').fill(studentEmail)
     await page.getByLabel('Department').selectOption({ index: 1 })
     await page.getByRole('button', { name: 'Create' }).click()
-    await expect(page.getByText(studentEmail)).toBeVisible({ timeout: 20_000 })
-    await expect(page.getByRole('dialog')).toHaveCount(0)
 
-    // Create course
+    // Temporary password shown once
+    await expect(page.getByText(/temporary password|one-time password|password/i).first()).toBeVisible({
+      timeout: 20_000,
+    })
+    const dialog = page.getByRole('dialog')
+    if (await dialog.count()) {
+      await page.getByRole('button', { name: /Close|Done|OK/i }).first().click()
+    }
+    await expect(page.getByText(studentEmail)).toBeVisible({ timeout: 20_000 })
+
     await page.getByTestId('nav-courses').click()
     await page.getByRole('button', { name: 'Add course' }).click()
     await page.getByLabel('Code').fill(courseCode)
@@ -114,7 +169,6 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await expect(page.getByText(courseCode)).toBeVisible({ timeout: 20_000 })
     await expect(page.getByRole('dialog')).toHaveCount(0)
 
-    // Resolve IDs via API using token from localStorage
     const ids = await page.evaluate(async ({ studentEmail: se, courseCode: cc }) => {
       const raw = localStorage.getItem('campusflow-auth')
       const parsed = raw ? JSON.parse(raw) : null
@@ -131,7 +185,6 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     expect(ids.studentId, 'created student id').toBeTruthy()
     expect(ids.courseId, 'created course id').toBeTruthy()
 
-    // Enroll via UI (select pickers)
     await page.getByTestId('nav-enrollments').click()
     await page.getByRole('button', { name: 'New enrollment' }).click()
     await page.getByLabel('Student').selectOption(String(ids.studentId))
@@ -140,10 +193,55 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0)
     await expect(page.getByRole('row').filter({ hasText: courseCode })).toBeVisible({ timeout: 20_000 })
 
-    // Reports still load after mutations
     await page.getByTestId('nav-reports').click()
     await expect(page.getByRole('heading', { name: 'Reports' })).toBeVisible()
     await expect(page.getByText('Total students')).toBeVisible()
+  })
+
+  test('LECTURER: enter grade on own-course enrollment', async ({ page }) => {
+    await loginAs(page, USERS.lecturer.email, USERS.lecturer.password)
+    await page.getByTestId('nav-enrollments').click()
+    await expect(page.getByRole('heading', { name: 'Enrollments' })).toBeVisible()
+
+    const gradeButton = page.getByRole('button', { name: /Edit grade|grade/i }).first()
+    const iconGrade = page.locator('button[aria-label*="grade" i]').first()
+    const target = (await gradeButton.count()) > 0 ? gradeButton : iconGrade
+
+    if ((await target.count()) === 0) {
+      test.skip(true, 'No enrollments available for lecturer to grade')
+      return
+    }
+
+    await target.click()
+    await page.getByLabel('Grade').fill('A')
+    await page.getByRole('button', { name: /Save grade/i }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page.getByRole('row').filter({ hasText: 'A' }).first()).toBeVisible({ timeout: 15_000 })
+    await signOut(page)
+  })
+
+  test('STUDENT: self-enroll from enrollments page', async ({ page }) => {
+    await loginAs(page, USERS.student.email, USERS.student.password)
+    await page.getByTestId('nav-enrollments').click()
+    await expect(page.getByRole('heading', { name: 'Enrollments' })).toBeVisible()
+
+    const enrollBtn = page.getByRole('button', { name: /Enroll|New enrollment|Self-enroll/i }).first()
+    await expect(enrollBtn).toBeVisible()
+    await enrollBtn.click()
+
+    const courseSelect = page.getByLabel('Course')
+    await expect(courseSelect).toBeVisible()
+    const options = courseSelect.locator('option')
+    const optionCount = await options.count()
+    if (optionCount <= 1) {
+      await page.getByRole('button', { name: /Cancel|Close/i }).first().click()
+      test.skip(true, 'No available courses for self-enroll')
+      return
+    }
+    await courseSelect.selectOption({ index: 1 })
+    await page.getByRole('button', { name: 'Enroll', exact: true }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0, { timeout: 20_000 })
+    await signOut(page)
   })
 
   test('STUDENT: public register creates STUDENT session', async ({ page }) => {

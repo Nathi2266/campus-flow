@@ -19,6 +19,16 @@ spring:
     console:
       enabled: true
 
+  flyway:
+    enabled: false
+
+jwt:
+  secret: campusflow-test-secret-key-min-32-bytes!!
+  allow-insecure-default: true
+
+cors:
+  allowed-origin-patterns: http://localhost:*
+
 server:
   port: 8081
 

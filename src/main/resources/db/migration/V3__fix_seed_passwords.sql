@@ -1,5 +1,5 @@
--- Fix seed user passwords to a real BCrypt hash for Admin123!
--- Only touch known seed emails — never rewrite all users (prod-safe).
+-- Fix seed passwords to a real BCrypt hash for Admin123!
+-- Constrained to seed emails only (do not reset passwords for users created after seed).
 -- Also widen tokens.token for full JWT refresh tokens.
 
 UPDATE users

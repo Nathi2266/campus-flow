@@ -1,5 +1,6 @@
 package com.campusflow.service;
 
+import com.campusflow.domain.AuditLog;
 import com.campusflow.domain.Course;
 import com.campusflow.domain.Enrollment;
 import com.campusflow.domain.Student;
@@ -12,6 +13,7 @@ import com.campusflow.dto.response.EnrollmentResponse;
 import com.campusflow.dto.response.PagedResponse;
 import com.campusflow.exception.NotFoundException;
 import com.campusflow.exception.ValidationException;
+import com.campusflow.repository.AuditLogRepository;
 import com.campusflow.repository.CourseRepository;
 import com.campusflow.repository.EnrollmentRepository;
 import com.campusflow.repository.StudentRepository;
@@ -23,6 +25,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+import java.util.Map;
 
 /**
  * Service class for Enrollment management.
@@ -39,6 +45,7 @@ public class EnrollmentService {
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
     private final SecurityUtils securityUtils;
+    private final AuditLogRepository auditLogRepository;
 
     public EnrollmentResponse enrollStudent(EnrollmentCreateRequest request) {
         User currentUser = securityUtils.getCurrentUser();
@@ -119,7 +126,15 @@ public class EnrollmentService {
             }
         }
 
-        return toResponse(enrollmentRepository.save(enrollment));
+        Enrollment saved = enrollmentRepository.save(enrollment);
+        auditLogRepository.save(AuditLog.builder()
+            .user(currentUser)
+            .action("GRADE_UPDATE")
+            .entityType("ENROLLMENT")
+            .entityId(saved.getId())
+            .details(Map.of("grade", grade))
+            .build());
+        return toResponse(saved);
     }
 
     public void dropCourse(Long id) {
@@ -202,6 +217,19 @@ public class EnrollmentService {
             if (!ownStudent.getId().equals(studentId)) {
                 throw new ValidationException("Cannot view another student's enrollments", "studentId", "FORBIDDEN");
             }
+        } else if (currentUser.getRole() == UserRole.LECTURER) {
+            // Lecturers may only see enrollments for their own courses
+            Pageable pageable = createPageable(page, size, sort);
+            EnrollmentStatus enrollmentStatus = parseStatus(status);
+            Page<Enrollment> ownCoursePage = enrollmentStatus != null
+                ? enrollmentRepository.findByCourseLecturerIdAndStatus(
+                    currentUser.getId(), enrollmentStatus, pageable)
+                : enrollmentRepository.findByCourseLecturerId(currentUser.getId(), pageable);
+            List<Enrollment> filtered = ownCoursePage.getContent().stream()
+                .filter(e -> e.getStudent().getId().equals(studentId))
+                .toList();
+            return toPagedResponse(new org.springframework.data.domain.PageImpl<>(
+                filtered, pageable, filtered.size()));
         }
 
         Pageable pageable = createPageable(page, size, sort);
@@ -216,6 +244,10 @@ public class EnrollmentService {
     @Transactional(readOnly = true)
     public PagedResponse<EnrollmentResponse> listCourseEnrollments(Long courseId, Integer page, Integer size, String sort) {
         User currentUser = securityUtils.getCurrentUser();
+        if (currentUser.getRole() == UserRole.STUDENT) {
+            throw new ValidationException(
+                "Students cannot view course rosters", "courseId", "FORBIDDEN");
+        }
         if (currentUser.getRole() == UserRole.LECTURER) {
             Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new NotFoundException("Course not found", "courseId"));
