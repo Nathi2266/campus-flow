@@ -2,7 +2,15 @@ import { Box, TableContainer } from '@chakra-ui/react'
 import type { ReactNode } from 'react'
 import { Surface } from '@/components/ui'
 
-export function DataTableShell({ children, toolbar }: { children: ReactNode; toolbar?: ReactNode }) {
+export function DataTableShell({
+  children,
+  toolbar,
+  footer,
+}: {
+  children: ReactNode
+  toolbar?: ReactNode
+  footer?: ReactNode
+}) {
   return (
     <Surface overflow="hidden">
       {toolbar ? (
@@ -13,6 +21,7 @@ export function DataTableShell({ children, toolbar }: { children: ReactNode; too
       <TableContainer>
         <Box sx={{ table: { minW: 'full' } }}>{children}</Box>
       </TableContainer>
+      {footer}
     </Surface>
   )
 }

@@ -20,53 +20,99 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useState } from 'react'
+import { useForm, type Resolver } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FiPlus, FiPower, FiTrash2 } from 'react-icons/fi'
+import { FiEdit2, FiPlus, FiPower, FiTrash2 } from 'react-icons/fi'
 import {
   activateCourse,
   createCourse,
   deactivateCourse,
   deleteCourse,
   listCourses,
+  listDepartments,
+  listUsers,
+  updateCourse,
 } from '@/api/resources'
 import { getErrorMessage } from '@/api/client'
 import { ActiveBadge } from '@/components/StatusBadge'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '@/components/feedback'
-import { FormStack, NumberField, TextAreaField, TextField } from '@/components/FormFields'
+import { FormStack, SelectField, TextAreaField, TextField } from '@/components/FormFields'
 import { DataTableShell } from '@/components/DataTableShell'
+import { PaginationControls } from '@/components/PaginationControls'
+import { useAuthStore } from '@/features/auth/authStore'
+import type { Course } from '@/types'
 
-const schema = z.object({
+const PAGE_SIZE = 20
+
+const emptyToUndefined = (val: unknown) =>
+  val === '' || val === null || val === undefined || (typeof val === 'number' && Number.isNaN(val))
+    ? undefined
+    : val
+
+const createSchema = z.object({
   code: z.string().min(1),
   name: z.string().min(1),
   description: z.string().optional(),
   credits: z.number().int().positive(),
   departmentId: z.number().int().positive(),
-  lecturerId: z.number().int().positive().optional(),
+  lecturerId: z.preprocess(emptyToUndefined, z.number().int().positive().optional()),
   maxCapacity: z.number().int().positive(),
 })
 
-type FormValues = z.infer<typeof schema>
+const editSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  credits: z.number().int().positive(),
+  lecturerId: z.preprocess(emptyToUndefined, z.number().int().positive().optional()),
+  maxCapacity: z.number().int().positive(),
+})
+
+type CreateValues = z.infer<typeof createSchema>
+type EditValues = z.infer<typeof editSchema>
 
 export function CoursesPage() {
   const toast = useToast()
   const queryClient = useQueryClient()
-  const { isOpen, onOpen, onClose } = useDisclosure()
+  const user = useAuthStore((s) => s.user)
+  const isAdmin = useAuthStore((s) => s.hasRole('ADMIN'))
+  const isLecturer = useAuthStore((s) => s.hasRole('LECTURER'))
+  const isStudent = useAuthStore((s) => s.hasRole('STUDENT'))
+  const createModal = useDisclosure()
+  const editModal = useDisclosure()
+  const [editing, setEditing] = useState<Course | null>(null)
+  const [page, setPage] = useState(0)
+
   const query = useQuery({
-    queryKey: ['courses'],
-    queryFn: () => listCourses({ page: 0, size: 50 }),
+    queryKey: ['courses', isStudent ? 'active' : 'all', page],
+    queryFn: () =>
+      listCourses({
+        page,
+        size: PAGE_SIZE,
+        ...(isStudent ? { active: true } : {}),
+      }),
   })
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const departments = useQuery({
+    queryKey: ['departments'],
+    queryFn: listDepartments,
+    enabled: isAdmin,
+  })
+
+  const lecturers = useQuery({
+    queryKey: ['users', 'LECTURER'],
+    queryFn: () => listUsers({ page: 0, size: 100, role: 'LECTURER' }),
+    enabled: isAdmin,
+  })
+
+  const createForm = useForm<CreateValues>({
+    resolver: zodResolver(createSchema) as Resolver<CreateValues>,
     defaultValues: { maxCapacity: 30, credits: 3 },
+  })
+
+  const editForm = useForm<EditValues>({
+    resolver: zodResolver(editSchema) as Resolver<EditValues>,
   })
 
   const invalidate = async () => {
@@ -78,22 +124,59 @@ export function CoursesPage() {
     onSuccess: async () => {
       await invalidate()
       toast({ title: 'Course created', status: 'success' })
-      reset({ maxCapacity: 30, credits: 3 })
-      onClose()
+      createForm.reset({ maxCapacity: 30, credits: 3 })
+      createModal.onClose()
     },
     onError: (error) => toast({ title: getErrorMessage(error), status: 'error' }),
   })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: EditValues }) => updateCourse(id, payload),
+    onSuccess: async () => {
+      await invalidate()
+      toast({ title: 'Course updated', status: 'success' })
+      editModal.onClose()
+      setEditing(null)
+    },
+    onError: (error) => toast({ title: getErrorMessage(error), status: 'error' }),
+  })
+
+  function canEditCourse(course: Course) {
+    if (isAdmin) return true
+    if (isLecturer && user?.id != null && course.lecturerId === user.id) return true
+    return false
+  }
+
+  function openEdit(course: Course) {
+    setEditing(course)
+    editForm.reset({
+      name: course.name,
+      description: course.description ?? '',
+      credits: course.credits,
+      lecturerId: course.lecturerId ?? undefined,
+      maxCapacity: course.maxCapacity,
+    })
+    editModal.onOpen()
+  }
+
+  const description = isStudent
+    ? 'Browse the active course catalogue.'
+    : isLecturer
+      ? 'View your courses and update metadata on courses assigned to you.'
+      : 'Manage course catalogue, capacity, and activation.'
 
   return (
     <>
       <PageHeader
         eyebrow="Catalogue"
         title="Courses"
-        description="Manage course catalogue, capacity, and activation."
+        description={description}
         actions={
-          <Button leftIcon={<FiPlus />} onClick={onOpen}>
-            Add course
-          </Button>
+          isAdmin ? (
+            <Button leftIcon={<FiPlus />} onClick={createModal.onOpen}>
+              Add course
+            </Button>
+          ) : undefined
         }
       />
 
@@ -102,7 +185,14 @@ export function CoursesPage() {
         <ErrorState message={getErrorMessage(query.error)} onRetry={() => query.refetch()} />
       ) : null}
       {query.data && !query.data.content.length ? (
-        <EmptyState title="No courses" description="Create a course to begin enrollments." />
+        <EmptyState
+          title="No courses"
+          description={
+            isStudent
+              ? 'No active courses are available yet.'
+              : 'Create a course to begin enrollments.'
+          }
+        />
       ) : null}
       {query.data && query.data.content.length > 0 ? (
         <DataTableShell
@@ -111,16 +201,29 @@ export function CoursesPage() {
               {query.data.totalElements} course{query.data.totalElements === 1 ? '' : 's'}
             </Text>
           }
+          footer={
+            <PaginationControls
+              page={page}
+              totalPages={query.data.totalPages ?? 0}
+              totalElements={query.data.totalElements}
+              onPageChange={setPage}
+              isLoading={query.isFetching}
+            />
+          }
         >
           <Table variant="simple">
+            <caption style={{ captionSide: 'top', padding: '0.75rem 1rem', textAlign: 'left' }}>
+              Course catalogue
+            </caption>
             <Thead>
               <Tr>
-                <Th>Code</Th>
-                <Th>Name</Th>
-                <Th>Credits</Th>
-                <Th>Capacity</Th>
-                <Th>Status</Th>
-                <Th aria-label="Actions" />
+                <Th scope="col">Code</Th>
+                <Th scope="col">Name</Th>
+                <Th scope="col">Credits</Th>
+                <Th scope="col">Capacity</Th>
+                <Th scope="col">Department</Th>
+                <Th scope="col">Status</Th>
+                {!isStudent ? <Th scope="col">Actions</Th> : null}
               </Tr>
             </Thead>
             <Tbody>
@@ -134,44 +237,60 @@ export function CoursesPage() {
                   <Td>
                     {course.enrolledCount ?? 0}/{course.maxCapacity}
                   </Td>
+                  <Td>{course.departmentName ?? course.departmentId}</Td>
                   <Td>
                     <ActiveBadge active={course.active} />
                   </Td>
-                  <Td>
-                    <HStack>
-                      <IconButton
-                        aria-label={course.active ? 'Deactivate course' : 'Activate course'}
-                        icon={<FiPower />}
-                        size="sm"
-                        variant="ghost"
-                        onClick={async () => {
-                          try {
-                            if (course.active) await deactivateCourse(course.id)
-                            else await activateCourse(course.id)
-                            await invalidate()
-                          } catch (error) {
-                            toast({ title: getErrorMessage(error), status: 'error' })
-                          }
-                        }}
-                      />
-                      <IconButton
-                        aria-label={`Delete ${course.code}`}
-                        icon={<FiTrash2 />}
-                        size="sm"
-                        variant="ghost"
-                        colorScheme="red"
-                        onClick={async () => {
-                          try {
-                            await deleteCourse(course.id)
-                            await invalidate()
-                            toast({ title: 'Course deleted', status: 'success' })
-                          } catch (error) {
-                            toast({ title: getErrorMessage(error), status: 'error' })
-                          }
-                        }}
-                      />
-                    </HStack>
-                  </Td>
+                  {!isStudent ? (
+                    <Td>
+                      <HStack>
+                        {canEditCourse(course) ? (
+                          <IconButton
+                            aria-label={`Edit ${course.code}`}
+                            icon={<FiEdit2 />}
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openEdit(course)}
+                          />
+                        ) : null}
+                        {isAdmin ? (
+                          <>
+                            <IconButton
+                              aria-label={course.active ? 'Deactivate course' : 'Activate course'}
+                              icon={<FiPower />}
+                              size="sm"
+                              variant="ghost"
+                              onClick={async () => {
+                                try {
+                                  if (course.active) await deactivateCourse(course.id)
+                                  else await activateCourse(course.id)
+                                  await invalidate()
+                                } catch (error) {
+                                  toast({ title: getErrorMessage(error), status: 'error' })
+                                }
+                              }}
+                            />
+                            <IconButton
+                              aria-label={`Delete ${course.code}`}
+                              icon={<FiTrash2 />}
+                              size="sm"
+                              variant="ghost"
+                              colorScheme="red"
+                              onClick={async () => {
+                                try {
+                                  await deleteCourse(course.id)
+                                  await invalidate()
+                                  toast({ title: 'Course deleted', status: 'success' })
+                                } catch (error) {
+                                  toast({ title: getErrorMessage(error), status: 'error' })
+                                }
+                              }}
+                            />
+                          </>
+                        ) : null}
+                      </HStack>
+                    </Td>
+                  ) : null}
                 </Tr>
               ))}
             </Tbody>
@@ -179,29 +298,183 @@ export function CoursesPage() {
         </DataTableShell>
       ) : null}
 
-      <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
+      <Modal isOpen={createModal.isOpen} onClose={createModal.onClose} size="lg" isCentered>
         <ModalOverlay backdropFilter="blur(4px)" />
-        <ModalContent as="form" onSubmit={handleSubmit((values) => createMutation.mutate(values))}>
+        <ModalContent
+          as="form"
+          onSubmit={createForm.handleSubmit((values) => createMutation.mutate(values))}
+        >
           <ModalHeader fontFamily="heading">Add course</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormStack>
-              <TextField name="code" label="Code" register={register} error={errors.code?.message} isRequired />
-              <TextField name="name" label="Name" register={register} error={errors.name?.message} isRequired />
-              <TextAreaField name="description" label="Description" register={register} error={errors.description?.message} />
-              <NumberField name="credits" label="Credits" control={control} error={errors.credits?.message} isRequired min={1} />
-              <NumberField name="departmentId" label="Department ID" control={control} error={errors.departmentId?.message} isRequired min={1} />
-              <NumberField name="lecturerId" label="Lecturer user ID" control={control} error={errors.lecturerId?.message} min={1} />
-              <NumberField name="maxCapacity" label="Max capacity" control={control} error={errors.maxCapacity?.message} isRequired min={1} />
+              <TextField
+                name="code"
+                label="Code"
+                register={createForm.register}
+                error={createForm.formState.errors.code?.message}
+                isRequired
+              />
+              <TextField
+                name="name"
+                label="Name"
+                register={createForm.register}
+                error={createForm.formState.errors.name?.message}
+                isRequired
+              />
+              <TextAreaField
+                name="description"
+                label="Description"
+                register={createForm.register}
+                error={createForm.formState.errors.description?.message}
+              />
+              <TextField
+                name="credits"
+                label="Credits"
+                type="number"
+                register={createForm.register}
+                error={createForm.formState.errors.credits?.message}
+                isRequired
+                min={1}
+              />
+              <SelectField
+                name="departmentId"
+                label="Department"
+                register={createForm.register}
+                error={createForm.formState.errors.departmentId?.message}
+                isRequired
+                valueAsNumber
+                placeholder="Select department"
+              >
+                {(departments.data ?? []).map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </SelectField>
+              <SelectField
+                name="lecturerId"
+                label="Lecturer"
+                register={createForm.register}
+                error={createForm.formState.errors.lecturerId?.message}
+                valueAsNumber
+                placeholder="Optional lecturer"
+              >
+                <option value="">None</option>
+                {(lecturers.data?.content ?? []).map((lecturer) => (
+                  <option key={lecturer.id} value={lecturer.id}>
+                    {lecturer.firstName} {lecturer.lastName} ({lecturer.email})
+                  </option>
+                ))}
+              </SelectField>
+              <TextField
+                name="maxCapacity"
+                label="Max capacity"
+                type="number"
+                register={createForm.register}
+                error={createForm.formState.errors.maxCapacity?.message}
+                isRequired
+                min={1}
+              />
             </FormStack>
           </ModalBody>
           <ModalFooter>
             <HStack>
-              <Button variant="ghost" onClick={onClose}>
+              <Button variant="ghost" onClick={createModal.onClose}>
                 Cancel
               </Button>
-              <Button type="submit" isLoading={isSubmitting || createMutation.isPending}>
+              <Button type="submit" isLoading={createMutation.isPending}>
                 Create
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={editModal.isOpen}
+        onClose={() => {
+          editModal.onClose()
+          setEditing(null)
+        }}
+        size="lg"
+        isCentered
+      >
+        <ModalOverlay backdropFilter="blur(4px)" />
+        <ModalContent
+          as="form"
+          onSubmit={editForm.handleSubmit((values) => {
+            if (!editing) return
+            updateMutation.mutate({ id: editing.id, payload: values })
+          })}
+        >
+          <ModalHeader fontFamily="heading">Edit course{editing ? `: ${editing.code}` : ''}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormStack>
+              <TextField
+                name="name"
+                label="Name"
+                register={editForm.register}
+                error={editForm.formState.errors.name?.message}
+                isRequired
+              />
+              <TextAreaField
+                name="description"
+                label="Description"
+                register={editForm.register}
+                error={editForm.formState.errors.description?.message}
+              />
+              <TextField
+                name="credits"
+                label="Credits"
+                type="number"
+                register={editForm.register}
+                error={editForm.formState.errors.credits?.message}
+                isRequired
+                min={1}
+              />
+              {isAdmin ? (
+                <SelectField
+                  name="lecturerId"
+                  label="Lecturer"
+                  register={editForm.register}
+                  error={editForm.formState.errors.lecturerId?.message}
+                  valueAsNumber
+                  placeholder="Optional lecturer"
+                >
+                  <option value="">None</option>
+                  {(lecturers.data?.content ?? []).map((lecturer) => (
+                    <option key={lecturer.id} value={lecturer.id}>
+                      {lecturer.firstName} {lecturer.lastName} ({lecturer.email})
+                    </option>
+                  ))}
+                </SelectField>
+              ) : null}
+              <TextField
+                name="maxCapacity"
+                label="Max capacity"
+                type="number"
+                register={editForm.register}
+                error={editForm.formState.errors.maxCapacity?.message}
+                isRequired
+                min={1}
+              />
+            </FormStack>
+          </ModalBody>
+          <ModalFooter>
+            <HStack>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  editModal.onClose()
+                  setEditing(null)
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" isLoading={updateMutation.isPending}>
+                Save
               </Button>
             </HStack>
           </ModalFooter>

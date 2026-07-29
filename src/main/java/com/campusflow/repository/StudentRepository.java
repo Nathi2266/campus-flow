@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 /**
@@ -34,9 +35,28 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     Page<Student> findByUserDepartmentIdAndAcademicStatus(Long departmentId, AcademicStatus status, Pageable pageable);
 
+    long countByAcademicStatus(AcademicStatus status);
+
+    long countByUserDepartmentId(Long departmentId);
+
+    long countByUserDepartmentIdAndAcademicStatus(Long departmentId, AcademicStatus status);
+
+    @Query("SELECT AVG(s.gpa) FROM Student s WHERE s.gpa IS NOT NULL")
+    Optional<BigDecimal> findAverageGpa();
+
     @Query("SELECT s FROM Student s WHERE s.user.department.id = :departmentId " +
-           "AND (s.firstName LIKE %:search% OR s.lastName LIKE %:search% OR s.studentNumber LIKE %:search%)")
+           "AND (LOWER(s.firstName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(s.lastName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(s.studentNumber) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(s.user.email) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Student> searchByDepartment(@Param("departmentId") Long departmentId,
                                      @Param("search") String search,
                                      Pageable pageable);
+
+    @Query("SELECT s FROM Student s WHERE " +
+           "LOWER(s.firstName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(s.lastName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(s.studentNumber) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(s.user.email) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Student> searchAll(@Param("search") String search, Pageable pageable);
 }

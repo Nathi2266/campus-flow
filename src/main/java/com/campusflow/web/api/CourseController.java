@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -29,6 +30,7 @@ public class CourseController {
     private final CourseService courseService;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "List courses", description = "Retrieve paginated list of courses")
     public ResponseEntity<PagedResponse<CourseResponse>> listCourses(
         @Parameter(description = "Page number") @RequestParam(defaultValue = "0") Integer page,
@@ -43,6 +45,7 @@ public class CourseController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get course by ID", description = "Retrieve detailed information about a course")
     public ResponseEntity<CourseResponse> getCourse(
         @Parameter(description = "Course ID") @PathVariable Long id
@@ -52,6 +55,7 @@ public class CourseController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create course", description = "Create a new course")
     public ResponseEntity<CourseResponse> createCourse(
         @Valid @RequestBody CourseCreateRequest request
@@ -61,6 +65,7 @@ public class CourseController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
     @Operation(summary = "Update course", description = "Update course information")
     public ResponseEntity<CourseResponse> updateCourse(
         @Parameter(description = "Course ID") @PathVariable Long id,
@@ -71,6 +76,7 @@ public class CourseController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete course", description = "Soft delete a course")
     public ResponseEntity<Void> deleteCourse(
         @Parameter(description = "Course ID") @PathVariable Long id
@@ -80,6 +86,7 @@ public class CourseController {
     }
 
     @PostMapping("/{id}/activate")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Activate course", description = "Activate a course for enrollment")
     public ResponseEntity<CourseResponse> activateCourse(
         @Parameter(description = "Course ID") @PathVariable Long id
@@ -89,6 +96,7 @@ public class CourseController {
     }
 
     @PostMapping("/{id}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Deactivate course", description = "Deactivate a course to prevent new enrollments")
     public ResponseEntity<CourseResponse> deactivateCourse(
         @Parameter(description = "Course ID") @PathVariable Long id

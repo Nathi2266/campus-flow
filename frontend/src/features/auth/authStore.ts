@@ -11,6 +11,7 @@ interface AuthState {
     refreshToken: string
     user: User
   }) => void
+  updateUser: (user: User) => void
   clearSession: () => void
   isAuthenticated: () => boolean
   hasRole: (...roles: UserRole[]) => boolean
@@ -24,6 +25,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       setSession: ({ accessToken, refreshToken, user }) =>
         set({ accessToken, refreshToken, user }),
+      updateUser: (user) => set({ user }),
       clearSession: () => set({ accessToken: null, refreshToken: null, user: null }),
       isAuthenticated: () => Boolean(get().accessToken && get().user),
       hasRole: (...roles) => {

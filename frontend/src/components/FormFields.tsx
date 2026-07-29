@@ -28,13 +28,20 @@ export function TextField<T extends FieldValues>({
   register,
   error,
   isRequired,
+  type,
   ...rest
 }: FieldProps<T> & InputProps) {
   const id = String(name)
+  const isNumber = type === 'number'
   return (
     <FormControl isInvalid={Boolean(error)} isRequired={isRequired}>
       <FormLabel htmlFor={id}>{label}</FormLabel>
-      <Input id={id} {...register(name)} {...rest} />
+      <Input
+        id={id}
+        type={type}
+        {...register(name, isNumber ? { valueAsNumber: true } : undefined)}
+        {...rest}
+      />
       <FormErrorMessage>{error}</FormErrorMessage>
     </FormControl>
   )
@@ -47,13 +54,18 @@ export function SelectField<T extends FieldValues>({
   error,
   isRequired,
   children,
+  valueAsNumber,
   ...rest
-}: FieldProps<T> & SelectProps & { children: ReactNode }) {
+}: FieldProps<T> & SelectProps & { children: ReactNode; valueAsNumber?: boolean }) {
   const id = String(name)
   return (
     <FormControl isInvalid={Boolean(error)} isRequired={isRequired}>
       <FormLabel htmlFor={id}>{label}</FormLabel>
-      <Select id={id} {...register(name)} {...rest}>
+      <Select
+        id={id}
+        {...register(name, valueAsNumber ? { valueAsNumber: true } : undefined)}
+        {...rest}
+      >
         {children}
       </Select>
       <FormErrorMessage>{error}</FormErrorMessage>

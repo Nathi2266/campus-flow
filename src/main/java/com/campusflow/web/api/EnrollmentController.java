@@ -1,6 +1,7 @@
 package com.campusflow.web.api;
 
 import com.campusflow.dto.request.EnrollmentCreateRequest;
+import com.campusflow.dto.request.GradeUpdateRequest;
 import com.campusflow.dto.response.EnrollmentResponse;
 import com.campusflow.dto.response.PagedResponse;
 import com.campusflow.service.EnrollmentService;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -28,6 +30,7 @@ public class EnrollmentController {
     private final EnrollmentService enrollmentService;
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "List enrollments", description = "Retrieve paginated list of enrollments")
     public ResponseEntity<PagedResponse<EnrollmentResponse>> listEnrollments(
         @Parameter(description = "Page number") @RequestParam(defaultValue = "0") Integer page,
@@ -42,6 +45,7 @@ public class EnrollmentController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get enrollment by ID", description = "Retrieve detailed information about an enrollment")
     public ResponseEntity<EnrollmentResponse> getEnrollment(
         @Parameter(description = "Enrollment ID") @PathVariable Long id
@@ -51,6 +55,7 @@ public class EnrollmentController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Enroll student", description = "Enroll a student in a course")
     public ResponseEntity<EnrollmentResponse> enrollStudent(
         @Valid @RequestBody EnrollmentCreateRequest request
@@ -59,7 +64,18 @@ public class EnrollmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PatchMapping("/{id}/grade")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
+    @Operation(summary = "Update grade", description = "Set or change enrollment grade")
+    public ResponseEntity<EnrollmentResponse> updateGrade(
+        @Parameter(description = "Enrollment ID") @PathVariable Long id,
+        @Valid @RequestBody GradeUpdateRequest request
+    ) {
+        return ResponseEntity.ok(enrollmentService.updateGrade(id, request));
+    }
+
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Drop course", description = "Drop a course for a student")
     public ResponseEntity<Void> dropCourse(
         @Parameter(description = "Enrollment ID") @PathVariable Long id
@@ -69,15 +85,17 @@ public class EnrollmentController {
     }
 
     @GetMapping("/student/{studentId}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get student enrollments", description = "Retrieve enrollments for a student")
     public ResponseEntity<PagedResponse<EnrollmentResponse>> getStudentEnrollments(
         @Parameter(description = "Student ID") @PathVariable Long studentId
     ) {
-        PagedResponse<EnrollmentResponse> response = enrollmentService.listStudentEnrollments(studentId, 0, 20, null);
+        PagedResponse<EnrollmentResponse> response = enrollmentService.listStudentEnrollments(studentId, 0, 20, null, null);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/course/{courseId}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get course enrollments", description = "Retrieve enrollments for a course")
     public ResponseEntity<PagedResponse<EnrollmentResponse>> getCourseEnrollments(
         @Parameter(description = "Course ID") @PathVariable Long courseId

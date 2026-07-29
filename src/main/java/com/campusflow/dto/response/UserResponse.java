@@ -21,4 +21,6 @@ public class UserResponse {
     private String role;
     private Long departmentId;
     private String phoneNumber;
+    /** Linked student profile id when role is STUDENT; otherwise null. */
+    private Long studentId;
 }

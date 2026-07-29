@@ -32,9 +32,14 @@ public class JwtTokenProvider {
     private final long refreshTokenExpirationMs;
 
     public JwtTokenProvider(
-            @Value("${jwt.secret:campusflow-secret-key-2024-change-in-production}") String secret,
+            @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-token-expiration:900000}") long accessTokenExpirationMs,
             @Value("${jwt.refresh-token-expiration:604800000}") long refreshTokenExpirationMs) {
+        if (secret == null || secret.isBlank() || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException(
+                "jwt.secret must be set and at least 32 bytes (configure JWT_SECRET / jwt.secret)"
+            );
+        }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpirationMs = accessTokenExpirationMs;
         this.refreshTokenExpirationMs = refreshTokenExpirationMs;
@@ -103,6 +108,14 @@ public class JwtTokenProvider {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public Instant getExpirationFromToken(String token) {
+        return parseClaims(token).getExpiration().toInstant();
+    }
+
+    public long getRefreshTokenExpirationMs() {
+        return refreshTokenExpirationMs;
     }
 
     private Claims parseClaims(String token) {

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -25,11 +26,25 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     Page<Course> findByDepartmentId(Long departmentId, Pageable pageable);
 
+    List<Course> findByDepartmentId(Long departmentId);
+
     Page<Course> findByLecturerId(Long lecturerId, Pageable pageable);
+
+    Page<Course> findByLecturerIdAndActive(Long lecturerId, Boolean active, Pageable pageable);
 
     Page<Course> findByActive(Boolean active, Pageable pageable);
 
     Page<Course> findByDepartmentIdAndActive(Long departmentId, Boolean active, Pageable pageable);
+
+    List<Course> findByActiveTrue();
+
+    List<Course> findByActiveFalse();
+
+    List<Course> findByDepartmentIdAndActiveTrue(Long departmentId);
+
+    List<Course> findByDepartmentIdAndActiveFalse(Long departmentId);
+
+    long countByActiveTrue();
 
     @Query("SELECT c FROM Course c LEFT JOIN FETCH c.enrollments WHERE c.id = :id")
     Optional<Course> findByIdWithEnrollments(@Param("id") Long id);

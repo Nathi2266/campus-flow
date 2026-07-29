@@ -23,11 +23,14 @@ import {
   FiBell,
   FiBook,
   FiClipboard,
+  FiGrid,
   FiHome,
   FiLogOut,
   FiMenu,
   FiSettings,
+  FiShield,
   FiUser,
+  FiUserCheck,
   FiUsers,
 } from 'react-icons/fi'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -48,9 +51,12 @@ interface NavItem {
 const navItems: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: <FiHome /> },
   { to: '/students', label: 'Students', icon: <FiUsers />, roles: ['ADMIN', 'LECTURER'] },
-  { to: '/courses', label: 'Courses', icon: <FiBook />, roles: ['ADMIN', 'LECTURER'] },
+  { to: '/courses', label: 'Courses', icon: <FiBook /> },
   { to: '/enrollments', label: 'Enrollments', icon: <FiClipboard /> },
+  { to: '/departments', label: 'Departments', icon: <FiGrid />, roles: ['ADMIN'] },
+  { to: '/users', label: 'Users', icon: <FiUserCheck />, roles: ['ADMIN'] },
   { to: '/reports', label: 'Reports', icon: <FiBarChart2 />, roles: ['ADMIN', 'LECTURER'] },
+  { to: '/audit', label: 'Audit', icon: <FiShield />, roles: ['ADMIN'] },
   { to: '/notifications', label: 'Notifications', icon: <FiBell /> },
   { to: '/profile', label: 'Profile', icon: <FiUser /> },
   { to: '/settings', label: 'Settings', icon: <FiSettings /> },
@@ -104,12 +110,15 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
 export function AppLayout() {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const user = useAuthStore((s) => s.user)
+  const refreshToken = useAuthStore((s) => s.refreshToken)
   const clearSession = useAuthStore((s) => s.clearSession)
   const navigate = useNavigate()
   const location = useLocation()
 
   async function handleLogout() {
-    await apiLogout()
+    if (refreshToken) {
+      await apiLogout(refreshToken)
+    }
     clearSession()
     navigate('/login', { replace: true })
   }

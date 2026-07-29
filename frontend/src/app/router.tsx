@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '@/app/ProtectedRoute'
 import { AppLayout } from '@/layouts/AppLayout'
 import { AuthLayout } from '@/layouts/AuthLayout'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { LoadingState } from '@/components/feedback'
 
 const LoginPage = lazy(() => import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage })))
@@ -24,6 +25,11 @@ const EnrollmentsPage = lazy(() =>
 const ReportsPage = lazy(() =>
   import('@/pages/ReportsPage').then((m) => ({ default: m.ReportsPage })),
 )
+const DepartmentsPage = lazy(() =>
+  import('@/pages/DepartmentsPage').then((m) => ({ default: m.DepartmentsPage })),
+)
+const UsersPage = lazy(() => import('@/pages/UsersPage').then((m) => ({ default: m.UsersPage })))
+const AuditPage = lazy(() => import('@/pages/AuditPage').then((m) => ({ default: m.AuditPage })))
 const ProfilePage = lazy(() =>
   import('@/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 )
@@ -44,42 +50,34 @@ function Lazy({ children }: { children: React.ReactNode }) {
 export function AppRouter() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<AuthLayout />}>
-          <Route
-            path="/login"
-            element={
-              <Lazy>
-                <LoginPage />
-              </Lazy>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <Lazy>
-                <RegisterPage />
-              </Lazy>
-            }
-          />
-        </Route>
-
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AppLayout />}>
+      <ErrorBoundary>
+        <Routes>
+          <Route element={<AuthLayout />}>
             <Route
-              index
+              path="/login"
               element={
                 <Lazy>
-                  <DashboardPage />
+                  <LoginPage />
                 </Lazy>
               }
             />
-            <Route element={<ProtectedRoute roles={['ADMIN', 'LECTURER']} />}>
+            <Route
+              path="/register"
+              element={
+                <Lazy>
+                  <RegisterPage />
+                </Lazy>
+              }
+            />
+          </Route>
+
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
               <Route
-                path="students"
+                index
                 element={
                   <Lazy>
-                    <StudentsPage />
+                    <DashboardPage />
                   </Lazy>
                 }
               />
@@ -92,59 +90,95 @@ export function AppRouter() {
                 }
               />
               <Route
-                path="reports"
+                path="enrollments"
                 element={
                   <Lazy>
-                    <ReportsPage />
+                    <EnrollmentsPage />
+                  </Lazy>
+                }
+              />
+              <Route element={<ProtectedRoute roles={['ADMIN', 'LECTURER']} />}>
+                <Route
+                  path="students"
+                  element={
+                    <Lazy>
+                      <StudentsPage />
+                    </Lazy>
+                  }
+                />
+                <Route
+                  path="reports"
+                  element={
+                    <Lazy>
+                      <ReportsPage />
+                    </Lazy>
+                  }
+                />
+              </Route>
+              <Route element={<ProtectedRoute roles={['ADMIN']} />}>
+                <Route
+                  path="departments"
+                  element={
+                    <Lazy>
+                      <DepartmentsPage />
+                    </Lazy>
+                  }
+                />
+                <Route
+                  path="users"
+                  element={
+                    <Lazy>
+                      <UsersPage />
+                    </Lazy>
+                  }
+                />
+                <Route
+                  path="audit"
+                  element={
+                    <Lazy>
+                      <AuditPage />
+                    </Lazy>
+                  }
+                />
+              </Route>
+              <Route
+                path="notifications"
+                element={
+                  <Lazy>
+                    <NotificationsPage />
+                  </Lazy>
+                }
+              />
+              <Route
+                path="profile"
+                element={
+                  <Lazy>
+                    <ProfilePage />
+                  </Lazy>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <Lazy>
+                    <SettingsPage />
                   </Lazy>
                 }
               />
             </Route>
-            <Route
-              path="enrollments"
-              element={
-                <Lazy>
-                  <EnrollmentsPage />
-                </Lazy>
-              }
-            />
-            <Route
-              path="notifications"
-              element={
-                <Lazy>
-                  <NotificationsPage />
-                </Lazy>
-              }
-            />
-            <Route
-              path="profile"
-              element={
-                <Lazy>
-                  <ProfilePage />
-                </Lazy>
-              }
-            />
-            <Route
-              path="settings"
-              element={
-                <Lazy>
-                  <SettingsPage />
-                </Lazy>
-              }
-            />
           </Route>
-        </Route>
 
-        <Route
-          path="/404"
-          element={
-            <Lazy>
-              <NotFoundPage />
-            </Lazy>
-          }
-        />
-        <Route path="*" element={<Navigate to="/404" replace />} />
-      </Routes>
+          <Route
+            path="/404"
+            element={
+              <Lazy>
+                <NotFoundPage />
+              </Lazy>
+            }
+          />
+          <Route path="*" element={<Navigate to="/404" replace />} />
+        </Routes>
+      </ErrorBoundary>
     </BrowserRouter>
   )
 }

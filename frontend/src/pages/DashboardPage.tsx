@@ -105,7 +105,7 @@ function HStackLike({
 function LecturerDashboard() {
   const courses = useQuery({
     queryKey: ['courses', 'lecturer-dash'],
-    queryFn: () => listCourses({ page: 0, size: 10, active: true }),
+    queryFn: () => listCourses({ page: 0, size: 10 }),
   })
 
   if (courses.isLoading) return <LoadingState />
@@ -120,10 +120,10 @@ function LecturerDashboard() {
       <PageHeader
         eyebrow="Lecturer"
         title="Your courses"
-        description="Active courses and enrollment capacity."
+        description="Courses assigned to you with enrollment capacity (API-scoped)."
       />
       {!list.length ? (
-        <EmptyState title="No active courses" description="Courses assigned to you will appear here." />
+        <EmptyState title="No courses assigned" description="Courses assigned to you will appear here." />
       ) : (
         <Stagger>
           <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={5}>
@@ -147,7 +147,14 @@ function LecturerDashboard() {
                     <Text fontSize="sm" color="gray.500" mb={4}>
                       {course.credits} credits · {enrolled}/{course.maxCapacity} enrolled
                     </Text>
-                    <Progress value={pct} size="sm" colorScheme="brand" borderRadius="full" bg="canvas.200" />
+                    <Progress
+                      value={pct}
+                      size="sm"
+                      colorScheme="brand"
+                      borderRadius="full"
+                      bg="canvas.200"
+                      aria-label={`${course.code} capacity ${pct.toFixed(0)} percent`}
+                    />
                   </Surface>
                 </StaggerItem>
               )
@@ -171,7 +178,7 @@ function StudentDashboard() {
     return (
       <ErrorState
         title="Enrollment list unavailable"
-        message={getErrorMessage(enrollments.error, 'The enrollments list endpoint may still be a stub.')}
+        message={getErrorMessage(enrollments.error)}
         onRetry={() => enrollments.refetch()}
       />
     )
@@ -184,10 +191,13 @@ function StudentDashboard() {
       <PageHeader
         eyebrow="Student"
         title={`Hello, ${user?.firstName ?? 'there'}`}
-        description="Your current course enrollments."
+        description="Your current course enrollments, grades, and status."
       />
       {!mine.length ? (
-        <EmptyState title="No enrollments" description="Ask an administrator to enroll you in courses." />
+        <EmptyState
+          title="No enrollments yet"
+          description="Browse Courses for the active catalogue, then self-enroll from Enrollments."
+        />
       ) : (
         <Stagger>
           <SimpleGrid columns={{ base: 1, md: 2, xl: 3 }} spacing={5}>
@@ -205,11 +215,12 @@ function StudentDashboard() {
                     </Box>
                     <EnrollmentStatusBadge status={item.status} />
                   </Flex>
-                  {item.grade ? (
-                    <Text mt={4} fontSize="sm" color="gray.500">
-                      Grade: {item.grade}
-                    </Text>
-                  ) : null}
+                  <Text mt={4} fontSize="sm" color="gray.600">
+                    Grade: {item.grade ?? 'Not graded'}
+                  </Text>
+                  <Text mt={1} fontSize="sm" color="gray.500">
+                    Status: {item.status}
+                  </Text>
                 </Surface>
               </StaggerItem>
             ))}

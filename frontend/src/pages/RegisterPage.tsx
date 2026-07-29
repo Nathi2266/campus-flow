@@ -15,15 +15,13 @@ import { useState } from 'react'
 import { register as registerUser } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
 import { useAuthStore } from '@/features/auth/authStore'
-import { FormStack, NumberField, SelectField, TextField } from '@/components/FormFields'
+import { FormStack, TextField } from '@/components/FormFields'
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
   password: z.string().min(8, 'At least 8 characters'),
   firstName: z.string().min(1, 'Required'),
   lastName: z.string().min(1, 'Required'),
-  role: z.enum(['ADMIN', 'LECTURER', 'STUDENT']),
-  departmentId: z.number().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -37,8 +35,6 @@ export function RegisterPage() {
   const {
     register,
     handleSubmit,
-    control,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -47,18 +43,15 @@ export function RegisterPage() {
       password: '',
       firstName: '',
       lastName: '',
-      role: 'STUDENT',
     },
   })
-
-  const role = watch('role')
 
   async function onSubmit(values: FormValues) {
     setSubmitError(null)
     try {
       const data = await registerUser({
         ...values,
-        departmentId: role === 'STUDENT' ? undefined : values.departmentId,
+        role: 'STUDENT',
       })
       setSession({
         accessToken: data.accessToken,
@@ -82,9 +75,11 @@ export function RegisterPage() {
           Get started
         </Text>
         <Text as="h2" fontFamily="heading" fontSize="2.2rem" fontWeight="700" letterSpacing="-0.03em">
-          Create account
+          Create student account
         </Text>
-        <Text color="gray.500">Register as a student, lecturer, or administrator.</Text>
+        <Text color="gray.500">
+          Public registration creates a student account. Staff accounts are provisioned by an administrator.
+        </Text>
       </Stack>
       {submitError ? (
         <Alert status="error" borderRadius="md">
@@ -105,22 +100,8 @@ export function RegisterPage() {
             error={errors.password?.message}
             isRequired
           />
-          <SelectField name="role" label="Role" register={register} error={errors.role?.message} isRequired>
-            <option value="STUDENT">Student</option>
-            <option value="LECTURER">Lecturer</option>
-            <option value="ADMIN">Administrator</option>
-          </SelectField>
-          {role !== 'STUDENT' ? (
-            <NumberField
-              name="departmentId"
-              label="Department ID"
-              control={control}
-              error={errors.departmentId?.message}
-              min={1}
-            />
-          ) : null}
           <Button type="submit" isLoading={isSubmitting} width="full" size="lg" mt={2}>
-            Register
+            Register as student
           </Button>
         </FormStack>
       </form>

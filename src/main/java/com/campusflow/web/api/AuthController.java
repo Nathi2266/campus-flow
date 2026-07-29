@@ -1,9 +1,11 @@
 package com.campusflow.web.api;
 
 import com.campusflow.dto.request.LoginRequest;
+import com.campusflow.dto.request.ProfileUpdateRequest;
 import com.campusflow.dto.request.RefreshRequest;
 import com.campusflow.dto.request.UserRegistrationRequest;
 import com.campusflow.dto.response.AuthResponse;
+import com.campusflow.dto.response.UserResponse;
 import com.campusflow.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -28,7 +31,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    @Operation(summary = "Register a new user", description = "Create a new user account with the specified role")
+    @Operation(summary = "Register a new user", description = "Create a new STUDENT account")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody UserRegistrationRequest request) {
         AuthResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -49,16 +52,23 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "Logout user", description = "Revoke current refresh token")
-    public ResponseEntity<Void> logout() {
-        // Token revocation would happen here
+    @Operation(summary = "Logout user", description = "Revoke current refresh token (no access token required)")
+    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshRequest request) {
+        authService.logout(request);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get current user", description = "Get details of the currently authenticated user")
-    public ResponseEntity<AuthResponse> getCurrentUser() {
-        // Get current user from security context
-        return ResponseEntity.ok().build();
+    public ResponseEntity<UserResponse> getCurrentUser() {
+        return ResponseEntity.ok(authService.getCurrentUser());
+    }
+
+    @PatchMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update profile", description = "Update first name, last name, and phone number")
+    public ResponseEntity<UserResponse> updateProfile(@Valid @RequestBody ProfileUpdateRequest request) {
+        return ResponseEntity.ok(authService.updateProfile(request));
     }
 }

@@ -7,7 +7,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * REST Controller for Reports and Statistics.
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/reports")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
 @Tag(name = "Reports", description = "Reporting and analytics endpoints")
 public class ReportController {
 
@@ -32,11 +36,10 @@ public class ReportController {
 
     @GetMapping("/students-per-course")
     @Operation(summary = "Get students per course", description = "Retrieve count of enrolled students per course")
-    public ResponseEntity<?> getStudentsPerCourse(
+    public ResponseEntity<List<StudentsPerCourseResponse>> getStudentsPerCourse(
         @Parameter(description = "Department ID filter") @RequestParam(required = false) Long departmentId
     ) {
-        // This would return the students per course report
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(reportService.getStudentsPerCourse(departmentId));
     }
 
     @GetMapping("/graduation-progress")
@@ -51,19 +54,17 @@ public class ReportController {
 
     @GetMapping("/active-courses")
     @Operation(summary = "Get active courses", description = "Retrieve list of active courses with enrollment counts")
-    public ResponseEntity<?> getActiveCourses(
+    public ResponseEntity<List<ActiveCourseResponse>> getActiveCourses(
         @Parameter(description = "Department ID filter") @RequestParam(required = false) Long departmentId
     ) {
-        // This would return the active courses report
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(reportService.getActiveCourses(departmentId));
     }
 
     @GetMapping("/inactive-courses")
     @Operation(summary = "Get inactive courses", description = "Retrieve list of inactive courses")
-    public ResponseEntity<?> getInactiveCourses(
+    public ResponseEntity<List<CourseResponse>> getInactiveCourses(
         @Parameter(description = "Department ID filter") @RequestParam(required = false) Long departmentId
     ) {
-        // This would return the inactive courses report
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(reportService.getInactiveCourses(departmentId));
     }
 }

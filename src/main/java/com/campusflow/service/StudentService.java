@@ -4,22 +4,29 @@ import com.campusflow.domain.Department;
 import com.campusflow.domain.Student;
 import com.campusflow.domain.User;
 import com.campusflow.domain.enums.AcademicStatus;
+import com.campusflow.domain.enums.UserRole;
 import com.campusflow.dto.request.StudentCreateRequest;
 import com.campusflow.dto.request.StudentUpdateRequest;
-import com.campusflow.dto.response.StudentResponse;
 import com.campusflow.dto.response.PagedResponse;
+import com.campusflow.dto.response.StudentResponse;
 import com.campusflow.exception.NotFoundException;
 import com.campusflow.exception.ValidationException;
 import com.campusflow.repository.DepartmentRepository;
 import com.campusflow.repository.StudentRepository;
 import com.campusflow.repository.UserRepository;
+import com.campusflow.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.security.SecureRandom;
+import java.util.List;
 
 /**
  * Service class for Student management.
@@ -32,27 +39,37 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class StudentService {
 
+    private static final String TEMP_PASSWORD_CHARS =
+        "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final SecurityUtils securityUtils;
 
     public StudentResponse createStudent(StudentCreateRequest request) {
-        // Check if email already exists
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new ValidationException("Email already exists", "email", "EMAIL_EXISTS");
         }
 
-        // Create user
+        Department department = departmentRepository.findById(request.getDepartmentId())
+            .orElseThrow(() -> new NotFoundException("Department not found", "departmentId"));
+
+        String temporaryPassword = generateTemporaryPassword();
+
         User user = User.builder()
             .email(request.getEmail())
-            .passwordHash("$2a$12$placeholder") // Will be hashed by AuthService
+            .passwordHash(passwordEncoder.encode(temporaryPassword))
             .firstName(request.getFirstName())
             .lastName(request.getLastName())
             .phoneNumber(request.getPhoneNumber())
-            .role(com.campusflow.domain.enums.UserRole.STUDENT)
+            .role(UserRole.STUDENT)
+            .department(department)
             .build();
+        user = userRepository.save(user);
 
-        // Create student
         Student student = Student.builder()
             .user(user)
             .studentNumber(generateStudentNumber())
@@ -63,21 +80,18 @@ public class StudentService {
             .build();
 
         user.setStudent(student);
-
-        // Set department
-        Department department = departmentRepository.findById(request.getDepartmentId())
-            .orElseThrow(() -> new NotFoundException("Department not found", "departmentId"));
-        user.setDepartment(department);
-
         Student savedStudent = studentRepository.save(student);
 
-        return toResponse(savedStudent);
+        StudentResponse response = toResponse(savedStudent);
+        response.setTemporaryPassword(temporaryPassword);
+        return response;
     }
 
+    @Transactional(readOnly = true)
     public StudentResponse getStudent(Long id) {
+        assertCanAccessStudent(id);
         Student student = studentRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Student not found", "id"));
-
         return toResponse(student);
     }
 
@@ -85,7 +99,6 @@ public class StudentService {
         Student student = studentRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Student not found", "id"));
 
-        // Update fields
         student.setFirstName(request.getFirstName());
         student.setLastName(request.getLastName());
         if (student.getUser() != null) {
@@ -98,27 +111,33 @@ public class StudentService {
             student.setAcademicStatus(AcademicStatus.valueOf(request.getAcademicStatus()));
         }
 
-        Student updatedStudent = studentRepository.save(student);
-
-        return toResponse(updatedStudent);
+        return toResponse(studentRepository.save(student));
     }
 
     public void deleteStudent(Long id) {
         Student student = studentRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Student not found", "id"));
 
-        // Soft delete by setting to INACTIVE
         student.setAcademicStatus(AcademicStatus.INACTIVE);
         studentRepository.save(student);
     }
 
-    public PagedResponse<StudentResponse> listStudents(Integer page, Integer size, String sort, Long departmentId, AcademicStatus status) {
+    @Transactional(readOnly = true)
+    public PagedResponse<StudentResponse> listStudents(
+        Integer page, Integer size, String sort, Long departmentId, AcademicStatus status
+    ) {
+        User currentUser = securityUtils.getCurrentUser();
+        if (currentUser.getRole() == UserRole.STUDENT) {
+            return ownStudentPage(currentUser, page, size);
+        }
+
         Pageable pageable = createPageable(page, size, sort);
 
         Page<Student> studentPage;
         if (departmentId != null) {
             if (status != null) {
-                studentPage = studentRepository.findByUserDepartmentIdAndAcademicStatus(departmentId, status, pageable);
+                studentPage = studentRepository.findByUserDepartmentIdAndAcademicStatus(
+                    departmentId, status, pageable);
             } else {
                 studentPage = studentRepository.findByUserDepartmentId(departmentId, pageable);
             }
@@ -128,50 +147,79 @@ public class StudentService {
             studentPage = studentRepository.findAll(pageable);
         }
 
-        return PagedResponse.<StudentResponse>builder()
-            .content(studentPage.getContent().stream().map(this::toResponse).toList())
-            .page(studentPage.getNumber())
-            .size(studentPage.getSize())
-            .totalElements(studentPage.getTotalElements())
-            .totalPages(studentPage.getTotalPages())
-            .isFirst(studentPage.isFirst())
-            .isLast(studentPage.isLast())
-            .hasContent(studentPage.hasContent())
-            .build();
+        return toPagedResponse(studentPage);
     }
 
-    public PagedResponse<StudentResponse> searchStudents(String search, Integer page, Integer size, Long departmentId) {
+    @Transactional(readOnly = true)
+    public PagedResponse<StudentResponse> searchStudents(
+        String search, Integer page, Integer size, Long departmentId
+    ) {
+        User currentUser = securityUtils.getCurrentUser();
+        if (currentUser.getRole() == UserRole.STUDENT) {
+            return ownStudentPage(currentUser, page, size);
+        }
+
         Pageable pageable = createPageable(page, size, null);
+        String query = search != null ? search.trim() : "";
 
         Page<Student> studentPage;
         if (departmentId != null) {
-            studentPage = studentRepository.searchByDepartment(departmentId, search, pageable);
+            studentPage = studentRepository.searchByDepartment(departmentId, query, pageable);
         } else {
-            // Fallback to basic search if search method not available
-            studentPage = studentRepository.findAll(pageable);
+            studentPage = studentRepository.searchAll(query, pageable);
         }
 
-        return PagedResponse.<StudentResponse>builder()
-            .content(studentPage.getContent().stream().map(this::toResponse).toList())
-            .page(studentPage.getNumber())
-            .size(studentPage.getSize())
-            .totalElements(studentPage.getTotalElements())
-            .totalPages(studentPage.getTotalPages())
-            .isFirst(studentPage.isFirst())
-            .isLast(studentPage.isLast())
-            .hasContent(studentPage.hasContent())
-            .build();
+        return toPagedResponse(studentPage);
+    }
+
+    private PagedResponse<StudentResponse> ownStudentPage(User currentUser, Integer page, Integer size) {
+        Student own = requireLinkedStudent(currentUser);
+        Pageable pageable = createPageable(page, size, null);
+        Page<Student> studentPage = new PageImpl<>(List.of(own), pageable, 1);
+        return toPagedResponse(studentPage);
+    }
+
+    private void assertCanAccessStudent(Long studentId) {
+        User currentUser = securityUtils.getCurrentUser();
+        if (currentUser.getRole() != UserRole.STUDENT) {
+            return;
+        }
+        Student own = requireLinkedStudent(currentUser);
+        if (!own.getId().equals(studentId)) {
+            throw new ValidationException("Cannot view another student", "id", "FORBIDDEN");
+        }
+    }
+
+    private Student requireLinkedStudent(User user) {
+        return studentRepository.findByUserId(user.getId())
+            .orElseThrow(() -> new ValidationException(
+                "No student record linked to user", "student", "STUDENT_NOT_LINKED"));
     }
 
     private Pageable createPageable(Integer page, Integer size, String sort) {
+        int pageNum = page != null ? Math.max(page, 0) : 0;
+        int pageSize = size != null ? Math.min(Math.max(size, 1), 100) : 20;
         if (sort != null && !sort.isEmpty()) {
             String[] sortParts = sort.split(",");
             Sort.Direction direction = sortParts.length > 1 && "desc".equalsIgnoreCase(sortParts[1])
                 ? Sort.Direction.DESC
                 : Sort.Direction.ASC;
-            return PageRequest.of(page, size, Sort.by(direction, sortParts[0]));
+            return PageRequest.of(pageNum, pageSize, Sort.by(direction, sortParts[0]));
         }
-        return PageRequest.of(page, size);
+        return PageRequest.of(pageNum, pageSize);
+    }
+
+    private PagedResponse<StudentResponse> toPagedResponse(Page<Student> studentPage) {
+        return PagedResponse.<StudentResponse>builder()
+            .content(studentPage.getContent().stream().map(this::toResponse).toList())
+            .page(studentPage.getNumber())
+            .size(studentPage.getSize())
+            .totalElements(studentPage.getTotalElements())
+            .totalPages(studentPage.getTotalPages())
+            .isFirst(studentPage.isFirst())
+            .isLast(studentPage.isLast())
+            .hasContent(studentPage.hasContent())
+            .build();
     }
 
     private StudentResponse toResponse(Student student) {
@@ -196,6 +244,14 @@ public class StudentService {
     }
 
     private String generateStudentNumber() {
-        return "2024" + (int) (Math.random() * 10000);
+        return "2024" + (1000 + SECURE_RANDOM.nextInt(9000));
+    }
+
+    private String generateTemporaryPassword() {
+        StringBuilder sb = new StringBuilder(14);
+        for (int i = 0; i < 14; i++) {
+            sb.append(TEMP_PASSWORD_CHARS.charAt(SECURE_RANDOM.nextInt(TEMP_PASSWORD_CHARS.length())));
+        }
+        return sb.toString();
     }
 }

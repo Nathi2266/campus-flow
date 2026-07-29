@@ -88,25 +88,29 @@
 
 | Endpoint | ADMIN | LECTURER | STUDENT |
 |----------|-------|----------|---------|
-| POST /auth/register | ✓ | ✓ | ✓ |
+| POST /auth/register (STUDENT only) | ✗ | ✗ | ✓ |
 | POST /auth/login | ✓ | ✓ | ✓ |
 | POST /auth/refresh | ✓ | ✓ | ✓ |
 | POST /auth/logout | ✓ | ✓ | ✓ |
-| GET /auth/me | ✓ | ✓ | ✓ |
+| GET/PATCH /auth/me | ✓ | ✓ | ✓ |
 | GET /students | ✓ | ✓ | ✓ |
 | POST /students | ✓ | ✗ | ✗ |
 | PUT /students/{id} | ✓ | ✗ | ✗ |
 | DELETE /students/{id} | ✓ | ✗ | ✗ |
 | GET /courses | ✓ | ✓ | ✓ |
 | POST /courses | ✓ | ✗ | ✗ |
-| PUT /courses/{id} | ✓ | ✗ | ✗ |
+| PUT /courses/{id} | ✓ | Own only | ✗ |
 | DELETE /courses/{id} | ✓ | ✗ | ✗ |
 | POST /courses/{id}/activate | ✓ | ✗ | ✗ |
 | POST /courses/{id}/deactivate | ✓ | ✗ | ✗ |
-| GET /enrollments | ✓ | ✓ | ✓ |
-| POST /enrollments | ✓ | ✓ | ✓ |
-| DELETE /enrollments/{id} | ✓ | ✓ | ✓ |
+| GET /enrollments | ✓ | Own courses | Own only |
+| POST /enrollments | ✓ | ✓ | Own only |
+| PATCH /enrollments/{id}/grade | ✓ | Own courses | ✗ |
+| DELETE /enrollments/{id} | ✓ | ✓ | Own only |
 | GET /reports/* | ✓ | ✓ | ✗ |
+| /departments, /users, /audit-logs | ✓ | ✗ | ✗ |
+
+Canonical role rules: `campusflow-roles.md`. Grade rules: `campusflow-grades.md`.
 
 ## Security Configuration
 

@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test'
 
+/** Seeded users — password Admin123! after V3 migration. */
 export const USERS = {
   admin: { email: 'admin@campusflow.edu', password: 'Admin123!', role: 'ADMIN' },
   lecturer: { email: 'lecturer1@campusflow.edu', password: 'Admin123!', role: 'LECTURER' },
@@ -25,15 +26,14 @@ export async function loginAs(page: Page, email: string, password: string) {
   await expect(page.getByRole('heading').first()).toBeVisible()
 }
 
-export async function registerUser(
+/** Public registration creates STUDENT only. */
+export async function registerStudent(
   page: Page,
   data: {
     email: string
     password: string
     firstName: string
     lastName: string
-    role: 'ADMIN' | 'LECTURER' | 'STUDENT'
-    departmentId?: string
   },
 ) {
   await clearSession(page)
@@ -42,11 +42,7 @@ export async function registerUser(
   await page.getByLabel('Last name').fill(data.lastName)
   await page.getByLabel('Email').fill(data.email)
   await page.getByLabel('Password').fill(data.password)
-  await page.getByLabel('Role').selectOption(data.role)
-  if (data.role !== 'STUDENT' && data.departmentId) {
-    await page.getByLabel('Department ID').fill(data.departmentId)
-  }
-  await page.getByRole('button', { name: 'Register' }).click()
+  await page.getByRole('button', { name: /Register as student/i }).click()
   await expect(page).toHaveURL(/\/($|\?)/, { timeout: 20_000 })
 }
 

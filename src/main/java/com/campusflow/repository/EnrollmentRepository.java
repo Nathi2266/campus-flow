@@ -42,4 +42,8 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     @Query("SELECT e FROM Enrollment e WHERE e.course.id = :courseId AND e.status = 'ACTIVE'")
     Page<Enrollment> findActiveEnrollmentsByCourse(@Param("courseId") Long courseId, Pageable pageable);
+
+    Page<Enrollment> findByCourseLecturerId(Long lecturerId, Pageable pageable);
+
+    Page<Enrollment> findByCourseLecturerIdAndStatus(Long lecturerId, EnrollmentStatus status, Pageable pageable);
 }

@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: campusflow
       POSTGRES_USER: campusflow
-      POSTGRES_PASSWORD: campusflow123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-campusflow123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -24,12 +24,15 @@ services:
       dockerfile: docker/Dockerfile
     container_name: campusflow-app
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/campusflow
       SPRING_DATASOURCE_USERNAME: campusflow
-      SPRING_DATASOURCE_PASSWORD: campusflow123
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-campusflow123}
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      JWT_SECRET: ${JWT_SECRET:-campusflow-dev-secret-key-min-32-bytes!!}
+      CORS_ALLOWED_ORIGIN_PATTERNS: ${CORS_ALLOWED_ORIGIN_PATTERNS:-http://localhost:*,http://127.0.0.1:*}
+      SPRINGDOC_SWAGGER_UI_ENABLED: ${SPRINGDOC_SWAGGER_UI_ENABLED:-true}
       SERVER_PORT: 8080
     ports:
       - "8090:8080"

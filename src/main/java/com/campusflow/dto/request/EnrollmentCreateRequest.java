@@ -15,7 +15,7 @@ import lombok.*;
 @AllArgsConstructor
 public class EnrollmentCreateRequest {
 
-    @NotNull(message = "Student ID is required")
+    /** Required for ADMIN/LECTURER; ignored for STUDENT (forced to own student). */
     private Long studentId;
 
     @NotNull(message = "Course ID is required")

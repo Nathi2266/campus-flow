@@ -91,11 +91,20 @@ cache:
     time-to-live: 600000
     cache-null-values: false
 
+jwt:
+  secret: ${JWT_SECRET:campusflow-dev-secret-key-min-32-bytes!!}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900000}
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800000}
+
+cors:
+  allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*,https://*.campusflow.edu}
+
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+    enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:true}
     operations-sorter: method
     tags-sorter: alpha
     try-it-out-enabled: true

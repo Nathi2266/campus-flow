@@ -12,6 +12,7 @@ export interface User {
   role: UserRole
   departmentId: number | null
   phoneNumber: string | null
+  studentId?: number | null
 }
 
 export interface AuthResponse {
@@ -46,6 +47,8 @@ export interface Student {
   graduationDate: string | null
   createdAt: string
   updatedAt: string
+  /** Present once on create when the API generated a password (ADMIN only). */
+  temporaryPassword?: string | null
 }
 
 export interface Course {
@@ -78,6 +81,49 @@ export interface Enrollment {
   notes: string | null
   createdAt: string
   updatedAt: string
+}
+
+export interface Department {
+  id: number
+  name: string
+  description: string | null
+  createdAt: string
+}
+
+export interface AuditLog {
+  id: number
+  userId: number | null
+  userEmail: string | null
+  action: string
+  entityType: string | null
+  entityId: number | null
+  details: Record<string, unknown> | null
+  ipAddress: string | null
+  userAgent: string | null
+  createdAt: string
+}
+
+export interface StudentsPerCourse {
+  courseId: number
+  courseCode: string
+  courseName: string
+  enrolledStudents: number
+}
+
+export interface ActiveCourseReport {
+  courseId: number
+  courseCode: string
+  courseName: string
+  enrolledCount: number
+  maxCapacity: number
+}
+
+export interface GraduationProgress {
+  totalStudents: number
+  graduatedStudents: number
+  expectedGraduates: number
+  graduationRate: number
+  averageGpa: number | null
 }
 
 export interface Statistics {

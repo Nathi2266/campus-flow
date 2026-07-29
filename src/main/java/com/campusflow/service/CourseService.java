@@ -3,6 +3,7 @@ package com.campusflow.service;
 import com.campusflow.domain.Course;
 import com.campusflow.domain.Department;
 import com.campusflow.domain.User;
+import com.campusflow.domain.enums.UserRole;
 import com.campusflow.dto.request.CourseCreateRequest;
 import com.campusflow.dto.request.CourseUpdateRequest;
 import com.campusflow.dto.response.CourseResponse;
@@ -12,6 +13,7 @@ import com.campusflow.exception.ValidationException;
 import com.campusflow.repository.CourseRepository;
 import com.campusflow.repository.DepartmentRepository;
 import com.campusflow.repository.UserRepository;
+import com.campusflow.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,25 +36,22 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
+    private final SecurityUtils securityUtils;
 
     public CourseResponse createCourse(CourseCreateRequest request) {
-        // Check if course code already exists
         if (courseRepository.existsByCode(request.getCode())) {
             throw new ValidationException("Course code already exists", "code", "COURSE_CODE_EXISTS");
         }
 
-        // Get department
         Department department = departmentRepository.findById(request.getDepartmentId())
             .orElseThrow(() -> new NotFoundException("Department not found", "departmentId"));
 
-        // Get lecturer if provided
         User lecturer = null;
         if (request.getLecturerId() != null) {
             lecturer = userRepository.findById(request.getLecturerId())
                 .orElseThrow(() -> new NotFoundException("Lecturer not found", "lecturerId"));
         }
 
-        // Create course
         Course course = Course.builder()
             .code(request.getCode())
             .name(request.getName())
@@ -64,15 +63,12 @@ public class CourseService {
             .active(true)
             .build();
 
-        Course savedCourse = courseRepository.save(course);
-
-        return toResponse(savedCourse);
+        return toResponse(courseRepository.save(course));
     }
 
     public CourseResponse getCourse(Long id) {
         Course course = courseRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Course not found", "id"));
-
         return toResponse(course);
     }
 
@@ -80,56 +76,65 @@ public class CourseService {
         Course course = courseRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Course not found", "id"));
 
+        User currentUser = securityUtils.getCurrentUser();
+        if (currentUser.getRole() == UserRole.LECTURER) {
+            if (course.getLecturer() == null || !course.getLecturer().getId().equals(currentUser.getId())) {
+                throw new ValidationException("Lecturers may only update their own courses", "id", "FORBIDDEN");
+            }
+        }
+
         course.setName(request.getName());
         course.setDescription(request.getDescription());
         course.setCredits(request.getCredits());
         course.setMaxCapacity(request.getMaxCapacity());
 
-        if (request.getLecturerId() != null) {
+        if (request.getLecturerId() != null && currentUser.getRole() == UserRole.ADMIN) {
             User lecturer = userRepository.findById(request.getLecturerId())
                 .orElseThrow(() -> new NotFoundException("Lecturer not found", "lecturerId"));
             course.setLecturer(lecturer);
         }
 
-        Course updatedCourse = courseRepository.save(course);
-
-        return toResponse(updatedCourse);
+        return toResponse(courseRepository.save(course));
     }
 
     public void deleteCourse(Long id) {
         Course course = courseRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Course not found", "id"));
-
-        // Soft delete by setting to inactive
         course.setActive(false);
         courseRepository.save(course);
     }
 
-    @Transactional(readOnly = true)
     public CourseResponse activateCourse(Long id) {
         Course course = courseRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Course not found", "id"));
-
         course.setActive(true);
         courseRepository.save(course);
-
         return toResponse(course);
     }
 
-    @Transactional(readOnly = true)
     public CourseResponse deactivateCourse(Long id) {
         Course course = courseRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Course not found", "id"));
-
         course.setActive(false);
         courseRepository.save(course);
-
         return toResponse(course);
     }
 
     @Transactional(readOnly = true)
     public PagedResponse<CourseResponse> listCourses(Integer page, Integer size, String sort,
                                                      Long departmentId, Long lecturerId, Boolean active) {
+        User currentUser = securityUtils.getCurrentUser();
+
+        // Auto-filter lecturers to own courses when lecturerId not provided
+        if (currentUser.getRole() == UserRole.LECTURER && lecturerId == null) {
+            lecturerId = currentUser.getId();
+        }
+
+        // Students default to active catalog when active not specified
+        if (currentUser.getRole() == UserRole.STUDENT && active == null) {
+            active = true;
+        }
+
         Pageable pageable = createPageable(page, size, sort);
 
         Page<Course> coursePage;
@@ -140,7 +145,11 @@ public class CourseService {
                 coursePage = courseRepository.findByDepartmentId(departmentId, pageable);
             }
         } else if (lecturerId != null) {
-            coursePage = courseRepository.findByLecturerId(lecturerId, pageable);
+            if (active != null) {
+                coursePage = courseRepository.findByLecturerIdAndActive(lecturerId, active, pageable);
+            } else {
+                coursePage = courseRepository.findByLecturerId(lecturerId, pageable);
+            }
         } else if (active != null) {
             coursePage = courseRepository.findByActive(active, pageable);
         } else {

@@ -15,5 +15,6 @@ import org.mapstruct.Mapping;
 public interface UserMapper {
 
     @Mapping(source = "department.id", target = "departmentId")
+    @Mapping(source = "student.id", target = "studentId")
     UserResponse toResponse(User user);
 }

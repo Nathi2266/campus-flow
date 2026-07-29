@@ -1,4 +1,13 @@
-import { Box, HStack, SimpleGrid, Text, VStack } from '@chakra-ui/react'
+import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
+  Box,
+  HStack,
+  SimpleGrid,
+  Text,
+  VStack,
+} from '@chakra-ui/react'
 import { FiBell, FiBook, FiClipboard, FiInfo } from 'react-icons/fi'
 import { EmptyState, PageHeader } from '@/components/feedback'
 import { Surface, Stagger, StaggerItem } from '@/components/ui'
@@ -18,6 +27,11 @@ export function NotificationsPage() {
         title="Notifications"
         description="Campus alerts and reminders will appear here when the notifications API is available."
       />
+
+      <Alert status="info" variant="subtle" borderRadius="md" mb={6} role="status">
+        <AlertIcon />
+        <AlertDescription>Notifications API coming soon</AlertDescription>
+      </Alert>
 
       <Stagger>
         <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} spacing={4} mb={8}>

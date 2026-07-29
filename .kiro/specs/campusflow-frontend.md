@@ -23,15 +23,18 @@ React 19, TypeScript, Vite, Chakra UI, React Router, TanStack Query, React Hook 
 
 | Path | Page | Roles |
 |------|------|-------|
-| `/login`, `/register` | Auth | Public |
+| `/login`, `/register` | Auth (register = STUDENT only) | Public |
 | `/` | Role dashboard | Authenticated |
-| `/students` | Student management | ADMIN, LECTURER |
-| `/courses` | Course management | ADMIN, LECTURER |
-| `/enrollments` | Enrollment management | ADMIN, LECTURER, STUDENT (own) |
+| `/students` | Student management (ADMIN write; LECTURER read) | ADMIN, LECTURER |
+| `/courses` | Course catalogue (ADMIN full; LECTURER edit own; STUDENT active read-only) | Authenticated |
+| `/enrollments` | Enrollments + grade entry (STUDENT self-enroll/drop) | Authenticated |
+| `/departments` | Department CRUD | ADMIN |
+| `/users` | User administration | ADMIN |
 | `/reports` | Reports | ADMIN, LECTURER |
-| `/profile` | Profile | Authenticated |
+| `/audit` | Audit log viewer | ADMIN |
+| `/profile` | Profile edit (GET/PATCH `/auth/me`) | Authenticated |
 | `/settings` | Settings | Authenticated |
-| `/notifications` | Notifications shell | Authenticated |
+| `/notifications` | Notifications shell (P2 API deferred) | Authenticated |
 | `*` | Not found | Public |
 
 ## Structure
@@ -57,13 +60,6 @@ frontend/src/
 - Session: access/refresh tokens + user (auth store); clear on logout
 - Server: TanStack Query
 - Forms: React Hook Form + Zod
-
-## Known backend gaps (FE must degrade)
-
-- `GET /auth/me`, refresh, logout stubs
-- Several report endpoints stubbed
-- No DepartmentController — use numeric department IDs in forms
-- Server RBAC not enforced — client role gates are defense-in-depth only
 
 ## Related
 

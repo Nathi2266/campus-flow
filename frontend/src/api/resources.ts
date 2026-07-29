@@ -1,8 +1,32 @@
 import { api } from '@/api/client'
-import type { Course, Enrollment, PagedResponse, Statistics, Student } from '@/types'
+import type {
+  ActiveCourseReport,
+  AuditLog,
+  Course,
+  Department,
+  Enrollment,
+  EnrollmentStatus,
+  GraduationProgress,
+  PagedResponse,
+  Statistics,
+  Student,
+  StudentsPerCourse,
+  User,
+  UserRole,
+} from '@/types'
 
 export async function listStudents(params?: Record<string, string | number | undefined>) {
   const { data } = await api.get<PagedResponse<Student>>('/students', { params })
+  return data
+}
+
+export async function searchStudents(
+  search: string,
+  params?: Record<string, string | number | undefined>,
+) {
+  const { data } = await api.get<PagedResponse<Student>>('/students/search', {
+    params: { search, ...params },
+  })
   return data
 }
 
@@ -90,8 +114,16 @@ export async function listEnrollments(params?: Record<string, string | number | 
   return data
 }
 
-export async function createEnrollment(payload: { studentId: number; courseId: number }) {
+export async function createEnrollment(payload: { studentId?: number; courseId: number }) {
   const { data } = await api.post<Enrollment>('/enrollments', payload)
+  return data
+}
+
+export async function updateEnrollmentGrade(
+  id: number,
+  payload: { grade: string; status?: EnrollmentStatus },
+) {
+  const { data } = await api.patch<Enrollment>(`/enrollments/${id}/grade`, payload)
   return data
 }
 
@@ -99,7 +131,90 @@ export async function dropEnrollment(id: number) {
   await api.delete(`/enrollments/${id}`)
 }
 
+export async function listDepartments() {
+  const { data } = await api.get<Department[]>('/departments')
+  return data
+}
+
+export async function createDepartment(payload: { name: string; description?: string }) {
+  const { data } = await api.post<Department>('/departments', payload)
+  return data
+}
+
+export async function updateDepartment(
+  id: number,
+  payload: { name: string; description?: string },
+) {
+  const { data } = await api.put<Department>(`/departments/${id}`, payload)
+  return data
+}
+
+export async function deleteDepartment(id: number) {
+  await api.delete(`/departments/${id}`)
+}
+
+export async function listUsers(params?: {
+  page?: number
+  size?: number
+  role?: UserRole | string
+}) {
+  const { data } = await api.get<PagedResponse<User>>('/users', { params })
+  return data
+}
+
+export async function createUser(payload: {
+  email: string
+  password: string
+  firstName: string
+  lastName: string
+  role: UserRole | string
+  departmentId?: number | null
+  phoneNumber?: string
+}) {
+  const { data } = await api.post<User>('/users', payload)
+  return data
+}
+
+export async function updateUser(
+  id: number,
+  payload: { role?: UserRole | string; departmentId?: number | null },
+) {
+  const { data } = await api.patch<User>(`/users/${id}`, payload)
+  return data
+}
+
+export async function listAuditLogs(params?: { page?: number; size?: number }) {
+  const { data } = await api.get<PagedResponse<AuditLog>>('/audit-logs', { params })
+  return data
+}
+
 export async function getStatistics() {
   const { data } = await api.get<Statistics>('/reports/statistics')
+  return data
+}
+
+export async function getStudentsPerCourse(departmentId?: number) {
+  const { data } = await api.get<StudentsPerCourse[]>('/reports/students-per-course', {
+    params: departmentId != null ? { departmentId } : undefined,
+  })
+  return data
+}
+
+export async function getActiveCourses(departmentId?: number) {
+  const { data } = await api.get<ActiveCourseReport[]>('/reports/active-courses', {
+    params: departmentId != null ? { departmentId } : undefined,
+  })
+  return data
+}
+
+export async function getInactiveCourses(departmentId?: number) {
+  const { data } = await api.get<Course[]>('/reports/inactive-courses', {
+    params: departmentId != null ? { departmentId } : undefined,
+  })
+  return data
+}
+
+export async function getGraduationProgress(params?: { departmentId?: number; year?: number }) {
+  const { data } = await api.get<GraduationProgress>('/reports/graduation-progress', { params })
   return data
 }

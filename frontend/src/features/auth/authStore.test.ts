@@ -24,6 +24,19 @@ describe('authStore', () => {
     expect(useAuthStore.getState().hasRole('ADMIN')).toBe(true)
     expect(useAuthStore.getState().hasRole('STUDENT')).toBe(false)
 
+    useAuthStore.getState().updateUser({
+      id: 1,
+      email: 'admin@campus.edu',
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      role: 'ADMIN',
+      departmentId: 1,
+      phoneNumber: '555-0100',
+      studentId: null,
+    })
+    expect(useAuthStore.getState().user?.lastName).toBe('Lovelace')
+    expect(useAuthStore.getState().accessToken).toBe('access')
+
     useAuthStore.getState().clearSession()
     expect(useAuthStore.getState().accessToken).toBeNull()
   })

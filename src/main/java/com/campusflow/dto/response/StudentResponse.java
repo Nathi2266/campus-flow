@@ -30,4 +30,6 @@ public class StudentResponse {
     private java.time.LocalDate graduationDate;
     private java.time.LocalDateTime createdAt;
     private java.time.LocalDateTime updatedAt;
+    /** One-time temporary password; only set on create responses for ADMIN. */
+    private String temporaryPassword;
 }
