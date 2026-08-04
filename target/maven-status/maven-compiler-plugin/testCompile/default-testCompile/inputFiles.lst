@@ -1,2 +1,3 @@
 /build/src/test/java/com/campusflow/CampusFlowApplicationTests.java
+/build/src/test/java/com/campusflow/web/api/AdminApiSecurityTest.java
 /build/src/test/java/com/campusflow/service/StudentServiceTest.java

@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Playwright (ephemeral)
+/test-results/
+/playwright-report/
+/blob-report/
+
+# Keep e2e-artifacts/README.md; videos stay local (large binaries)
+/e2e-artifacts/*.webm

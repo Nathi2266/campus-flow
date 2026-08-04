@@ -186,7 +186,7 @@ public class CourseService {
                 : Sort.Direction.ASC;
             return PageRequest.of(page, size, Sort.by(direction, sortParts[0]));
         }
-        return PageRequest.of(page, size);
+        return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
     }
 
     private CourseResponse toResponse(Course course) {

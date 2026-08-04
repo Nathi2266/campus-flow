@@ -335,7 +335,7 @@ public class EnrollmentService {
                 : Sort.Direction.ASC;
             return PageRequest.of(pageNum, pageSize, Sort.by(direction, sortParts[0]));
         }
-        return PageRequest.of(pageNum, pageSize);
+        return PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "id"));
     }
 
     private PagedResponse<EnrollmentResponse> toPagedResponse(Page<Enrollment> enrollmentPage) {

@@ -21,7 +21,13 @@ export async function loginAs(page: Page, email: string, password: string) {
   await expect(page.getByTestId('login-email')).toBeVisible()
   await page.getByTestId('login-email').fill(email)
   await page.getByTestId('login-password').fill(password)
+  const loginResponse = page.waitForResponse(
+    (res) => res.url().includes('/api/v1/auth/login') && res.request().method() === 'POST',
+    { timeout: 45_000 },
+  )
   await page.getByTestId('login-submit').click()
+  const res = await loginResponse
+  expect(res.ok(), `login failed HTTP ${res.status()} for ${email}`).toBeTruthy()
   await expect(page).toHaveURL(/\/dashboard($|\?)/, { timeout: 45_000 })
   await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15_000 })
 }

@@ -1,0 +1,70 @@
+-------------------------------------------------------------------------------
+Test set: com.campusflow.web.api.AdminApiSecurityTest
+-------------------------------------------------------------------------------
+Tests run: 7, Failures: 6, Errors: 0, Skipped: 0, Time elapsed: 8.616 s <<< FAILURE! -- in com.campusflow.web.api.AdminApiSecurityTest
+com.campusflow.web.api.AdminApiSecurityTest.departmentsList_admin_ok -- Time elapsed: 0.687 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<200> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.campusflow.web.api.AdminApiSecurityTest.departmentsList_admin_ok(AdminApiSecurityTest.java:127)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+com.campusflow.web.api.AdminApiSecurityTest.usersList_admin_ok -- Time elapsed: 0.096 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<200> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.campusflow.web.api.AdminApiSecurityTest.usersList_admin_ok(AdminApiSecurityTest.java:99)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+com.campusflow.web.api.AdminApiSecurityTest.usersDeactivate_admin_ok -- Time elapsed: 0.113 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<200> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.campusflow.web.api.AdminApiSecurityTest.usersDeactivate_admin_ok(AdminApiSecurityTest.java:109)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+com.campusflow.web.api.AdminApiSecurityTest.usersSearch_student_forbidden -- Time elapsed: 0.094 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.campusflow.web.api.AdminApiSecurityTest.usersSearch_student_forbidden(AdminApiSecurityTest.java:80)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+com.campusflow.web.api.AdminApiSecurityTest.usersList_lecturer_forbidden -- Time elapsed: 0.073 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.campusflow.web.api.AdminApiSecurityTest.usersList_lecturer_forbidden(AdminApiSecurityTest.java:72)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+com.campusflow.web.api.AdminApiSecurityTest.departmentsCreate_lecturer_forbidden -- Time elapsed: 0.070 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<403> but was:<404>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:59)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:122)
+	at org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$9(StatusResultMatchers.java:637)
+	at org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:214)
+	at com.campusflow.web.api.AdminApiSecurityTest.departmentsCreate_lecturer_forbidden(AdminApiSecurityTest.java:119)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

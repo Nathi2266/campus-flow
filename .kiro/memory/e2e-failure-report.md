@@ -1,19 +1,22 @@
 # E2E Failure Report
 
-**Status:** PASS
+**Status:** PASS  
+**Date:** 2026-08-04
 
-**Suite:** `frontend/e2e/roles-and-data-flow.spec.ts`  
-**Result:** 10 passed (0 failed, 0 skipped)  
-**Date:** 2026-07-29
+## Results
 
-Covered:
-- Login UI health
-- ADMIN / LECTURER / STUDENT nav role gates
-- STUDENT student-list + course-roster IDOR negatives
-- Profile patch
-- Admin create student (temp password) → course → enroll → reports
-- Lecturer grade entry
-- Student self-enroll
-- Public register → STUDENT
+| Suite | Result |
+|-------|--------|
+| `roles-and-data-flow.spec.ts` | **15/15 passed** |
+| `full-app-walkthrough.spec.ts` | **1/1 passed** |
 
-Loop may sign off on E2E smoke for this cycle.
+## Durable walkthrough video
+
+**Path:** `frontend/e2e-artifacts/campusflow-full-app-walkthrough.webm`  
+
+Continuous recording of ADMIN / LECTURER / STUDENT flows (nav, CRUD, grades, IDOR, enroll, register).  
+Not deleted when Playwright clears `test-results/`.
+
+Regenerate: `cd frontend && npm run test:e2e:walkthrough`
+
+Loop may sign off.

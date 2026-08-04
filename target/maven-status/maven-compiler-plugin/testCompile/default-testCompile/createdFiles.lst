@@ -1,2 +1,3 @@
 com/campusflow/service/StudentServiceTest.class
+com/campusflow/web/api/AdminApiSecurityTest.class
 com/campusflow/CampusFlowApplicationTests.class

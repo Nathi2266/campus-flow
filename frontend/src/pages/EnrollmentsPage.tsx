@@ -105,7 +105,8 @@ export function EnrollmentsPage() {
 
   const courses = useQuery({
     queryKey: ['courses', 'enroll-picker', isStudent],
-    queryFn: () => listCourses({ page: 0, size: 100, ...(isStudent ? { active: true } : {}) }),
+    // Larger page so new E2E/admin courses still appear in filters/pickers
+    queryFn: () => listCourses({ page: 0, size: 200, ...(isStudent ? { active: true } : {}) }),
     enabled: enrollModal.isOpen || canManage,
   })
 

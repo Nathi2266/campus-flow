@@ -292,7 +292,8 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await expect(tempDialog.getByText(/Temporary password/i)).toBeVisible()
     await tempDialog.getByRole('button', { name: 'Done' }).click()
     await expect(tempDialog).toHaveCount(0)
-    await expect(page.getByText(studentEmail)).toBeVisible({ timeout: 20_000 })
+    await page.getByLabel('Search students').fill(studentEmail)
+    await expect(page.getByText(studentEmail)).toBeVisible({ timeout: 25_000 })
 
     await page.getByTestId('nav-courses').click()
     await page.getByRole('button', { name: 'Add course' }).click()
@@ -303,8 +304,8 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await courseDialog.locator('#departmentId').selectOption({ index: 1 })
     await courseDialog.getByLabel('Max capacity').fill('25')
     await courseDialog.getByRole('button', { name: 'Create' }).click()
-    await expect(page.getByText(courseCode)).toBeVisible({ timeout: 20_000 })
     await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page.getByText(/Course created|created/i).first()).toBeVisible({ timeout: 20_000 })
 
     const ids = await page.evaluate(async ({ studentEmail: se, courseCode: cc }) => {
       const raw = localStorage.getItem('campusflow-auth')
@@ -312,11 +313,28 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
       const token = parsed?.state?.accessToken as string
       const headers = { Authorization: `Bearer ${token}` }
 
-      const students = await fetch('/api/v1/students?page=0&size=100', { headers }).then((r) => r.json())
-      const courses = await fetch('/api/v1/courses?page=0&size=100', { headers }).then((r) => r.json())
-      const student = (students.content as Array<{ id: number; email: string }>).find((s) => s.email === se)
-      const course = (courses.content as Array<{ id: number; code: string }>).find((c) => c.code === cc)
-      return { studentId: student?.id, courseId: course?.id, token }
+      async function findInPages<T extends { id: number }>(
+        path: string,
+        match: (row: T) => boolean,
+      ): Promise<number | undefined> {
+        for (let page = 0; page < 10; page++) {
+          const body = await fetch(`${path}?page=${page}&size=50`, { headers }).then((r) => r.json())
+          const hit = (body.content as T[] | undefined)?.find(match)
+          if (hit) return hit.id
+          if (body.last || !body.content?.length) break
+        }
+        return undefined
+      }
+
+      const studentId = await findInPages<{ id: number; email: string }>(
+        '/api/v1/students',
+        (s) => s.email === se,
+      )
+      const courseId = await findInPages<{ id: number; code: string }>(
+        '/api/v1/courses',
+        (c) => c.code === cc,
+      )
+      return { studentId, courseId, token }
     }, { studentEmail, courseCode })
 
     expect(ids.studentId, 'created student id').toBeTruthy()
@@ -329,7 +347,30 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await enrollDialog.locator('#courseId').selectOption(String(ids.courseId))
     await enrollDialog.getByRole('button', { name: 'Enroll', exact: true }).click()
     await expect(page.getByRole('dialog')).toHaveCount(0)
+
+    // Filter to the new course so the row is on the first page of a growing catalog
+    const courseFilter = page.locator('#enrollment-course-filter')
+    await expect(courseFilter.locator(`option[value="${ids.courseId}"]`)).toBeAttached({
+      timeout: 25_000,
+    })
+    await courseFilter.selectOption(String(ids.courseId))
     await expect(page.getByRole('row').filter({ hasText: courseCode })).toBeVisible({ timeout: 20_000 })
+
+    const enrolled = await page.evaluate(async ({ studentId, courseId }) => {
+      const raw = localStorage.getItem('campusflow-auth')
+      const parsed = raw ? JSON.parse(raw) : null
+      const token = parsed?.state?.accessToken as string
+      const res = await fetch(`/api/v1/enrollments?page=0&size=50&courseId=${courseId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const body = await res.json()
+      const match = (body.content as Array<{ studentId: number; courseId: number }> | undefined)?.find(
+        (e) => e.studentId === studentId && e.courseId === courseId,
+      )
+      return { status: res.status, found: Boolean(match) }
+    }, { studentId: ids.studentId!, courseId: ids.courseId! })
+    expect(enrolled.status).toBe(200)
+    expect(enrolled.found).toBe(true)
 
     await page.getByTestId('nav-reports').click()
     await expect(page.getByRole('heading', { name: 'Reports' })).toBeVisible()

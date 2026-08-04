@@ -48,6 +48,8 @@
 4. Waitlists + academic term/year (schema)
 5. FORBIDDEN → HTTP 403 mapping; auth rate limiting; httpOnly cookies
 6. Expand report CSV pack / user email invite delivery
+7. Course catalogue search (lists grow past first page — E2E already works around via API)
+8. Avoid nginx 502 during API cold start (FE should wait on app healthy / retry proxy)
 
 ## Spec hygiene
 
