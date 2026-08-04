@@ -49,7 +49,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { to: '/', label: 'Dashboard', icon: <FiHome /> },
+  { to: '/dashboard', label: 'Dashboard', icon: <FiHome /> },
   { to: '/students', label: 'Students', icon: <FiUsers />, roles: ['ADMIN', 'LECTURER'] },
   { to: '/courses', label: 'Courses', icon: <FiBook /> },
   { to: '/enrollments', label: 'Enrollments', icon: <FiClipboard /> },
@@ -73,7 +73,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
           key={item.to}
           as={NavLink}
           to={item.to}
-          end={item.to === '/'}
+          end={item.to === '/dashboard'}
           onClick={onNavigate}
           display="flex"
           alignItems="center"
@@ -120,13 +120,13 @@ export function AppLayout() {
       await apiLogout(refreshToken)
     }
     clearSession()
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   const sidebar = (
     <Flex direction="column" h="full" py={6} px={3} gap={7}>
       <Box px={2}>
-        <HStack spacing={3} as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>
+        <HStack spacing={3} as={RouterLink} to="/dashboard" _hover={{ textDecoration: 'none' }}>
           <Box
             w="40px"
             h="40px"

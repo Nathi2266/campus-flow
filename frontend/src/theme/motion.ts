@@ -40,3 +40,21 @@ export const fadeIn: Variants = {
   initial: { opacity: 0 },
   animate: { opacity: 1, transition: { duration: 0.25 } },
 }
+
+export const heroVariants: Variants = {
+  initial: { opacity: 0, y: 20 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+  },
+}
+
+export const heroVisualVariants: Variants = {
+  initial: { opacity: 0, scale: 1.04 },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+  },
+}

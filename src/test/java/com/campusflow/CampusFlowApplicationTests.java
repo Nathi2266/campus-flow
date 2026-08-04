@@ -2,14 +2,13 @@ package com.campusflow;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 /**
  * Application context loading tests for CampusFlow.
- *
- * @author CampusFlow Team
- * @version 1.0.0
  */
 @SpringBootTest
+@ActiveProfiles("test")
 class CampusFlowApplicationTests {
 
     @Test

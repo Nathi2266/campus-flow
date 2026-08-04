@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtTokenProvider.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">campusflow</a> &gt; <a href="index.source.html" class="el_package">com.campusflow.security</a> &gt; <span class="el_source">JwtTokenProvider.java</span></div><h1>JwtTokenProvider.java</h1><pre class="source lang-java linenums">package com.campusflow.security;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+
+/**
+ * JWT token provider for CampusFlow.
+ *
+ * &lt;p&gt;Generates and validates JWT tokens for authentication.
+ *
+ * @author CampusFlow Team
+ * @version 1.0.0
+ */
+@Component
+<span class="nc" id="L25">@Slf4j</span>
+public class JwtTokenProvider {
+
+    private static final int MIN_SECRET_LENGTH = 32;
+
+    private final SecretKey key;
+
+    private final long accessTokenExpirationMs;
+
+    private final long refreshTokenExpirationMs;
+
+    public JwtTokenProvider(
+            @Value(&quot;${jwt.secret:}&quot;) String secret,
+            @Value(&quot;${jwt.allow-insecure-default:false}&quot;) boolean allowInsecureDefault,
+            @Value(&quot;${jwt.access-token-expiration:900000}&quot;) long accessTokenExpirationMs,
+<span class="nc" id="L40">            @Value(&quot;${jwt.refresh-token-expiration:604800000}&quot;) long refreshTokenExpirationMs) {</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        String resolved = secret != null ? secret.trim() : &quot;&quot;;</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        if (resolved.isEmpty()) {</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">            if (!allowInsecureDefault) {</span>
+<span class="nc" id="L44">                throw new IllegalStateException(</span>
+                    &quot;jwt.secret must be set (env JWT_SECRET). Refusing to start without a signing secret.&quot;);
+            }
+<span class="nc" id="L47">            resolved = &quot;campusflow-dev-only-secret-key-min-32-chars!!&quot;;</span>
+<span class="nc" id="L48">            log.warn(&quot;Using insecure JWT default secret — set JWT_SECRET for any shared/prod environment&quot;);</span>
+        }
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (resolved.length() &lt; MIN_SECRET_LENGTH) {</span>
+<span class="nc" id="L51">            throw new IllegalStateException(</span>
+                &quot;jwt.secret must be at least &quot; + MIN_SECRET_LENGTH + &quot; characters&quot;);
+        }
+<span class="nc" id="L54">        this.key = Keys.hmacShaKeyFor(resolved.getBytes(StandardCharsets.UTF_8));</span>
+<span class="nc" id="L55">        this.accessTokenExpirationMs = accessTokenExpirationMs;</span>
+<span class="nc" id="L56">        this.refreshTokenExpirationMs = refreshTokenExpirationMs;</span>
+<span class="nc" id="L57">    }</span>
+
+    public String generateAccessToken(Long userId, String email, String role, Long departmentId) {
+<span class="nc" id="L60">        Instant now = Instant.now();</span>
+<span class="nc" id="L61">        Instant expiry = now.plus(accessTokenExpirationMs, ChronoUnit.MILLIS);</span>
+
+<span class="nc" id="L63">        return Jwts.builder()</span>
+<span class="nc" id="L64">            .subject(String.valueOf(userId))</span>
+<span class="nc" id="L65">            .claim(&quot;email&quot;, email)</span>
+<span class="nc" id="L66">            .claim(&quot;role&quot;, role)</span>
+<span class="nc" id="L67">            .claim(&quot;departmentId&quot;, departmentId)</span>
+<span class="nc" id="L68">            .issuedAt(Date.from(now))</span>
+<span class="nc" id="L69">            .expiration(Date.from(expiry))</span>
+<span class="nc" id="L70">            .signWith(key)</span>
+<span class="nc" id="L71">            .compact();</span>
+    }
+
+    public String generateRefreshToken(Long userId) {
+<span class="nc" id="L75">        Instant now = Instant.now();</span>
+<span class="nc" id="L76">        Instant expiry = now.plus(refreshTokenExpirationMs, ChronoUnit.MILLIS);</span>
+
+<span class="nc" id="L78">        return Jwts.builder()</span>
+<span class="nc" id="L79">            .subject(String.valueOf(userId))</span>
+<span class="nc" id="L80">            .claim(&quot;type&quot;, &quot;refresh&quot;)</span>
+<span class="nc" id="L81">            .issuedAt(Date.from(now))</span>
+<span class="nc" id="L82">            .expiration(Date.from(expiry))</span>
+<span class="nc" id="L83">            .signWith(key)</span>
+<span class="nc" id="L84">            .compact();</span>
+    }
+
+    public boolean validateToken(String token) {
+        try {
+<span class="nc" id="L89">            parseClaims(token);</span>
+<span class="nc" id="L90">            return true;</span>
+<span class="nc" id="L91">        } catch (Exception e) {</span>
+<span class="nc" id="L92">            log.warn(&quot;Invalid JWT token: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L93">            return false;</span>
+        }
+    }
+
+    public Long getUserIdFromToken(String token) {
+<span class="nc" id="L98">        return Long.parseLong(parseClaims(token).getSubject());</span>
+    }
+
+    public String getRoleFromToken(String token) {
+<span class="nc" id="L102">        return parseClaims(token).get(&quot;role&quot;, String.class);</span>
+    }
+
+    public Long getDepartmentIdFromToken(String token) {
+<span class="nc" id="L106">        Object deptId = parseClaims(token).get(&quot;departmentId&quot;);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (deptId == null) {</span>
+<span class="nc" id="L108">            return null;</span>
+        }
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (deptId instanceof Number number) {</span>
+<span class="nc" id="L111">            return number.longValue();</span>
+        }
+<span class="nc" id="L113">        return Long.parseLong(deptId.toString());</span>
+    }
+
+    public boolean isRefreshToken(String token) {
+        try {
+<span class="nc" id="L118">            return &quot;refresh&quot;.equals(parseClaims(token).get(&quot;type&quot;, String.class));</span>
+<span class="nc" id="L119">        } catch (Exception e) {</span>
+<span class="nc" id="L120">            return false;</span>
+        }
+    }
+
+    public Instant getExpirationFromToken(String token) {
+<span class="nc" id="L125">        return parseClaims(token).getExpiration().toInstant();</span>
+    }
+
+    public long getRefreshTokenExpirationMs() {
+<span class="nc" id="L129">        return refreshTokenExpirationMs;</span>
+    }
+
+    private Claims parseClaims(String token) {
+<span class="nc" id="L133">        return Jwts.parser()</span>
+<span class="nc" id="L134">            .verifyWith(key)</span>
+<span class="nc" id="L135">            .build()</span>
+<span class="nc" id="L136">            .parseSignedClaims(token)</span>
+<span class="nc" id="L137">            .getPayload();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

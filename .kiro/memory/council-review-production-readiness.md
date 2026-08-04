@@ -103,6 +103,17 @@ Notifications, CSV, rate limiting, httpOnly cookies, full Khonofy doc purge
 ## Next step
 
 - [x] Council
-- [ ] Implement Cycle 1–2
-- [ ] Loop gates
-- [ ] Memory / spec updates
+- [x] Implement Cycle 1–2
+- [x] Loop gates (FE typecheck/test; BE compile + StudentServiceTest)
+- [x] Memory / spec updates
+- [ ] Optional: Playwright against compose; rate limiting; cookie sessions (tracked in future-features)
+
+## Loop verification (2026-07-29)
+
+| Gate | Result |
+|------|--------|
+| FE typecheck / unit tests | Pass |
+| BE `mvn compile` + `StudentServiceTest` | Pass |
+| Context test uses `@ActiveProfiles("test")` | Fixed |
+| Prod swagger disabled / JWT required | Done |
+| Remaining production items | Documented in `future-features.md` |

@@ -30,7 +30,8 @@ export function LoginPage() {
   const setSession = useAuthStore((s) => s.setSession)
   const toast = useToast()
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/'
+  const fromRaw = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname
+  const from = fromRaw && fromRaw !== '/' ? fromRaw : '/dashboard'
 
   const {
     register,
@@ -108,6 +109,11 @@ export function LoginPage() {
         Need an account?{' '}
         <Link as={RouterLink} to="/register" color="brand.600" fontWeight="semibold">
           Register
+        </Link>
+      </Text>
+      <Text fontSize="sm" color="gray.500" textAlign="center">
+        <Link as={RouterLink} to="/" color="gray.600" fontWeight="medium">
+          ← Back to CampusFlow
         </Link>
       </Text>
     </Stack>

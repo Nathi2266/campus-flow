@@ -161,6 +161,13 @@ Notifications API, CSV export, httpOnly cookies, rate limiting, lecturer enrollm
 ## Next step
 
 - [x] Council
-- [ ] Begin implementation (Cycle A → B)
-- [ ] Loop gates + Playwright until green
-- [ ] Document remaining improvements
+- [x] Begin implementation (Cycle A → B)
+- [x] Loop gates + Playwright until green (10/10)
+- [x] Document remaining improvements (`future-features.md`)
+
+## Loop verification (2026-07-29 close)
+
+- FE: typecheck / lint / unit / build green
+- Playwright: 10/10 pass against API `:8090` + Vite `:5173`
+- P0 security: student scoping, roster IDOR, temp password, V3 constrain, JWT config, logout permitAll, swagger prod off, cache→simple
+- Remaining: see `future-features.md` P1/P2

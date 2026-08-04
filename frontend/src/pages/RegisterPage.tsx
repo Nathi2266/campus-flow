@@ -62,7 +62,7 @@ export function RegisterPage() {
         },
       })
       toast({ title: 'Account created', status: 'success', duration: 2500 })
-      navigate('/', { replace: true })
+      navigate('/dashboard', { replace: true })
     } catch (error) {
       setSubmitError(getErrorMessage(error, 'Registration failed'))
     }
@@ -109,6 +109,11 @@ export function RegisterPage() {
         Already registered?{' '}
         <Link as={RouterLink} to="/login" color="brand.600" fontWeight="semibold">
           Sign in
+        </Link>
+      </Text>
+      <Text fontSize="sm" color="gray.500" textAlign="center">
+        <Link as={RouterLink} to="/" color="gray.600" fontWeight="medium">
+          ← Back to CampusFlow
         </Link>
       </Text>
     </Stack>

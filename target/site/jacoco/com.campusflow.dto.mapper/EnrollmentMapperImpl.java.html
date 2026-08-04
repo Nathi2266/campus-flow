@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EnrollmentMapperImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">campusflow</a> &gt; <a href="index.source.html" class="el_package">com.campusflow.dto.mapper</a> &gt; <span class="el_source">EnrollmentMapperImpl.java</span></div><h1>EnrollmentMapperImpl.java</h1><pre class="source lang-java linenums">package com.campusflow.dto.mapper;
+
+import com.campusflow.domain.Course;
+import com.campusflow.domain.Enrollment;
+import com.campusflow.domain.Student;
+import com.campusflow.dto.request.EnrollmentCreateRequest;
+import com.campusflow.dto.response.EnrollmentResponse;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.processing.Generated;
+import org.springframework.stereotype.Component;
+
+@Generated(
+    value = &quot;org.mapstruct.ap.MappingProcessor&quot;,
+    date = &quot;2026-07-29T22:10:08+0000&quot;,
+    comments = &quot;version: 1.5.5.Final, compiler: javac, environment: Java 21.0.11 (Eclipse Adoptium)&quot;
+)
+@Component
+<span class="nc" id="L19">public class EnrollmentMapperImpl implements EnrollmentMapper {</span>
+
+    @Override
+    public Enrollment toEntity(EnrollmentCreateRequest request) {
+<span class="nc bnc" id="L23" title="All 2 branches missed.">        if ( request == null ) {</span>
+<span class="nc" id="L24">            return null;</span>
+        }
+
+<span class="nc" id="L27">        Enrollment.EnrollmentBuilder enrollment = Enrollment.builder();</span>
+
+<span class="nc" id="L29">        return enrollment.build();</span>
+    }
+
+    @Override
+    public EnrollmentResponse toResponse(Enrollment enrollment) {
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if ( enrollment == null ) {</span>
+<span class="nc" id="L35">            return null;</span>
+        }
+
+<span class="nc" id="L38">        EnrollmentResponse.EnrollmentResponseBuilder enrollmentResponse = EnrollmentResponse.builder();</span>
+
+<span class="nc" id="L40">        enrollmentResponse.id( enrollment.getId() );</span>
+<span class="nc" id="L41">        enrollmentResponse.enrollmentDate( map( enrollment.getEnrollmentDate() ) );</span>
+<span class="nc" id="L42">        enrollmentResponse.status( enrollment.getStatus() );</span>
+<span class="nc" id="L43">        enrollmentResponse.grade( enrollment.getGrade() );</span>
+<span class="nc" id="L44">        enrollmentResponse.notes( enrollment.getNotes() );</span>
+<span class="nc" id="L45">        enrollmentResponse.createdAt( map( enrollment.getCreatedAt() ) );</span>
+<span class="nc" id="L46">        enrollmentResponse.updatedAt( map( enrollment.getUpdatedAt() ) );</span>
+
+<span class="nc" id="L48">        return enrollmentResponse.build();</span>
+    }
+
+    @Override
+    public EnrollmentResponse toResponseWithDetails(Enrollment enrollment) {
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        if ( enrollment == null ) {</span>
+<span class="nc" id="L54">            return null;</span>
+        }
+
+<span class="nc" id="L57">        EnrollmentResponse.EnrollmentResponseBuilder enrollmentResponse = EnrollmentResponse.builder();</span>
+
+<span class="nc" id="L59">        enrollmentResponse.studentName( enrollmentStudentFirstName( enrollment ) );</span>
+<span class="nc" id="L60">        enrollmentResponse.courseCode( enrollmentCourseCode( enrollment ) );</span>
+<span class="nc" id="L61">        enrollmentResponse.courseName( enrollmentCourseName( enrollment ) );</span>
+<span class="nc" id="L62">        enrollmentResponse.id( enrollment.getId() );</span>
+<span class="nc" id="L63">        enrollmentResponse.enrollmentDate( map( enrollment.getEnrollmentDate() ) );</span>
+<span class="nc" id="L64">        enrollmentResponse.status( enrollment.getStatus() );</span>
+<span class="nc" id="L65">        enrollmentResponse.grade( enrollment.getGrade() );</span>
+<span class="nc" id="L66">        enrollmentResponse.notes( enrollment.getNotes() );</span>
+<span class="nc" id="L67">        enrollmentResponse.createdAt( map( enrollment.getCreatedAt() ) );</span>
+<span class="nc" id="L68">        enrollmentResponse.updatedAt( map( enrollment.getUpdatedAt() ) );</span>
+
+<span class="nc" id="L70">        return enrollmentResponse.build();</span>
+    }
+
+    @Override
+    public List&lt;EnrollmentResponse&gt; toResponseList(List&lt;Enrollment&gt; enrollments) {
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if ( enrollments == null ) {</span>
+<span class="nc" id="L76">            return null;</span>
+        }
+
+<span class="nc" id="L79">        List&lt;EnrollmentResponse&gt; list = new ArrayList&lt;EnrollmentResponse&gt;( enrollments.size() );</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        for ( Enrollment enrollment : enrollments ) {</span>
+<span class="nc" id="L81">            list.add( toResponse( enrollment ) );</span>
+<span class="nc" id="L82">        }</span>
+
+<span class="nc" id="L84">        return list;</span>
+    }
+
+    private String enrollmentStudentFirstName(Enrollment enrollment) {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if ( enrollment == null ) {</span>
+<span class="nc" id="L89">            return null;</span>
+        }
+<span class="nc" id="L91">        Student student = enrollment.getStudent();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        if ( student == null ) {</span>
+<span class="nc" id="L93">            return null;</span>
+        }
+<span class="nc" id="L95">        String firstName = student.getFirstName();</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        if ( firstName == null ) {</span>
+<span class="nc" id="L97">            return null;</span>
+        }
+<span class="nc" id="L99">        return firstName;</span>
+    }
+
+    private String enrollmentCourseCode(Enrollment enrollment) {
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if ( enrollment == null ) {</span>
+<span class="nc" id="L104">            return null;</span>
+        }
+<span class="nc" id="L106">        Course course = enrollment.getCourse();</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if ( course == null ) {</span>
+<span class="nc" id="L108">            return null;</span>
+        }
+<span class="nc" id="L110">        String code = course.getCode();</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        if ( code == null ) {</span>
+<span class="nc" id="L112">            return null;</span>
+        }
+<span class="nc" id="L114">        return code;</span>
+    }
+
+    private String enrollmentCourseName(Enrollment enrollment) {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if ( enrollment == null ) {</span>
+<span class="nc" id="L119">            return null;</span>
+        }
+<span class="nc" id="L121">        Course course = enrollment.getCourse();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        if ( course == null ) {</span>
+<span class="nc" id="L123">            return null;</span>
+        }
+<span class="nc" id="L125">        String name = course.getName();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if ( name == null ) {</span>
+<span class="nc" id="L127">            return null;</span>
+        }
+<span class="nc" id="L129">        return name;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

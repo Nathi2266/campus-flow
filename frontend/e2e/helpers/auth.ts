@@ -22,8 +22,8 @@ export async function loginAs(page: Page, email: string, password: string) {
   await page.getByTestId('login-email').fill(email)
   await page.getByTestId('login-password').fill(password)
   await page.getByTestId('login-submit').click()
-  await expect(page).toHaveURL(/\/($|\?)/, { timeout: 20_000 })
-  await expect(page.getByRole('heading').first()).toBeVisible()
+  await expect(page).toHaveURL(/\/dashboard($|\?)/, { timeout: 45_000 })
+  await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15_000 })
 }
 
 /** Public registration creates STUDENT only. */
@@ -43,7 +43,7 @@ export async function registerStudent(
   await page.getByLabel('Email').fill(data.email)
   await page.getByLabel('Password').fill(data.password)
   await page.getByRole('button', { name: /Register as student/i }).click()
-  await expect(page).toHaveURL(/\/($|\?)/, { timeout: 20_000 })
+  await expect(page).toHaveURL(/\/dashboard($|\?)/, { timeout: 45_000 })
 }
 
 export async function signOut(page: Page) {

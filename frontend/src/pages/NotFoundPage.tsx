@@ -1,4 +1,4 @@
-import { Button, Heading, Text, VStack } from '@chakra-ui/react'
+import { Button, Heading, HStack, Text, VStack } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router-dom'
 import { AnimatedSurface } from '@/components/AnimatedSurface'
 
@@ -22,9 +22,14 @@ export function NotFoundPage() {
         <Text mt={3} color="gray.500" lineHeight="tall">
           This page does not exist in CampusFlow.
         </Text>
-        <Button as={RouterLink} to="/" mt={8} size="lg">
-          Back to dashboard
-        </Button>
+        <HStack mt={8} justify="center" spacing={3} flexWrap="wrap">
+          <Button as={RouterLink} to="/" size="lg" variant="outline">
+            Home
+          </Button>
+          <Button as={RouterLink} to="/login" size="lg">
+            Sign in
+          </Button>
+        </HStack>
       </AnimatedSurface>
     </VStack>
   )

@@ -1,5 +1,5 @@
 import { Box, Container, Text, VStack } from '@chakra-ui/react'
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet, Navigate, Link as RouterLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuthStore } from '@/features/auth/authStore'
 import { authPanelVariants, fadeIn } from '@/theme/motion'
@@ -11,7 +11,7 @@ export function AuthLayout() {
   const authenticated = useAuthStore((s) => s.isAuthenticated())
 
   if (authenticated) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   return (
@@ -45,6 +45,8 @@ export function AuthLayout() {
           animate="animate"
         >
           <Box
+            as={RouterLink}
+            to="/"
             w="56px"
             h="56px"
             borderRadius="xl"
@@ -60,16 +62,20 @@ export function AuthLayout() {
             fontWeight="700"
             fontSize="lg"
             mb={2}
+            _hover={{ bg: 'whiteAlpha.300', textDecoration: 'none' }}
+            aria-label="CampusFlow home"
           >
             CF
           </Box>
           <Text
-            as="h1"
+            as={RouterLink}
+            to="/"
             fontFamily="heading"
             fontSize={{ base: '3xl', md: '4xl' }}
             fontWeight="700"
             color="white"
             letterSpacing="-0.03em"
+            _hover={{ textDecoration: 'none', color: 'whiteAlpha.900' }}
           >
             CampusFlow
           </Text>

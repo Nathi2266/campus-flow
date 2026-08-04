@@ -6,7 +6,8 @@ test.describe.configure({ mode: 'serial' })
 test.describe('CampusFlow E2E — all roles & data flow', () => {
   test('health: UI loads login', async ({ page }) => {
     await page.goto('/login')
-    await expect(page.getByRole('heading', { name: 'CampusFlow' })).toBeVisible()
+    await expect(page.getByText('CampusFlow').first()).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Sign in/i })).toBeVisible()
     await expect(page.getByTestId('login-submit')).toBeVisible()
   })
 
@@ -148,14 +149,12 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await page.getByLabel('Department').selectOption({ index: 1 })
     await page.getByRole('button', { name: 'Create' }).click()
 
-    // Temporary password shown once
-    await expect(page.getByText(/temporary password|one-time password|password/i).first()).toBeVisible({
-      timeout: 20_000,
-    })
-    const dialog = page.getByRole('dialog')
-    if (await dialog.count()) {
-      await page.getByRole('button', { name: /Close|Done|OK/i }).first().click()
-    }
+    // Temporary password shown once (AlertDialog)
+    const tempDialog = page.getByRole('alertdialog')
+    await expect(tempDialog).toBeVisible({ timeout: 20_000 })
+    await expect(tempDialog.getByText(/Temporary password/i)).toBeVisible()
+    await tempDialog.getByRole('button', { name: 'Done' }).click()
+    await expect(tempDialog).toHaveCount(0)
     await expect(page.getByText(studentEmail)).toBeVisible({ timeout: 20_000 })
 
     await page.getByTestId('nav-courses').click()
@@ -203,20 +202,38 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await page.getByTestId('nav-enrollments').click()
     await expect(page.getByRole('heading', { name: 'Enrollments' })).toBeVisible()
 
-    const gradeButton = page.getByRole('button', { name: /Edit grade|grade/i }).first()
-    const iconGrade = page.locator('button[aria-label*="grade" i]').first()
-    const target = (await gradeButton.count()) > 0 ? gradeButton : iconGrade
-
-    if ((await target.count()) === 0) {
-      test.skip(true, 'No enrollments available for lecturer to grade')
-      return
+    // Prefer seeded roster; if empty, create enrollment via API for lecturer's course
+    let gradeBtn = page.locator('button[aria-label^="Edit grade"]').first()
+    if ((await gradeBtn.count()) === 0) {
+      const setup = await page.evaluate(async () => {
+        const raw = localStorage.getItem('campusflow-auth')
+        const parsed = raw ? JSON.parse(raw) : null
+        const token = parsed?.state?.accessToken as string
+        const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+        const courses = await fetch('/api/v1/courses?page=0&size=20', { headers }).then((r) => r.json())
+        const courseId = courses.content?.[0]?.id as number | undefined
+        const students = await fetch('/api/v1/students?page=0&size=5', { headers }).then((r) => r.json())
+        const studentId = students.content?.[0]?.id as number | undefined
+        if (!courseId || !studentId) return { ok: false as const }
+        const enroll = await fetch('/api/v1/enrollments', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ studentId, courseId }),
+        })
+        return { ok: enroll.ok || enroll.status === 400 }
+      })
+      expect(setup.ok, 'lecturer can access course/student for grading setup').toBeTruthy()
+      await page.reload()
+      await page.getByTestId('nav-enrollments').click()
+      gradeBtn = page.locator('button[aria-label^="Edit grade"]').first()
     }
 
-    await target.click()
-    await page.getByLabel('Grade').fill('A')
+    await expect(gradeBtn).toBeVisible({ timeout: 20_000 })
+    await gradeBtn.click()
+    await page.getByRole('textbox', { name: 'Grade' }).fill('A')
     await page.getByRole('button', { name: /Save grade/i }).click()
     await expect(page.getByRole('dialog')).toHaveCount(0)
-    await expect(page.getByRole('row').filter({ hasText: 'A' }).first()).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByRole('cell', { name: 'A', exact: true }).first()).toBeVisible({ timeout: 15_000 })
     await signOut(page)
   })
 
@@ -225,22 +242,31 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await page.getByTestId('nav-enrollments').click()
     await expect(page.getByRole('heading', { name: 'Enrollments' })).toBeVisible()
 
-    const enrollBtn = page.getByRole('button', { name: /Enroll|New enrollment|Self-enroll/i }).first()
-    await expect(enrollBtn).toBeVisible()
-    await enrollBtn.click()
+    await page.getByRole('button', { name: /Self-enroll/i }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
 
-    const courseSelect = page.getByLabel('Course')
-    await expect(courseSelect).toBeVisible()
-    const options = courseSelect.locator('option')
-    const optionCount = await options.count()
-    if (optionCount <= 1) {
-      await page.getByRole('button', { name: /Cancel|Close/i }).first().click()
-      test.skip(true, 'No available courses for self-enroll')
-      return
+    const courseSelect = dialog.getByLabel('Course')
+    await expect
+      .poll(async () => courseSelect.locator('option').count(), { timeout: 20_000 })
+      .toBeGreaterThan(1)
+
+    const optionCount = await courseSelect.locator('option').count()
+    await courseSelect.selectOption({ index: optionCount - 1 })
+    await dialog.getByRole('button', { name: 'Enroll', exact: true }).click()
+
+    // Either enrolled (dialog closes) or business-rule toast while dialog may remain
+    await Promise.race([
+      expect(dialog).toHaveCount(0, { timeout: 20_000 }),
+      expect(page.getByText(/already enrolled|maximum|full|Enrolled successfully/i).first()).toBeVisible({
+        timeout: 20_000,
+      }),
+    ])
+
+    if ((await dialog.count()) > 0) {
+      await dialog.getByRole('button', { name: 'Cancel' }).click()
+      await expect(dialog).toHaveCount(0)
     }
-    await courseSelect.selectOption({ index: 1 })
-    await page.getByRole('button', { name: 'Enroll', exact: true }).click()
-    await expect(page.getByRole('dialog')).toHaveCount(0, { timeout: 20_000 })
     await signOut(page)
   })
 

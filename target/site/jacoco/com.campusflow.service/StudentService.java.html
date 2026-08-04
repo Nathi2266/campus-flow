@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StudentService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">campusflow</a> &gt; <a href="index.source.html" class="el_package">com.campusflow.service</a> &gt; <span class="el_source">StudentService.java</span></div><h1>StudentService.java</h1><pre class="source lang-java linenums">package com.campusflow.service;
+
+import com.campusflow.domain.Department;
+import com.campusflow.domain.Student;
+import com.campusflow.domain.User;
+import com.campusflow.domain.enums.AcademicStatus;
+import com.campusflow.domain.enums.UserRole;
+import com.campusflow.dto.request.StudentCreateRequest;
+import com.campusflow.dto.request.StudentUpdateRequest;
+import com.campusflow.dto.response.PagedResponse;
+import com.campusflow.dto.response.StudentResponse;
+import com.campusflow.exception.NotFoundException;
+import com.campusflow.exception.ValidationException;
+import com.campusflow.repository.DepartmentRepository;
+import com.campusflow.repository.StudentRepository;
+import com.campusflow.repository.UserRepository;
+import com.campusflow.util.SecurityUtils;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.security.SecureRandom;
+import java.util.List;
+
+/**
+ * Service class for Student management.
+ *
+ * @author CampusFlow Team
+ * @version 1.0.0
+ */
+@Service
+<span class="fc" id="L38">@RequiredArgsConstructor</span>
+@Transactional
+public class StudentService {
+
+    private static final String TEMP_PASSWORD_CHARS =
+        &quot;ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&quot;;
+<span class="fc" id="L44">    private static final SecureRandom SECURE_RANDOM = new SecureRandom();</span>
+
+    private final StudentRepository studentRepository;
+    private final UserRepository userRepository;
+    private final DepartmentRepository departmentRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final SecurityUtils securityUtils;
+
+    public StudentResponse createStudent(StudentCreateRequest request) {
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (userRepository.existsByEmail(request.getEmail())) {</span>
+<span class="fc" id="L54">            throw new ValidationException(&quot;Email already exists&quot;, &quot;email&quot;, &quot;EMAIL_EXISTS&quot;);</span>
+        }
+
+<span class="fc" id="L57">        Department department = departmentRepository.findById(request.getDepartmentId())</span>
+<span class="fc" id="L58">            .orElseThrow(() -&gt; new NotFoundException(&quot;Department not found&quot;, &quot;departmentId&quot;));</span>
+
+<span class="fc" id="L60">        String temporaryPassword = generateTemporaryPassword();</span>
+
+<span class="fc" id="L62">        User user = User.builder()</span>
+<span class="fc" id="L63">            .email(request.getEmail())</span>
+<span class="fc" id="L64">            .passwordHash(passwordEncoder.encode(temporaryPassword))</span>
+<span class="fc" id="L65">            .firstName(request.getFirstName())</span>
+<span class="fc" id="L66">            .lastName(request.getLastName())</span>
+<span class="fc" id="L67">            .phoneNumber(request.getPhoneNumber())</span>
+<span class="fc" id="L68">            .role(UserRole.STUDENT)</span>
+<span class="fc" id="L69">            .department(department)</span>
+<span class="fc" id="L70">            .build();</span>
+<span class="fc" id="L71">        user = userRepository.save(user);</span>
+
+<span class="fc" id="L73">        Student student = Student.builder()</span>
+<span class="fc" id="L74">            .user(user)</span>
+<span class="fc" id="L75">            .studentNumber(generateStudentNumber())</span>
+<span class="fc" id="L76">            .firstName(request.getFirstName())</span>
+<span class="fc" id="L77">            .lastName(request.getLastName())</span>
+<span class="fc" id="L78">            .enrollmentDate(java.time.LocalDate.now())</span>
+<span class="fc" id="L79">            .academicStatus(AcademicStatus.ACTIVE)</span>
+<span class="fc" id="L80">            .build();</span>
+
+<span class="fc" id="L82">        user.setStudent(student);</span>
+<span class="fc" id="L83">        Student savedStudent = studentRepository.save(student);</span>
+
+<span class="fc" id="L85">        StudentResponse response = toResponse(savedStudent);</span>
+<span class="fc" id="L86">        response.setTemporaryPassword(temporaryPassword);</span>
+<span class="fc" id="L87">        return response;</span>
+    }
+
+    @Transactional(readOnly = true)
+    public StudentResponse getStudent(Long id) {
+<span class="fc" id="L92">        assertCanAccessStudent(id);</span>
+<span class="fc" id="L93">        Student student = studentRepository.findById(id)</span>
+<span class="fc" id="L94">            .orElseThrow(() -&gt; new NotFoundException(&quot;Student not found&quot;, &quot;id&quot;));</span>
+<span class="fc" id="L95">        return toResponse(student);</span>
+    }
+
+    public StudentResponse updateStudent(Long id, StudentUpdateRequest request) {
+<span class="fc" id="L99">        Student student = studentRepository.findById(id)</span>
+<span class="pc" id="L100">            .orElseThrow(() -&gt; new NotFoundException(&quot;Student not found&quot;, &quot;id&quot;));</span>
+
+<span class="fc" id="L102">        student.setFirstName(request.getFirstName());</span>
+<span class="fc" id="L103">        student.setLastName(request.getLastName());</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        if (student.getUser() != null) {</span>
+<span class="fc" id="L105">            student.getUser().setPhoneNumber(request.getPhoneNumber());</span>
+<span class="fc" id="L106">            student.getUser().setFirstName(request.getFirstName());</span>
+<span class="fc" id="L107">            student.getUser().setLastName(request.getLastName());</span>
+        }
+
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (request.getAcademicStatus() != null) {</span>
+<span class="fc" id="L111">            student.setAcademicStatus(AcademicStatus.valueOf(request.getAcademicStatus()));</span>
+        }
+
+<span class="fc" id="L114">        return toResponse(studentRepository.save(student));</span>
+    }
+
+    public void deleteStudent(Long id) {
+<span class="fc" id="L118">        Student student = studentRepository.findById(id)</span>
+<span class="pc" id="L119">            .orElseThrow(() -&gt; new NotFoundException(&quot;Student not found&quot;, &quot;id&quot;));</span>
+
+<span class="fc" id="L121">        student.setAcademicStatus(AcademicStatus.INACTIVE);</span>
+<span class="fc" id="L122">        studentRepository.save(student);</span>
+<span class="fc" id="L123">    }</span>
+
+    @Transactional(readOnly = true)
+    public PagedResponse&lt;StudentResponse&gt; listStudents(
+        Integer page, Integer size, String sort, Long departmentId, AcademicStatus status
+    ) {
+<span class="fc" id="L129">        User currentUser = securityUtils.getCurrentUser();</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        if (currentUser.getRole() == UserRole.STUDENT) {</span>
+<span class="fc" id="L131">            return ownStudentPage(currentUser, page, size);</span>
+        }
+
+<span class="fc" id="L134">        Pageable pageable = createPageable(page, size, sort);</span>
+
+        Page&lt;Student&gt; studentPage;
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        if (departmentId != null) {</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">            if (status != null) {</span>
+<span class="nc" id="L139">                studentPage = studentRepository.findByUserDepartmentIdAndAcademicStatus(</span>
+                    departmentId, status, pageable);
+            } else {
+<span class="nc" id="L142">                studentPage = studentRepository.findByUserDepartmentId(departmentId, pageable);</span>
+            }
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        } else if (status != null) {</span>
+<span class="nc" id="L145">            studentPage = studentRepository.findByAcademicStatus(status, pageable);</span>
+        } else {
+<span class="fc" id="L147">            studentPage = studentRepository.findAll(pageable);</span>
+        }
+
+<span class="fc" id="L150">        return toPagedResponse(studentPage);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public PagedResponse&lt;StudentResponse&gt; searchStudents(
+        String search, Integer page, Integer size, Long departmentId
+    ) {
+<span class="nc" id="L157">        User currentUser = securityUtils.getCurrentUser();</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">        if (currentUser.getRole() == UserRole.STUDENT) {</span>
+<span class="nc" id="L159">            return ownStudentPage(currentUser, page, size);</span>
+        }
+
+<span class="nc" id="L162">        Pageable pageable = createPageable(page, size, null);</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        String query = search != null ? search.trim() : &quot;&quot;;</span>
+
+        Page&lt;Student&gt; studentPage;
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        if (departmentId != null) {</span>
+<span class="nc" id="L167">            studentPage = studentRepository.searchByDepartment(departmentId, query, pageable);</span>
+        } else {
+<span class="nc" id="L169">            studentPage = studentRepository.searchAll(query, pageable);</span>
+        }
+
+<span class="nc" id="L172">        return toPagedResponse(studentPage);</span>
+    }
+
+    private PagedResponse&lt;StudentResponse&gt; ownStudentPage(User currentUser, Integer page, Integer size) {
+<span class="fc" id="L176">        Student own = requireLinkedStudent(currentUser);</span>
+<span class="fc" id="L177">        Pageable pageable = createPageable(page, size, null);</span>
+<span class="fc" id="L178">        Page&lt;Student&gt; studentPage = new PageImpl&lt;&gt;(List.of(own), pageable, 1);</span>
+<span class="fc" id="L179">        return toPagedResponse(studentPage);</span>
+    }
+
+    private void assertCanAccessStudent(Long studentId) {
+<span class="fc" id="L183">        User currentUser = securityUtils.getCurrentUser();</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">        if (currentUser.getRole() != UserRole.STUDENT) {</span>
+<span class="fc" id="L185">            return;</span>
+        }
+<span class="fc" id="L187">        Student own = requireLinkedStudent(currentUser);</span>
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">        if (!own.getId().equals(studentId)) {</span>
+<span class="fc" id="L189">            throw new ValidationException(&quot;Cannot view another student&quot;, &quot;id&quot;, &quot;FORBIDDEN&quot;);</span>
+        }
+<span class="nc" id="L191">    }</span>
+
+    private Student requireLinkedStudent(User user) {
+<span class="fc" id="L194">        return studentRepository.findByUserId(user.getId())</span>
+<span class="pc" id="L195">            .orElseThrow(() -&gt; new ValidationException(</span>
+                &quot;No student record linked to user&quot;, &quot;student&quot;, &quot;STUDENT_NOT_LINKED&quot;));
+    }
+
+    private Pageable createPageable(Integer page, Integer size, String sort) {
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">        int pageNum = page != null ? Math.max(page, 0) : 0;</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">        int pageSize = size != null ? Math.min(Math.max(size, 1), 100) : 20;</span>
+<span class="pc bpc" id="L202" title="3 of 4 branches missed.">        if (sort != null &amp;&amp; !sort.isEmpty()) {</span>
+<span class="nc" id="L203">            String[] sortParts = sort.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L204" title="All 4 branches missed.">            Sort.Direction direction = sortParts.length &gt; 1 &amp;&amp; &quot;desc&quot;.equalsIgnoreCase(sortParts[1])</span>
+<span class="nc" id="L205">                ? Sort.Direction.DESC</span>
+<span class="nc" id="L206">                : Sort.Direction.ASC;</span>
+<span class="nc" id="L207">            return PageRequest.of(pageNum, pageSize, Sort.by(direction, sortParts[0]));</span>
+        }
+<span class="fc" id="L209">        return PageRequest.of(pageNum, pageSize);</span>
+    }
+
+    private PagedResponse&lt;StudentResponse&gt; toPagedResponse(Page&lt;Student&gt; studentPage) {
+<span class="fc" id="L213">        return PagedResponse.&lt;StudentResponse&gt;builder()</span>
+<span class="fc" id="L214">            .content(studentPage.getContent().stream().map(this::toResponse).toList())</span>
+<span class="fc" id="L215">            .page(studentPage.getNumber())</span>
+<span class="fc" id="L216">            .size(studentPage.getSize())</span>
+<span class="fc" id="L217">            .totalElements(studentPage.getTotalElements())</span>
+<span class="fc" id="L218">            .totalPages(studentPage.getTotalPages())</span>
+<span class="fc" id="L219">            .isFirst(studentPage.isFirst())</span>
+<span class="fc" id="L220">            .isLast(studentPage.isLast())</span>
+<span class="fc" id="L221">            .hasContent(studentPage.hasContent())</span>
+<span class="fc" id="L222">            .build();</span>
+    }
+
+    private StudentResponse toResponse(Student student) {
+<span class="fc" id="L226">        User user = student.getUser();</span>
+<span class="fc" id="L227">        return StudentResponse.builder()</span>
+<span class="fc" id="L228">            .id(student.getId())</span>
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">            .userId(user != null ? user.getId() : null)</span>
+<span class="fc" id="L230">            .studentNumber(student.getStudentNumber())</span>
+<span class="fc" id="L231">            .firstName(student.getFirstName())</span>
+<span class="fc" id="L232">            .lastName(student.getLastName())</span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">            .email(user != null ? user.getEmail() : null)</span>
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">            .phoneNumber(user != null ? user.getPhoneNumber() : null)</span>
+<span class="pc bpc" id="L235" title="2 of 4 branches missed.">            .departmentId(user != null &amp;&amp; user.getDepartment() != null ? user.getDepartment().getId() : null)</span>
+<span class="pc bpc" id="L236" title="2 of 4 branches missed.">            .departmentName(user != null &amp;&amp; user.getDepartment() != null ? user.getDepartment().getName() : null)</span>
+<span class="fc" id="L237">            .enrollmentDate(student.getEnrollmentDate())</span>
+<span class="fc" id="L238">            .academicStatus(student.getAcademicStatus())</span>
+<span class="fc" id="L239">            .gpa(student.getGpa())</span>
+<span class="fc" id="L240">            .graduationDate(student.getGraduationDate())</span>
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">            .createdAt(student.getCreatedAt() != null ? student.getCreatedAt().toLocalDateTime() : null)</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">            .updatedAt(student.getUpdatedAt() != null ? student.getUpdatedAt().toLocalDateTime() : null)</span>
+<span class="fc" id="L243">            .build();</span>
+    }
+
+    private String generateStudentNumber() {
+<span class="fc" id="L247">        return &quot;2024&quot; + (1000 + SECURE_RANDOM.nextInt(9000));</span>
+    }
+
+    private String generateTemporaryPassword() {
+<span class="fc" id="L251">        StringBuilder sb = new StringBuilder(14);</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">        for (int i = 0; i &lt; 14; i++) {</span>
+<span class="fc" id="L253">            sb.append(TEMP_PASSWORD_CHARS.charAt(SECURE_RANDOM.nextInt(TEMP_PASSWORD_CHARS.length())));</span>
+        }
+<span class="fc" id="L255">        return sb.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

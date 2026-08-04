@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">campusflow</a> &gt; <a href="index.source.html" class="el_package">com.campusflow.web.api</a> &gt; <span class="el_source">UserController.java</span></div><h1>UserController.java</h1><pre class="source lang-java linenums">package com.campusflow.web.api;
+
+import com.campusflow.dto.request.UserAdminCreateRequest;
+import com.campusflow.dto.request.UserAdminUpdateRequest;
+import com.campusflow.dto.response.PagedResponse;
+import com.campusflow.dto.response.UserResponse;
+import com.campusflow.service.UserAdminService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * REST Controller for ADMIN user administration.
+ */
+@RestController
+@RequestMapping(&quot;/api/v1/users&quot;)
+<span class="nc" id="L23">@RequiredArgsConstructor</span>
+@PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+@Tag(name = &quot;Users&quot;, description = &quot;User administration endpoints&quot;)
+public class UserController {
+
+    private final UserAdminService userAdminService;
+
+    @GetMapping
+    @Operation(summary = &quot;List users&quot;)
+    public ResponseEntity&lt;PagedResponse&lt;UserResponse&gt;&gt; listUsers(
+        @Parameter(description = &quot;Page number&quot;) @RequestParam(defaultValue = &quot;0&quot;) Integer page,
+        @Parameter(description = &quot;Page size&quot;) @RequestParam(defaultValue = &quot;20&quot;) Integer size,
+        @Parameter(description = &quot;Role filter&quot;) @RequestParam(required = false) String role
+    ) {
+<span class="nc" id="L37">        return ResponseEntity.ok(userAdminService.listUsers(page, size, role));</span>
+    }
+
+    @PostMapping
+    @Operation(summary = &quot;Create user&quot;)
+    public ResponseEntity&lt;UserResponse&gt; createUser(@Valid @RequestBody UserAdminCreateRequest request) {
+<span class="nc" id="L43">        return ResponseEntity.status(HttpStatus.CREATED).body(userAdminService.createUser(request));</span>
+    }
+
+    @PatchMapping(&quot;/{id}&quot;)
+    @Operation(summary = &quot;Update user role/department&quot;)
+    public ResponseEntity&lt;UserResponse&gt; updateUser(
+        @Parameter(description = &quot;User ID&quot;) @PathVariable Long id,
+        @Valid @RequestBody UserAdminUpdateRequest request
+    ) {
+<span class="nc" id="L52">        return ResponseEntity.ok(userAdminService.updateUser(id, request));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

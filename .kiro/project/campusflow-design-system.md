@@ -49,9 +49,23 @@
 
 Respect `prefers-reduced-motion: reduce` (instant opacity only).
 
+## Landing page
+
+- Full-bleed hero (edge-to-edge visual plane); brand name is the dominant text signal
+- First viewport budget: brand, one headline, one supporting sentence, **exactly two auth buttons** (Sign in / Create account), dominant visual — no stat strips or promo chips on the hero
+- **Do not** repeat Sign in / Create account as buttons elsewhere on the landing (nav/footer/closing use text links for explore only)
+- Below fold: one-purpose sections (how it works, roles, capabilities, explore); surfaces only when interaction needs a container
+- Motion: hero fade/rise + light stagger on secondary sections; respect reduced-motion
+
+## Marketing / explore chrome
+
+- Shared header: logo → `/`, text links to Features / Roles / About
+- Shared footer: explore text links; no auth button cluster
+- Auth buttons live only on the landing hero (and on `/login` / `/register` form pages)
+
 ## Components
 
-`AnimatedPage`, `Surface`, `StatTile`, `PageHeader`, `EmptyState`, `ErrorState`, `LoadingState`, `DataTableShell`, Status badges, App shell nav.
+`AnimatedPage`, `Surface`, `StatTile`, `PageHeader`, `EmptyState`, `ErrorState`, `LoadingState`, `DataTableShell`, Status badges, App shell nav, MarketingLayout, Landing hero.
 
 ## Accessibility
 

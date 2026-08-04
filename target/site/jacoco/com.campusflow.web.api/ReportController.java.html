@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReportController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">campusflow</a> &gt; <a href="index.source.html" class="el_package">com.campusflow.web.api</a> &gt; <span class="el_source">ReportController.java</span></div><h1>ReportController.java</h1><pre class="source lang-java linenums">package com.campusflow.web.api;
+
+import com.campusflow.dto.response.*;
+import com.campusflow.service.ReportService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * REST Controller for Reports and Statistics.
+ *
+ * @author CampusFlow Team
+ * @version 1.0.0
+ */
+@RestController
+@RequestMapping(&quot;/api/v1/reports&quot;)
+<span class="nc" id="L23">@RequiredArgsConstructor</span>
+@PreAuthorize(&quot;hasAnyRole('ADMIN', 'LECTURER')&quot;)
+@Tag(name = &quot;Reports&quot;, description = &quot;Reporting and analytics endpoints&quot;)
+public class ReportController {
+
+    private final ReportService reportService;
+
+    @GetMapping(&quot;/statistics&quot;)
+    @Operation(summary = &quot;Get system statistics&quot;, description = &quot;Retrieve overall system statistics&quot;)
+    public ResponseEntity&lt;StatisticsResponse&gt; getStatistics() {
+<span class="nc" id="L33">        StatisticsResponse response = reportService.getStatistics();</span>
+<span class="nc" id="L34">        return ResponseEntity.ok(response);</span>
+    }
+
+    @GetMapping(&quot;/students-per-course&quot;)
+    @Operation(summary = &quot;Get students per course&quot;, description = &quot;Retrieve count of enrolled students per course&quot;)
+    public ResponseEntity&lt;List&lt;StudentsPerCourseResponse&gt;&gt; getStudentsPerCourse(
+        @Parameter(description = &quot;Department ID filter&quot;) @RequestParam(required = false) Long departmentId
+    ) {
+<span class="nc" id="L42">        return ResponseEntity.ok(reportService.getStudentsPerCourse(departmentId));</span>
+    }
+
+    @GetMapping(&quot;/graduation-progress&quot;)
+    @Operation(summary = &quot;Get graduation progress&quot;, description = &quot;Retrieve graduation progress report&quot;)
+    public ResponseEntity&lt;GraduationProgressResponse&gt; getGraduationProgress(
+        @Parameter(description = &quot;Department ID filter&quot;) @RequestParam(required = false) Long departmentId,
+        @Parameter(description = &quot;Year&quot;) @RequestParam(required = false) Integer year
+    ) {
+<span class="nc" id="L51">        GraduationProgressResponse response = reportService.getGraduationProgress(departmentId, year);</span>
+<span class="nc" id="L52">        return ResponseEntity.ok(response);</span>
+    }
+
+    @GetMapping(&quot;/active-courses&quot;)
+    @Operation(summary = &quot;Get active courses&quot;, description = &quot;Retrieve list of active courses with enrollment counts&quot;)
+    public ResponseEntity&lt;List&lt;ActiveCourseResponse&gt;&gt; getActiveCourses(
+        @Parameter(description = &quot;Department ID filter&quot;) @RequestParam(required = false) Long departmentId
+    ) {
+<span class="nc" id="L60">        return ResponseEntity.ok(reportService.getActiveCourses(departmentId));</span>
+    }
+
+    @GetMapping(&quot;/inactive-courses&quot;)
+    @Operation(summary = &quot;Get inactive courses&quot;, description = &quot;Retrieve list of inactive courses&quot;)
+    public ResponseEntity&lt;List&lt;CourseResponse&gt;&gt; getInactiveCourses(
+        @Parameter(description = &quot;Department ID filter&quot;) @RequestParam(required = false) Long departmentId
+    ) {
+<span class="nc" id="L68">        return ResponseEntity.ok(reportService.getInactiveCourses(departmentId));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

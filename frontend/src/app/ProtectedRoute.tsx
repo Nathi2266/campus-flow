@@ -12,7 +12,7 @@ export function ProtectedRoute({ roles }: { roles?: UserRole[] }) {
   }
 
   if (roles && user && !roles.includes(user.role)) {
-    return <Navigate to="/" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   return <Outlet />

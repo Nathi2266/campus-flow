@@ -6,6 +6,14 @@ import { AuthLayout } from '@/layouts/AuthLayout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { LoadingState } from '@/components/feedback'
 
+const LandingPage = lazy(() =>
+  import('@/pages/LandingPage').then((m) => ({ default: m.LandingPage })),
+)
+const FeaturesPage = lazy(() =>
+  import('@/pages/FeaturesPage').then((m) => ({ default: m.FeaturesPage })),
+)
+const RolesPage = lazy(() => import('@/pages/RolesPage').then((m) => ({ default: m.RolesPage })))
+const AboutPage = lazy(() => import('@/pages/AboutPage').then((m) => ({ default: m.AboutPage })))
 const LoginPage = lazy(() => import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage })))
 const RegisterPage = lazy(() =>
   import('@/pages/RegisterPage').then((m) => ({ default: m.RegisterPage })),
@@ -52,6 +60,39 @@ export function AppRouter() {
     <BrowserRouter>
       <ErrorBoundary>
         <Routes>
+          <Route
+            path="/"
+            element={
+              <Lazy>
+                <LandingPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/features"
+            element={
+              <Lazy>
+                <FeaturesPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/roles"
+            element={
+              <Lazy>
+                <RolesPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <Lazy>
+                <AboutPage />
+              </Lazy>
+            }
+          />
+
           <Route element={<AuthLayout />}>
             <Route
               path="/login"
@@ -74,7 +115,7 @@ export function AppRouter() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route
-                index
+                path="dashboard"
                 element={
                   <Lazy>
                     <DashboardPage />

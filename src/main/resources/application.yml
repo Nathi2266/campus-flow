@@ -86,7 +86,7 @@ logging:
     name: ${LOG_FILE:/var/log/campusflow/application.log}
 
 cache:
-  type: redis
+  type: simple
   redis:
     time-to-live: 600000
     cache-null-values: false

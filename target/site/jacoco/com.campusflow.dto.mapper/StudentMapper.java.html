@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StudentMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">campusflow</a> &gt; <a href="index.source.html" class="el_package">com.campusflow.dto.mapper</a> &gt; <span class="el_source">StudentMapper.java</span></div><h1>StudentMapper.java</h1><pre class="source lang-java linenums">package com.campusflow.dto.mapper;
+
+import com.campusflow.domain.Student;
+import com.campusflow.dto.request.StudentCreateRequest;
+import com.campusflow.dto.request.StudentUpdateRequest;
+import com.campusflow.dto.response.StudentResponse;
+import org.mapstruct.*;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.List;
+
+/**
+ * Mapper for Student entity and DTOs.
+ *
+ * @author CampusFlow Team
+ * @version 1.0.0
+ */
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+public interface StudentMapper {
+
+    Student toEntity(StudentCreateRequest request);
+
+    Student toEntity(StudentUpdateRequest request, @MappingTarget Student student);
+
+    @Named(&quot;toResponse&quot;)
+    StudentResponse toResponse(Student student);
+
+    @Mapping(source = &quot;user.email&quot;, target = &quot;email&quot;)
+    @Mapping(source = &quot;user.phoneNumber&quot;, target = &quot;phoneNumber&quot;)
+    @Mapping(source = &quot;user.department.id&quot;, target = &quot;departmentId&quot;)
+    @Mapping(source = &quot;user.department.name&quot;, target = &quot;departmentName&quot;)
+    StudentResponse toResponseWithUserAndDepartment(Student student);
+
+    @IterableMapping(qualifiedByName = &quot;toResponse&quot;)
+    List&lt;StudentResponse&gt; toResponseList(List&lt;Student&gt; students);
+
+    default LocalDateTime map(OffsetDateTime value) {
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        return value == null ? null : value.toLocalDateTime();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
