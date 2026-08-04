@@ -32,7 +32,7 @@ public interface StudentMapper {
     @Mapping(source = "user.department.name", target = "departmentName")
     StudentResponse toResponseWithUserAndDepartment(Student student);
 
-    @IterableMapping(qualifiedByName = "toResponse")
+    @IterableMapping(elementTargetType = StudentResponse.class)
     List<StudentResponse> toResponseList(List<Student> students);
 
     default LocalDateTime map(OffsetDateTime value) {

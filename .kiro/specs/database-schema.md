@@ -260,11 +260,24 @@ CREATE INDEX idx_tokens_expires ON tokens(expires_at);
 
 See `seed-data.md` for detailed seed data.
 
+## Notifications (V6)
+
+```sql
+-- users.notify_in_app BOOLEAN NOT NULL DEFAULT TRUE
+-- notifications(id, user_id, type, title, body, entity_type, entity_id, read_at, created_at)
+```
+
+See `campusflow-notifications.md`.
+
 ## Migration Strategy
 
-1. **Initial Schema** - V1__create_initial_schema.sql
-2. **Add Audit Fields** - V2__add_audit_fields.sql
-3. **Add Refresh Tokens** - V3__add_tokens_table.sql
-4. **Add Indexes** - V4__add_missing_indexes.sql
+Flyway under `src/main/resources/db/migration/`:
 
-Each migration creates idempotent SQL that can be run multiple times safely.
+1. **V1** — initial schema
+2. **V2** — seed data
+3. **V3** — seed password fix + tokens TEXT
+4. **V4** — preferred_theme
+5. **V5** — users.active
+6. **V6** — notifications + notify_in_app
+
+Each migration is written to be safe for the environments that apply it.

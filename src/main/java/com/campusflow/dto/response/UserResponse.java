@@ -27,6 +27,8 @@ public class UserResponse {
     private String preferredTheme;
     /** Soft account status. */
     private Boolean active;
+    /** When false, in-app notifications are not delivered. */
+    private Boolean notifyInApp;
     /** One-time temporary password returned only on create when server-generated. */
     private String temporaryPassword;
 }

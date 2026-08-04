@@ -38,9 +38,11 @@ public class CourseController {
         @Parameter(description = "Sort criteria") @RequestParam(required = false) String sort,
         @Parameter(description = "Department ID filter") @RequestParam(required = false) Long departmentId,
         @Parameter(description = "Lecturer ID filter") @RequestParam(required = false) Long lecturerId,
-        @Parameter(description = "Active status filter") @RequestParam(required = false) Boolean active
+        @Parameter(description = "Active status filter") @RequestParam(required = false) Boolean active,
+        @Parameter(description = "Search code or name") @RequestParam(required = false) String search
     ) {
-        PagedResponse<CourseResponse> response = courseService.listCourses(page, size, sort, departmentId, lecturerId, active);
+        PagedResponse<CourseResponse> response =
+            courseService.listCourses(page, size, sort, departmentId, lecturerId, active, search);
         return ResponseEntity.ok(response);
     }
 

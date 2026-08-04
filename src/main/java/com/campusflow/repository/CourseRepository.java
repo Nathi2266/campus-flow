@@ -65,4 +65,18 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.course.id = :courseId AND e.status = 'ACTIVE'")
     Integer countActiveEnrollments(@Param("courseId") Long courseId);
+
+    @Query("SELECT c FROM Course c WHERE " +
+        "(:search IS NULL OR :search = '' OR LOWER(c.code) LIKE LOWER(CONCAT('%', :search, '%')) " +
+        "OR LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+        "(:departmentId IS NULL OR c.department.id = :departmentId) AND " +
+        "(:lecturerId IS NULL OR c.lecturer.id = :lecturerId) AND " +
+        "(:active IS NULL OR c.active = :active)")
+    Page<Course> searchFiltered(
+        @Param("search") String search,
+        @Param("departmentId") Long departmentId,
+        @Param("lecturerId") Long lecturerId,
+        @Param("active") Boolean active,
+        Pageable pageable
+    );
 }

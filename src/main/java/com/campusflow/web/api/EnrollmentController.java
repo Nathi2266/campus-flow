@@ -1,7 +1,9 @@
 package com.campusflow.web.api;
 
+import com.campusflow.dto.request.BulkGradeUpdateRequest;
 import com.campusflow.dto.request.EnrollmentCreateRequest;
 import com.campusflow.dto.request.GradeUpdateRequest;
+import com.campusflow.dto.response.BulkGradeUpdateResponse;
 import com.campusflow.dto.response.EnrollmentResponse;
 import com.campusflow.dto.response.PagedResponse;
 import com.campusflow.service.EnrollmentService;
@@ -64,6 +66,15 @@ public class EnrollmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PatchMapping("/grades/bulk")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
+    @Operation(summary = "Bulk update grades", description = "Set grades for up to 100 enrollments")
+    public ResponseEntity<BulkGradeUpdateResponse> updateGradesBulk(
+        @Valid @RequestBody BulkGradeUpdateRequest request
+    ) {
+        return ResponseEntity.ok(enrollmentService.updateGradesBulk(request));
+    }
+
     @PatchMapping("/{id}/grade")
     @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
     @Operation(summary = "Update grade", description = "Set or change enrollment grade")
@@ -98,9 +109,12 @@ public class EnrollmentController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get course enrollments", description = "Retrieve enrollments for a course")
     public ResponseEntity<PagedResponse<EnrollmentResponse>> getCourseEnrollments(
-        @Parameter(description = "Course ID") @PathVariable Long courseId
+        @Parameter(description = "Course ID") @PathVariable Long courseId,
+        @Parameter(description = "Page number") @RequestParam(defaultValue = "0") Integer page,
+        @Parameter(description = "Page size") @RequestParam(defaultValue = "100") Integer size
     ) {
-        PagedResponse<EnrollmentResponse> response = enrollmentService.listCourseEnrollments(courseId, 0, 20, null);
+        PagedResponse<EnrollmentResponse> response =
+            enrollmentService.listCourseEnrollments(courseId, page, size, null);
         return ResponseEntity.ok(response);
     }
 }

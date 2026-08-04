@@ -28,7 +28,7 @@ public interface EnrollmentMapper {
     @Mapping(source = "course.name", target = "courseName")
     EnrollmentResponse toResponseWithDetails(Enrollment enrollment);
 
-    @IterableMapping(qualifiedByName = "toResponse")
+    @IterableMapping(elementTargetType = EnrollmentResponse.class)
     List<EnrollmentResponse> toResponseList(List<Enrollment> enrollments);
 
     default LocalDateTime map(OffsetDateTime value) {

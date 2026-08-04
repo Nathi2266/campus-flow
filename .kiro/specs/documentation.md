@@ -36,11 +36,10 @@ campusflow/
 ```markdown
 # CampusFlow - Student Management System
 
-[![Build Status](https://github.com/campusflow/campusflow/actions/workflows/ci.yml/badge.svg)](https://github.com/campusflow/campusflow)
-[![codecov](https://codecov.io/gh/campusflow/campusflow/branch/main/graph/badge.svg)](https://codecov.io/gh/campusflow/campusflow)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![CI](https://github.com/Nathi2266/campus-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/Nathi2266/campus-flow/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-CampusFlow is a comprehensive Student Management System for universities, built with Java 21 and Spring Boot 3.
+CampusFlow is a comprehensive Student Management System for universities, built with Java 21 and Spring Boot 3. See the root `README.md` for the live contributor guide.
 
 ## Features
 
@@ -113,7 +112,7 @@ We welcome contributions! See [Contributing Guidelines](CONTRIBUTING.md) for det
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Support
 

@@ -4,10 +4,18 @@
 
 React 19, TypeScript, Vite, Chakra UI, React Router, TanStack Query, React Hook Form, Zod, Axios, Framer Motion, React Icons.
 
+## Motion & loading
+
+- Screen transitions: `PageTransition` on MarketingLayout, AuthLayout, and AppLayout (all roles)
+- Global loader: theme-aware rotating logo (`RotatingLogo`) — ink in light mode, white in dark; cycle rotate once → wait 2s → repeat until idle
+- Triggers: route navigation, lazy route Suspense, debounced React Query mutations
+- In-page `LoadingState` uses the same rotating logo mark
+
 ## Typography & visual system
 
 - Typeface: **Poppins** (heading + body) per `.kiro/project/campusflow-design-system.md`
 - Theme entry: `frontend/src/theme/index.ts`; font load: `frontend/index.html`
+- Brand mark: white `campus_logo.png` via `BrandLogo`; tab icon `favicon.png` (white on brand-dark); light shells use `surface="light"` badge
 - Expanded shell: wider main canvas, multi-section surfaces on profile/settings/notifications/reports
 
 ## Base URL
@@ -30,15 +38,15 @@ React 19, TypeScript, Vite, Chakra UI, React Router, TanStack Query, React Hook 
 | `/login`, `/register` | Auth (register = STUDENT only) | Public |
 | `/dashboard` | Role dashboard | Authenticated |
 | `/students` | Student management + academic record drawer; ADMIN dept filter | ADMIN, LECTURER |
-| `/courses` | Course catalogue + roster drawer (ADMIN/LECTURER); ADMIN dept/active filters; capacity badges | Authenticated |
+| `/courses` | Course catalogue + roster drawer (ADMIN/LECTURER); text search (code/name); ADMIN dept/active filters; capacity badges; bulk grade save on roster | Authenticated |
 | `/enrollments` | Enrollments + grade entry; status/course filters; COURSE_FULL toast | Authenticated |
 | `/departments` | Department CRUD | ADMIN |
 | `/users` | User administration | ADMIN |
-| `/reports` | Reports (ADMIN dept filter; LECTURER own-course scope note) | ADMIN, LECTURER |
+| `/reports` | Reports (ADMIN dept filter; LECTURER own-course scope note); CSV exports for students-per-course, active-courses, graduation-progress | ADMIN, LECTURER |
 | `/audit` | Audit log viewer | ADMIN |
 | `/profile` | Profile edit (GET/PATCH `/auth/me`) | Authenticated |
 | `/settings` | Settings (dark mode toggle; persists `preferredTheme`) | Authenticated |
-| `/notifications` | Notifications shell (P2; **nav hidden** until API) | Authenticated (unlinked) |
+| `/notifications` | In-app notifications inbox (list, mark read, mark all read) | Authenticated |
 | `*` | Not found | Public |
 
 ## Theme preference
@@ -51,8 +59,9 @@ React 19, TypeScript, Vite, Chakra UI, React Router, TanStack Query, React Hook 
 ## ADMIN Cycle 2 surfaces
 
 - `/users`: search (name/email), role filter, soft activate/deactivate, optional password on create with one-time temp-password dialog
-- `/reports`: Export CSV for students-per-course (`GET /reports/students-per-course/export`)
-- Notifications nav item removed from `AppLayout` until a notifications API exists
+- `/reports`: CSV exports — students-per-course, active-courses, graduation-progress
+- Notifications nav restored; inbox uses `/api/v1/notifications`
+- Settings: in-app notification delivery toggle (`notifyInApp`)
 
 ## Demo credentials policy
 
@@ -62,7 +71,7 @@ React 19, TypeScript, Vite, Chakra UI, React Router, TanStack Query, React Hook 
 
 ## Landing (public `/`)
 
-- Brand-first hero: **CampusFlow**, one headline, one supporting line, full-bleed visual
+- Brand-first hero: **CampusFlow**, one headline, one supporting line, full-bleed visual (`/campus_landing.png`)
 - **Auth CTA rule:** exactly **two** buttons on the landing page — **Sign in** and **Create account** (hero only). No duplicate auth buttons in nav, closing band, or footer.
 - Explore navigation uses **text links** (not buttons): Features, Roles, About
 - Below fold: richer product story (how it works, roles preview, capabilities, explore teasers) from `project-overview.md` — no unshipped feature claims
@@ -111,8 +120,8 @@ Charts use Chakra/SVG meters (no separate chart library required). Empty/error/l
 
 ## Cycle 1 role-expansion features
 
-- **Course roster:** ADMIN/LECTURER open roster drawer from Courses (and lecturer dashboard) via `GET /enrollments/course/{id}`; grade/drop with query invalidation
-- **List filters:** Enrollments (`status`, staff `courseId`); Courses ADMIN (`departmentId`, `active`); Students ADMIN (`departmentId`)
+- **Course roster:** ADMIN/LECTURER open roster drawer from Courses (and lecturer dashboard) via `GET /enrollments/course/{id}`; inline bulk grade entry + Save all (`PATCH /enrollments/grades/bulk`); per-row edit/drop retained
+- **List filters:** Enrollments (`status`, staff `courseId`); Courses search (`search` on code/name) + ADMIN (`departmentId`, `active`); Students ADMIN (`departmentId`)
 - **Academic record:** Students “View record” drawer (`GET /students/{id}/courses` + stored GPA); student dashboard GPA; Profile compact academic summary for STUDENT
 - **Capacity UX:** `fillRatio` / Full · Near full (≥80%) · Open badges; enroll create surfaces COURSE_FULL clearly
 - **Reports:** ADMIN department Select wired into report query keys; LECTURER note “Showing metrics for your courses”

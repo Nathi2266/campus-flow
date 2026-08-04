@@ -1,11 +1,8 @@
 import { Box, Container, Heading, Text, VStack, Link as CLink, SimpleGrid } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router-dom'
 import { FiArrowRight } from 'react-icons/fi'
-import { MarketingLayout } from '@/layouts/MarketingLayout'
-
 export function AboutPage() {
   return (
-    <MarketingLayout>
       <Box py={{ base: 14, md: 20 }} px={{ base: 5, md: 10 }}>
         <Container maxW="3xl">
           <Text
@@ -87,6 +84,5 @@ export function AboutPage() {
           </Box>
         </Container>
       </Box>
-    </MarketingLayout>
   )
 }

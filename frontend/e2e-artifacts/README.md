@@ -13,7 +13,7 @@ See `runs/<timestamp>/INDEX.md` for every per-test recording.
 
 ### Latest run
 
-`20260804-111139` — 16 clip(s)
+`20260804-170616` — 6 clip(s)
 
 ### Regenerate
 

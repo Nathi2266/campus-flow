@@ -40,16 +40,52 @@
 - ADMIN API security `@WebMvcTest` matrix (`AdminApiSecurityTest`)
 - Council: `.kiro/memory/council-review-admin-cycle2.md`
 
-## Next highest impact (Cycle 3+)
+### Brand logo + favicon (2026-08-04)
+- `public/campus_logo.png` as favicon and in-app logo via `BrandLogo`
+- Applied on AppLayout (ADMIN/LECTURER/STUDENT), AuthLayout, MarketingLayout
+- Council: `council-review-campus-logo.md`
 
-1. Notifications MVP + settings prefs
-2. Bulk grade entry on roster
-3. GPA auto-recompute + transcript view (`campusflow-grades.md` update)
-4. Waitlists + academic term/year (schema)
-5. Auth rate limiting; httpOnly cookies
-6. Expand report CSV pack / user email invite delivery
-7. Course catalogue search (lists grow past first page — E2E already works around via API)
+### White brand mark (2026-08-04)
+- Logo mark converted to white-on-transparent; favicon white mark on brand-dark tile
+- Light shells (role AppLayout + sticky marketing): white mark on brand badge
+- Council: `council-review-white-logo.md`
+
+### Landing hero photo (2026-08-04)
+- Replaced abstract SVG hero with `public/campus_landing.png` (campus scene)
+- Council: `council-review-landing-hero-image.md`
+
+### Global motion + logo loader (2026-08-04)
+- Page transitions on marketing / auth / Admin·Lecturer·Student shells
+- Centered global loader with theme logos + rotate/pause cycle; hover polish
+- Council: `council-review-global-motion-loader.md`
+
+### OSS packaging — MIT + README (2026-08-05)
+
+- Root MIT `LICENSE` (copyright Nkosinathi Radebe / Nathi2266 / Nathiradebe20@gmail.com)
+- GitHub-ready README: what / features / screenshots / install / run / tech / license / contact
+- Badges → `Nathi2266/campus-flow` + MIT; expanded screenshot gallery (marketing + ADMIN/LECTURER/STUDENT)
+- Council: `council-review-mit-license-readme-prod-2026-08-05.md`
+
+## Next highest impact (post Cycle 3)
+
+> Cycle 3 shipped 2026-08-04 — see `.kiro/memory/cycle3-bulk-csv-notifications-2026-08-04.md`.
+
+1. **Production auth hardening (remaining)** — httpOnly cookies; Flyway seed profile-split  
+   - ~~rate limiting~~ shipped; ~~refresh respects `users.active`~~ shipped; ~~prod registration default off~~ shipped
+2. **GPA auto-recompute + transcript** — requires `campusflow-grades.md` update first
+3. Waitlists + academic term/year (schema) — deferred until academic truth solid
+4. Expand report CSV pack further / user email invite delivery
+5. ~~Bulk grade entry on roster~~ shipped Cycle 3
+6. ~~Notifications MVP + settings prefs~~ shipped Cycle 3
+7. ~~Course catalogue search + extra CSV exports~~ shipped Cycle 3
 8. ~~Avoid nginx 502 during API cold start~~ (Compose FE waits on healthy app; optional nginx retry still useful)
+
+### Also shipped Cycle 3 (2026-08-04)
+- Bulk grades API + roster Save all
+- Notifications Flyway V6 + inbox + nav + `notifyInApp`
+- CSV: students-per-course, active-courses, graduation-progress
+- Course `search` filter
+- Council: `council-review-cycle3-bulk-csv-notifications-2026-08-04.md`
 
 ### Also shipped with Cycle 2 verify (2026-08-04)
 - `AccessDeniedException` → HTTP **403** (was incorrectly 500)
@@ -61,6 +97,12 @@
 - Repositories under `com/campusflow/repository/`; Compose FE waits on healthy API
 - CI workflow; JaCoCo package floor 10%; AEOS stack docs/DoD/devops grounded
 - Council: `.kiro/memory/council-review-production-readiness-2026-08-04.md`
+
+### Full-system E2E re-verify + durable recordings (2026-08-04 PM)
+- **16/16** Playwright green; archive `frontend/e2e-artifacts/runs/20260804-142950/`
+- Hero: `frontend/e2e-artifacts/campusflow-full-app-walkthrough.webm`
+- Preserve-on-failure wrapper; hero size guard; role eyebrow assertions
+- Council: `council-review-full-system-e2e-2026-08-04-pm.md`
 
 ## Spec hygiene
 

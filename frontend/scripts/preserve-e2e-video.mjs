@@ -88,11 +88,15 @@ for (const src of videos.sort((a, b) => a.localeCompare(b))) {
   }
 }
 
-if (walkthroughSource) {
+if (walkthroughSource && statSync(walkthroughSource).size > 1_000_000) {
   const hero = path.join(artifactsDir, 'campusflow-full-app-walkthrough.webm')
   copyFileSync(walkthroughSource, hero)
   console.log(
     `Updated hero walkthrough → ${hero} (${(statSync(hero).size / (1024 * 1024)).toFixed(2)} MB)`,
+  )
+} else if (walkthroughSource) {
+  console.warn(
+    `Skipped hero update — walkthrough clip too small (${(statSync(walkthroughSource).size / 1024).toFixed(0)} KB); likely a failed early exit.`,
   )
 }
 

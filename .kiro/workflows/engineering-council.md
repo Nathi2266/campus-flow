@@ -59,6 +59,7 @@ Gate: approve → implementation workflow | defer | reject
 
 | Seat | Skill | Assesses |
 |------|-------|----------|
+| Feature Engineer | `feature-engineer` | Candidate fit vs shipped features/roles; backlog priority input (when proposal came from discovery) |
 | Product Manager | `product-manager` | Business value, priority, acceptance intent |
 | Business Analyst | `business-analyst` | Spec completeness; which domain specs must change |
 | Solution Architect | `solution-architect` | Fit with `architecture.md`, boundaries, sequencing |

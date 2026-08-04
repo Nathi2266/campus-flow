@@ -50,6 +50,8 @@ export const theme = extendTheme({
       'nav-hover-color': { default: 'brand.600', _dark: 'brand.300' },
       'nav-active-bg': { default: 'brand.50', _dark: 'whiteAlpha.200' },
       'table-header-bg': { default: 'canvas.50', _dark: 'whiteAlpha.100' },
+      /** Row hover — never solid white in dark mode (was canvas.50). */
+      'table-row-hover': { default: 'brand.50', _dark: 'whiteAlpha.100' },
       'progress-track': { default: 'canvas.200', _dark: 'whiteAlpha.200' },
       'brand-soft-bg': { default: 'brand.50', _dark: 'whiteAlpha.100' },
       'brand-soft-fg': { default: 'brand.700', _dark: 'brand.200' },
@@ -92,6 +94,7 @@ export const theme = extendTheme({
       baseStyle: {
         fontWeight: 'semibold',
         borderRadius: 'md',
+        transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
       },
       defaultProps: {
         colorScheme: 'brand',
@@ -99,7 +102,15 @@ export const theme = extendTheme({
       variants: {
         solid: {
           shadow: 'sm',
-          _hover: { transform: 'translateY(-1px)', shadow: 'md' },
+          _hover: { transform: 'translateY(-2px)', shadow: 'md' },
+          _active: { transform: 'translateY(0)' },
+        },
+        outline: {
+          _hover: { transform: 'translateY(-2px)', shadow: 'soft', borderColor: 'brand.400' },
+          _active: { transform: 'translateY(0)' },
+        },
+        ghost: {
+          _hover: { transform: 'translateY(-1px)' },
           _active: { transform: 'translateY(0)' },
         },
       },
@@ -176,6 +187,14 @@ export const theme = extendTheme({
             borderColor: 'app-border',
             color: 'app-text',
             py: 3.5,
+            transition: 'background 0.15s ease',
+          },
+          tr: {
+            _hover: {
+              td: {
+                bg: 'table-row-hover',
+              },
+            },
           },
         },
       },

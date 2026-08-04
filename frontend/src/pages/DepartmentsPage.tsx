@@ -157,7 +157,7 @@ export function DepartmentsPage() {
             </Thead>
             <Tbody>
               {query.data.map((dept) => (
-                <Tr key={dept.id} _hover={{ bg: 'canvas.50' }}>
+                <Tr key={dept.id}>
                   <Td fontWeight="semibold">{dept.name}</Td>
                   <Td color="app-muted">{dept.description || '—'}</Td>
                   <Td>

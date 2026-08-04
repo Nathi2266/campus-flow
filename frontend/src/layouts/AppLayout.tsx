@@ -15,10 +15,11 @@ import {
   VStack,
 } from '@chakra-ui/react'
 import type { ReactNode } from 'react'
-import { Link as RouterLink, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link as RouterLink, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   FiBarChart2,
   FiBook,
+  FiBell,
   FiClipboard,
   FiGrid,
   FiHome,
@@ -30,13 +31,11 @@ import {
   FiUserCheck,
   FiUsers,
 } from 'react-icons/fi'
-import { AnimatePresence, motion } from 'framer-motion'
 import { useAuthStore } from '@/features/auth/authStore'
 import { logout as apiLogout } from '@/api/auth'
 import type { UserRole } from '@/types'
-import { pageVariants } from '@/theme/motion'
-
-const MotionBox = motion.create(Box)
+import { BrandLogo } from '@/components/BrandLogo'
+import { PageTransition } from '@/components/PageTransition'
 
 interface NavItem {
   to: string
@@ -54,7 +53,7 @@ const navItems: NavItem[] = [
   { to: '/users', label: 'Users', icon: <FiUserCheck />, roles: ['ADMIN'] },
   { to: '/reports', label: 'Reports', icon: <FiBarChart2 />, roles: ['ADMIN', 'LECTURER'] },
   { to: '/audit', label: 'Audit', icon: <FiShield />, roles: ['ADMIN'] },
-  // Notifications nav hidden until notifications API ships (route kept unlinked).
+  { to: '/notifications', label: 'Notifications', icon: <FiBell /> },
   { to: '/profile', label: 'Profile', icon: <FiUser /> },
   { to: '/settings', label: 'Settings', icon: <FiSettings /> },
 ]
@@ -82,9 +81,15 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
           fontSize="sm"
           color="app-muted"
           position="relative"
-          transition="all 0.15s ease"
+          role="group"
+          transition="background 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease"
           data-testid={`nav-${item.label.toLowerCase()}`}
-          _hover={{ bg: 'nav-hover-bg', color: 'brand.600', textDecoration: 'none' }}
+          _hover={{
+            bg: 'nav-hover-bg',
+            color: 'brand.600',
+            textDecoration: 'none',
+            transform: 'translateX(3px)',
+          }}
           sx={{
             '&.active': {
               bg: 'nav-active-bg',
@@ -94,7 +99,12 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
             },
           }}
         >
-          <Box aria-hidden fontSize="lg">
+          <Box
+            aria-hidden
+            fontSize="lg"
+            transition="transform 0.18s ease"
+            _groupHover={{ transform: 'scale(1.08)' }}
+          >
             {item.icon}
           </Box>
           {item.label}
@@ -109,25 +119,28 @@ function BrandMark() {
     <VStack
       as={RouterLink}
       to="/dashboard"
-      spacing={0.5}
+      spacing={2}
       align="center"
       textAlign="center"
       px={2}
       _hover={{ textDecoration: 'none' }}
     >
-      <Text
-        fontFamily="heading"
-        fontSize="lg"
-        fontWeight="700"
-        color="app-text"
-        letterSpacing="-0.02em"
-        lineHeight="1.2"
-      >
-        CampusFlow
-      </Text>
-      <Text fontSize="xs" color="app-muted" fontWeight="medium" lineHeight="1.3">
-        Student Management
-      </Text>
+      <BrandLogo boxSize="48px" surface="light" alt="" aria-hidden />
+      <Box>
+        <Text
+          fontFamily="heading"
+          fontSize="lg"
+          fontWeight="700"
+          color="app-text"
+          letterSpacing="-0.02em"
+          lineHeight="1.2"
+        >
+          CampusFlow
+        </Text>
+        <Text fontSize="xs" color="app-muted" fontWeight="medium" lineHeight="1.3" mt={0.5}>
+          Student Management
+        </Text>
+      </Box>
     </VStack>
   )
 }
@@ -137,7 +150,6 @@ export function AppLayout() {
   const refreshToken = useAuthStore((s) => s.refreshToken)
   const clearSession = useAuthStore((s) => s.clearSession)
   const navigate = useNavigate()
-  const location = useLocation()
 
   async function handleLogout() {
     if (refreshToken) {
@@ -214,10 +226,13 @@ export function AppLayout() {
         <DrawerOverlay backdropFilter="blur(4px)" />
         <DrawerContent maxW="288px" bg="app-surface">
           <DrawerHeader borderBottomWidth="1px" borderColor="app-border">
-            <Flex justify="space-between" align="center">
-              <Text fontFamily="heading" fontWeight="700" color="brand.600">
-                CampusFlow
-              </Text>
+            <Flex justify="space-between" align="center" gap={3}>
+              <Flex align="center" gap={2} minW={0}>
+                <BrandLogo boxSize="28px" surface="light" alt="" aria-hidden />
+                <Text fontFamily="heading" fontWeight="700" color="brand.600" noOfLines={1}>
+                  CampusFlow
+                </Text>
+              </Flex>
               <CloseButton onClick={onClose} />
             </Flex>
           </DrawerHeader>
@@ -241,9 +256,12 @@ export function AppLayout() {
           zIndex={10}
         >
           <IconButton aria-label="Open menu" icon={<FiMenu />} variant="ghost" onClick={onOpen} />
-          <Text fontFamily="heading" fontWeight="700" color="brand.600">
-            CampusFlow
-          </Text>
+          <Flex align="center" gap={2}>
+            <BrandLogo boxSize="28px" surface="light" alt="" aria-hidden />
+            <Text fontFamily="heading" fontWeight="700" color="brand.600">
+              CampusFlow
+            </Text>
+          </Flex>
           <Button size="sm" variant="ghost" onClick={handleLogout}>
             Log out
           </Button>
@@ -258,17 +276,9 @@ export function AppLayout() {
           w="full"
           mx="auto"
         >
-          <AnimatePresence mode="wait">
-            <MotionBox
-              key={location.pathname}
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
-              <Outlet />
-            </MotionBox>
-          </AnimatePresence>
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
         </Box>
       </Flex>
     </Flex>

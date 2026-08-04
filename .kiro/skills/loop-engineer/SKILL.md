@@ -33,8 +33,11 @@ Orchestrate engineers, quality gates, and preview loops without editing business
 
 - .kiro/workflows/*
 - .kiro/workflows/daily-cycle.md
+- .kiro/workflows/feature-discovery.md
 - .kiro/workflows/engineering-council.md
 - .kiro/templates/council-review.md
+- .kiro/templates/feature-recommendation.md
+- .kiro/skills/feature-engineer/SKILL.md
 - .kiro/project/verbose-mode.md
 - .kiro/templates/verbose-trace.md
 - .kiro/hooks/*

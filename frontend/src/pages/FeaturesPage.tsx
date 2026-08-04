@@ -1,8 +1,6 @@
 import { Box, Container, Heading, HStack, SimpleGrid, Text, VStack, Link as CLink } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router-dom'
 import { FiArrowRight, FiBookOpen, FiClipboard, FiShield, FiUsers } from 'react-icons/fi'
-import { MarketingLayout } from '@/layouts/MarketingLayout'
-
 const features = [
   {
     title: 'Departments & users',
@@ -38,7 +36,6 @@ const features = [
 
 export function FeaturesPage() {
   return (
-    <MarketingLayout>
       <Box py={{ base: 14, md: 20 }} px={{ base: 5, md: 10 }}>
         <Container maxW="6xl">
           <Box maxW="2xl" mb={12}>
@@ -72,7 +69,16 @@ export function FeaturesPage() {
             {features.map((item) => {
               const Icon = item.icon
               return (
-                <HStack key={item.title} align="flex-start" spacing={4}>
+                <HStack
+                  key={item.title}
+                  role="group"
+                  align="flex-start"
+                  spacing={4}
+                  p={4}
+                  borderRadius="lg"
+                  transition="transform 0.2s ease, background 0.2s ease"
+                  _hover={{ transform: 'translateY(-3px)', bg: 'app-surface-muted' }}
+                >
                     <Box
                       w="44px"
                       h="44px"
@@ -84,6 +90,8 @@ export function FeaturesPage() {
                       justifyContent="center"
                       flexShrink={0}
                       aria-hidden
+                      transition="transform 0.2s ease"
+                      _groupHover={{ transform: 'scale(1.08)' }}
                     >
                     <Icon />
                   </Box>
@@ -121,6 +129,5 @@ export function FeaturesPage() {
           </VStack>
         </Container>
       </Box>
-    </MarketingLayout>
   )
 }

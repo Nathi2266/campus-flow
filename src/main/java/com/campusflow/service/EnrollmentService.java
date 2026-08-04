@@ -7,8 +7,12 @@ import com.campusflow.domain.Student;
 import com.campusflow.domain.User;
 import com.campusflow.domain.enums.EnrollmentStatus;
 import com.campusflow.domain.enums.UserRole;
+import com.campusflow.dto.request.BulkGradeItemRequest;
+import com.campusflow.dto.request.BulkGradeUpdateRequest;
 import com.campusflow.dto.request.EnrollmentCreateRequest;
 import com.campusflow.dto.request.GradeUpdateRequest;
+import com.campusflow.dto.response.BulkGradeErrorResponse;
+import com.campusflow.dto.response.BulkGradeUpdateResponse;
 import com.campusflow.dto.response.EnrollmentResponse;
 import com.campusflow.dto.response.PagedResponse;
 import com.campusflow.exception.NotFoundException;
@@ -26,8 +30,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
-
 import java.util.Map;
 
 /**
@@ -46,6 +50,7 @@ public class EnrollmentService {
     private final CourseRepository courseRepository;
     private final SecurityUtils securityUtils;
     private final AuditLogRepository auditLogRepository;
+    private final NotificationService notificationService;
 
     public EnrollmentResponse enrollStudent(EnrollmentCreateRequest request) {
         User currentUser = securityUtils.getCurrentUser();
@@ -74,6 +79,14 @@ public class EnrollmentService {
 
         Integer enrolledCount = courseRepository.countActiveEnrollments(course.getId());
         if (enrolledCount >= course.getMaxCapacity()) {
+            notificationService.notifyUser(
+                currentUser,
+                "COURSE_FULL",
+                "Course is full",
+                course.getCode() + " — " + course.getName() + " has no open seats.",
+                "COURSE",
+                course.getId()
+            );
             throw new ValidationException("Course is full", "courseId", "COURSE_FULL");
         }
 
@@ -100,6 +113,17 @@ public class EnrollmentService {
                 "courseId", request.getCourseId()
             ))
             .build());
+        if (course.getLecturer() != null) {
+            notificationService.notifyUser(
+                course.getLecturer(),
+                "ENROLLMENT_CREATED",
+                "New enrollment",
+                student.getFirstName() + " " + student.getLastName()
+                    + " enrolled in " + course.getCode() + ".",
+                "ENROLLMENT",
+                saved.getId()
+            );
+        }
         return toResponse(saved);
     }
 
@@ -110,7 +134,37 @@ public class EnrollmentService {
     }
 
     public EnrollmentResponse updateGrade(Long id, GradeUpdateRequest request) {
-        Enrollment enrollment = findEnrollment(id);
+        Enrollment saved = applyGradeUpdate(findEnrollment(id), request.getGrade(), request.getStatus());
+        return toResponse(saved);
+    }
+
+    public BulkGradeUpdateResponse updateGradesBulk(BulkGradeUpdateRequest request) {
+        List<EnrollmentResponse> updated = new ArrayList<>();
+        List<BulkGradeErrorResponse> errors = new ArrayList<>();
+        for (BulkGradeItemRequest item : request.getGrades()) {
+            try {
+                Enrollment enrollment = findEnrollment(item.getEnrollmentId());
+                Enrollment saved = applyGradeUpdate(enrollment, item.getGrade(), item.getStatus());
+                updated.add(toResponse(saved));
+            } catch (NotFoundException | ValidationException ex) {
+                String code = ex instanceof ValidationException ve && ve.getErrorCode() != null
+                    ? ve.getErrorCode()
+                    : (ex instanceof NotFoundException ? "NOT_FOUND" : "ERROR");
+                errors.add(BulkGradeErrorResponse.builder()
+                    .enrollmentId(item.getEnrollmentId())
+                    .code(code)
+                    .message(ex.getMessage())
+                    .build());
+            }
+        }
+        return BulkGradeUpdateResponse.builder()
+            .updated(updated)
+            .errors(errors)
+            .successCount(updated.size())
+            .build();
+    }
+
+    private Enrollment applyGradeUpdate(Enrollment enrollment, String rawGrade, String rawStatus) {
         User currentUser = securityUtils.getCurrentUser();
 
         if (currentUser.getRole() == UserRole.LECTURER) {
@@ -119,7 +173,7 @@ public class EnrollmentService {
             throw new ValidationException("Not allowed to update grades", "authorization", "FORBIDDEN");
         }
 
-        String grade = request.getGrade() != null ? request.getGrade().trim() : null;
+        String grade = rawGrade != null ? rawGrade.trim() : null;
         if (grade == null || grade.isBlank()) {
             throw new ValidationException("Grade is required", "grade", "GRADE_REQUIRED");
         }
@@ -129,9 +183,9 @@ public class EnrollmentService {
 
         enrollment.setGrade(grade);
 
-        if (request.getStatus() != null && !request.getStatus().isBlank()) {
+        if (rawStatus != null && !rawStatus.isBlank()) {
             try {
-                enrollment.setStatus(EnrollmentStatus.valueOf(request.getStatus().trim().toUpperCase()));
+                enrollment.setStatus(EnrollmentStatus.valueOf(rawStatus.trim().toUpperCase()));
             } catch (IllegalArgumentException ex) {
                 throw new ValidationException("Invalid enrollment status", "status", "INVALID_STATUS");
             }
@@ -145,7 +199,18 @@ public class EnrollmentService {
             .entityId(saved.getId())
             .details(Map.of("grade", grade))
             .build());
-        return toResponse(saved);
+
+        User studentUser = saved.getStudent() != null ? saved.getStudent().getUser() : null;
+        Course course = saved.getCourse();
+        notificationService.notifyUser(
+            studentUser,
+            "GRADE_POSTED",
+            "Grade posted",
+            (course != null ? course.getCode() + ": " : "") + "You received grade " + grade + ".",
+            "ENROLLMENT",
+            saved.getId()
+        );
+        return saved;
     }
 
     public void dropCourse(Long id) {

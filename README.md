@@ -1,78 +1,232 @@
-# CampusFlow - Student Management System
+# CampusFlow
 
-[![Build Status](https://github.com/campusflow/campusflow/actions/workflows/ci.yml/badge.svg)](https://github.com/campusflow/campusflow)
-[![codecov](https://codecov.io/gh/campusflow/campusflow/branch/main/graph/badge.svg)](https://codecov.io/gh/campusflow/campusflow)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![CI](https://github.com/Nathi2266/campus-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/Nathi2266/campus-flow/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-CampusFlow is a comprehensive Student Management System for universities, built with Java 21 and Spring Boot 3.
+CampusFlow is a full-stack **Student Management System** for campus academics. Administrators run departments, users, and courses; lecturers manage rosters and grades; students browse the catalogue, enroll, and view their results.
+
+Built with **Java 21 / Spring Boot 3** and a **React + Vite** UI. Roles: `ADMIN` · `LECTURER` · `STUDENT`.
+
+> Self-hostable demo / MVP. Local Compose includes Flyway seed accounts for exploration — do not use those passwords in a real production database. See [Production notes](#production-notes).
+
+---
+
+## What the project is
+
+CampusFlow covers the academic loop for a single campus organization:
+
+1. **Admins** manage departments, staff/student users, courses, enrollments, reports, notifications, and audit history.
+2. **Lecturers** update their courses, view rosters, enter grades (including bulk), and review scoped reports.
+3. **Students** browse the active course catalogue, self-enroll/drop, and view grades, profile, and notifications.
+
+Department is the soft organizational boundary. Authorization is enforced on the API with Spring Security + JWT (not client-only gates).
+
+Authoritative product rules live under [`.kiro/specs/`](.kiro/specs/) (start with [`project-overview.md`](.kiro/specs/project-overview.md) and [`campusflow-roles.md`](.kiro/specs/campusflow-roles.md)).
+
+---
 
 ## Features
 
-- **Student Management:** Create, update, delete, and search students
-- **Course Management:** Create courses, assign lecturers, manage capacity
-- **Enrollment System:** Enroll students in courses, track enrollment status
-- **Reporting:** Generate statistics, graduation progress, course analytics
-- **Authentication:** JWT-based authentication with refresh tokens
-- **Authorization:** Role-based access control (Admin, Lecturer, Student)
+- **Authentication** — JWT login, refresh rotation, logout; registration creates **STUDENT** accounts only (staff provisioned by ADMIN)
+- **Role-based access** — ADMIN / LECTURER / STUDENT capability matrix on API and UI
+- **Departments & users** — CRUD, search/filter, soft activate/deactivate, temp-password invite flow
+- **Students** — directory, academic record drawer, GPA display on profile/record views
+- **Courses** — catalogue with search, capacity badges, activate/deactivate, lecturer assignment
+- **Enrollments** — staff create/drop; student self-enroll/drop with capacity checks
+- **Grades** — per-enrollment grading and bulk grade entry on the course roster
+- **Reports & CSV** — statistics, students-per-course, active-courses, graduation-progress exports
+- **Notifications** — in-app inbox + per-user `notifyInApp` preference
+- **Audit log** — ADMIN visibility into key administrative actions
+- **Role dashboards** — KPIs and quick links per persona
+- **Marketing site** — public landing, features, roles, and about pages
 
-## Technology Stack
+---
 
-- **Java:** 21
-- **Framework:** Spring Boot 3.2.5
-- **Database:** PostgreSQL 15
-- **ORM:** Spring Data JPA + Hibernate 6
-- **Security:** Spring Security + JWT
-- **Build:** Maven 3.9
-- **Testing:** JUnit 5 + Mockito + Testcontainers
+## Screenshots
 
-## Prerequisites
+### Marketing
 
-- Java 21 or higher
-- Maven 3.8 or higher
-- PostgreSQL 15 or higher (or Docker)
+Landing page:
 
-## Quick Start
+![CampusFlow landing](docs/screenshots/01-landing.png)
 
-**Important (Windows):** Docker Desktop must be running before `docker compose`. If you see `npipe:////./pipe/dockerDesktopLinuxEngine`, open **Docker Desktop** and wait until it says Engine running.
+Login:
+
+![CampusFlow login](docs/screenshots/02-login.png)
+
+Features:
+
+![CampusFlow features](docs/screenshots/03-features.png)
+
+Roles:
+
+![CampusFlow roles](docs/screenshots/04-roles.png)
+
+### Administrator
+
+Dashboard:
+
+![Admin dashboard](docs/screenshots/05-admin-dashboard.png)
+
+Departments:
+
+![Admin departments](docs/screenshots/06-admin-departments.png)
+
+Users:
+
+![Admin users](docs/screenshots/07-admin-users.png)
+
+Students:
+
+![Admin students](docs/screenshots/08-admin-students.png)
+
+Courses:
+
+![Admin courses](docs/screenshots/09-admin-courses.png)
+
+Enrollments:
+
+![Admin enrollments](docs/screenshots/10-admin-enrollments.png)
+
+Reports:
+
+![Admin reports](docs/screenshots/11-admin-reports.png)
+
+Audit log:
+
+![Admin audit](docs/screenshots/12-admin-audit.png)
+
+Notifications:
+
+![Admin notifications](docs/screenshots/13-admin-notifications.png)
+
+### Lecturer
+
+Dashboard:
+
+![Lecturer dashboard](docs/screenshots/14-lecturer-dashboard.png)
+
+Courses:
+
+![Lecturer courses](docs/screenshots/15-lecturer-courses.png)
+
+Course roster / grades:
+
+![Lecturer roster](docs/screenshots/16-lecturer-roster.png)
+
+Reports:
+
+![Lecturer reports](docs/screenshots/17-lecturer-reports.png)
+
+### Student
+
+Dashboard:
+
+![Student dashboard](docs/screenshots/18-student-dashboard.png)
+
+Course catalogue:
+
+![Student catalogue](docs/screenshots/19-student-catalogue.png)
+
+My enrollments:
+
+![Student enrollments](docs/screenshots/20-student-enrollments.png)
+
+Profile:
+
+![Student profile](docs/screenshots/21-student-profile.png)
+
+| Asset | Path |
+|-------|------|
+| Captured UI screenshots | [`docs/screenshots/`](docs/screenshots/) |
+| Hero photo source | [`frontend/public/campus_landing.png`](frontend/public/campus_landing.png) |
+| Brand logo | [`frontend/public/campus_logo.png`](frontend/public/campus_logo.png) |
+| Full role walkthrough (video) | [`frontend/e2e-artifacts/campusflow-full-app-walkthrough.webm`](frontend/e2e-artifacts/campusflow-full-app-walkthrough.webm) |
+| Re-capture gallery | `cd frontend && node scripts/capture-readme-screenshots.mjs` |
+
+After a local run, explore role UIs at `http://localhost:5173` using the demo accounts below.
+
+---
+
+## Technologies used
+
+| Layer | Stack |
+|-------|--------|
+| Backend | Java 21, Spring Boot 3.2.5, Spring Security, Spring Data JPA |
+| API docs | springdoc OpenAPI (Swagger UI — **dev** profile) |
+| Database | PostgreSQL 15, Flyway migrations |
+| Auth | JWT (access + refresh), BCrypt passwords |
+| Frontend | React 19, TypeScript, Vite, Chakra UI, TanStack Query, Zustand, React Router |
+| Forms / validation | React Hook Form, Zod |
+| Testing | JUnit 5, Mockito, Vitest, Playwright |
+| Ops | Docker Compose, GitHub Actions CI (`.github/workflows/ci.yml`) |
+| Build | Maven 3.9 (backend), npm (frontend) |
+
+---
+
+## Installation
+
+### Prerequisites
+
+- **Docker Desktop** (recommended for Postgres + full stack)
+- **Node.js 22+** and npm (frontend)
+- **Java 21** and **Maven 3.8+** (optional — only if you run the API outside Docker)
+
+**Windows:** start Docker Desktop and wait until the engine is running before any `docker compose` command. If you see `npipe:////./pipe/dockerDesktopLinuxEngine`, the engine is not up yet.
+
+### Clone
+
+```bash
+git clone https://github.com/Nathi2266/campus-flow.git
+cd campus-flow
+```
+
+---
+
+## How to run it
 
 ### Option A — Full stack with Docker (recommended)
 
-From the repo root (`campus/`):
+From the repository root:
 
 ```powershell
-# 1) Start Docker Desktop, then:
 docker compose -f docker/docker-compose.yml up -d --build
-
-# 2) Check status
 docker compose -f docker/docker-compose.yml ps
+```
 
-# 3) Open the app
-# UI:  http://localhost:5173
-# API: http://localhost:8090
-# Swagger: http://localhost:8090/swagger-ui.html
+| Service | URL |
+|---------|-----|
+| UI | http://localhost:5173 |
+| API | http://localhost:8090 |
+| Swagger (dev) | http://localhost:8090/swagger-ui.html |
 
+```powershell
 # Logs / stop
 docker compose -f docker/docker-compose.yml logs -f app
 docker compose -f docker/docker-compose.yml down
 ```
 
-Local seed logins (Flyway only — **not** shown in the login UI):  
-`admin@campusflow.edu`, `lecturer1@campusflow.edu`, `student1@campusflow.edu` — password `Admin123!`.
+#### Demo logins (Flyway seed — local/demo only)
+
+| Role | Email | Password |
+|------|-------|----------|
+| ADMIN | `admin@campusflow.edu` | `Admin123!` |
+| LECTURER | `lecturer1@campusflow.edu` | `Admin123!` |
+| STUDENT | `student1@campusflow.edu` | `Admin123!` |
+
+These accounts are **not** shown in the login UI. Never reuse them for a shared or production database.
 
 ### Option B — Local backend + frontend (Postgres via Docker)
 
-Use this when developing. Vite proxies `/api` → backend.
-
-**Terminal 1 — Postgres only**
+**Terminal 1 — Postgres**
 
 ```powershell
 docker compose -f docker/docker-compose.yml up -d postgres
 ```
 
-**Terminal 2 — Backend** (needs Maven on PATH, or use Docker Maven below)
+**Terminal 2 — Backend** (Maven on PATH)
 
 ```powershell
-# From campus/
 $env:SPRING_PROFILES_ACTIVE="dev"
 $env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5433/campusflow"
 $env:SPRING_DATASOURCE_USERNAME="campusflow"
@@ -81,11 +235,10 @@ $env:JWT_SECRET="campusflow-dev-secret-key-min-32-bytes!!"
 mvn spring-boot:run
 ```
 
-If `mvn` is not installed, run the API with Docker instead:
+If Maven is not installed, run the API container instead:
 
 ```powershell
 docker compose -f docker/docker-compose.yml up -d postgres app
-# API on http://localhost:8090
 ```
 
 **Terminal 3 — Frontend**
@@ -93,146 +246,96 @@ docker compose -f docker/docker-compose.yml up -d postgres app
 ```powershell
 cd frontend
 npm install
-
-# If API is Docker on 8090 (default Vite proxy):
 npm run dev
+```
 
-# If API is local Maven on 8080:
+Vite proxies `/api` to `http://localhost:8090` by default. If the API is on Maven’s local port `8080`:
+
+```powershell
 $env:VITE_API_PROXY_TARGET="http://localhost:8080"
 npm run dev
 ```
 
 UI: http://localhost:5173
 
-### Frontend (React) only reminder
+### Useful commands
 
 ```bash
+# Backend tests / package
+mvn test
+mvn clean package
+
+# Frontend quality gates
 cd frontend
-npm install
-npm run dev
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+
+# Playwright e2e (API + UI must be reachable)
+npm run test:e2e
 ```
 
-UI: http://localhost:5173 (proxies `/api` to Spring Boot — default `http://localhost:8090`)
+### Environment variables (backend)
 
-### Environment Variables
+| Variable | Default / notes | Description |
+|----------|-----------------|-------------|
+| `SPRING_PROFILES_ACTIVE` | `dev` in Compose | `dev` or `prod` |
+| `SERVER_PORT` | `8080` in container (`8090` published) | API port |
+| `SPRING_DATASOURCE_URL` | Compose / `application-dev.yml` | JDBC URL |
+| `SPRING_DATASOURCE_USERNAME` | `campusflow` | DB user |
+| `SPRING_DATASOURCE_PASSWORD` | dev only | Required in **prod** |
+| `JWT_SECRET` | dev only (≥32 chars) | Required in **prod** |
+| `CORS_ALLOWED_ORIGIN_PATTERNS` | localhost patterns | Comma-separated origins |
+| `SPRING_JPA_HIBERNATE_DDL_AUTO` | `validate` | Hibernate DDL mode |
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| SPRING_PROFILES_ACTIVE | dev | Spring profile (dev, prod) |
-| SERVER_PORT | 8080 | Application port |
-| SPRING_DATASOURCE_URL | jdbc:postgresql://localhost:5432/campusflow | Database URL |
-| SPRING_DATASOURCE_USERNAME | campusflow | Database username |
-| SPRING_DATASOURCE_PASSWORD | (dev profile only) | Database password — required in prod |
-| JWT_SECRET | (dev profile only) | JWT signing secret (≥32 chars) — required in prod |
-| CORS_ALLOWED_ORIGIN_PATTERNS | localhost patterns | Comma-separated origin patterns |
-| SPRING_JPA_HIBERNATE_DDL_AUTO | validate | Hibernate DDL mode |
+Production (`SPRING_PROFILES_ACTIVE=prod`) fails closed without `JWT_SECRET` and datasource credentials. See [`.kiro/specs/devops-deployment.md`](.kiro/specs/devops-deployment.md) for the full checklist. Env examples: [`docker/.env.example`](docker/.env.example).
 
-Dev defaults live in `application-dev.yml` / Compose only. Production (`SPRING_PROFILES_ACTIVE=prod`) fails closed without `JWT_SECRET` and datasource credentials.
+### Production notes
 
-## API Documentation
+Shipped hygiene includes fail-closed secrets outside `dev`, CORS owned by security config, auth rate limiting (in-memory per node), registration gated for prod, and CI for Maven + frontend gates.
 
-With the **dev** profile (Compose default), interactive docs are at:
+Still on the hardening roadmap (not done in this packaging slice):
 
-- **Swagger UI:** `http://localhost:8090/swagger-ui.html` (Compose) or `:8080` (local Maven)
-- **OpenAPI JSON:** `http://localhost:8090/v3/api-docs`
+- httpOnly cookie sessions (tokens currently in frontend `localStorage`)
+- Flyway seed data split out of schema migrations for real prod DBs
+- Broader backend test / coverage floors
 
-Swagger is disabled under the **prod** profile.
+Treat Compose + seed accounts as a **demo** until those items are addressed for your deployment.
 
-## Project Structure
+---
+
+## Project structure
 
 ```
-campusflow/
-├── src/
-│   ├── main/
-│   │   ├── java/com/campusflow/
-│   │   │   ├── config/          # Configuration classes
-│   │   │   ├── domain/          # Domain entities
-│   │   │   │   ├── enums/       # Enumerations
-│   │   │   │   └── audit/       # Audit classes
-│   │   │   ├── dto/             # Data Transfer Objects
-│   │   │   │   ├── request/     # Request DTOs
-│   │   │   │   ├── response/    # Response DTOs
-│   │   │   │   └── mapper/      # MapStruct mappers
-│   │   │   ├── repository/      # JPA Repositories
-│   │   │   ├── service/         # Business logic
-│   │   │   ├── exception/       # Global exception handler
-│   │   │   ├── web/api/         # REST Controllers
-│   │   │   └── security/        # Security classes
-│   │   └── resources/
-│   │       ├── application.yml  # Main configuration
-│   │       ├── application-dev.yml  # Development profile
-│   │       ├── application-prod.yml # Production profile
-│   │       └── db/migration/    # Flyway migrations
-│   └── test/
-│       └── java/com/campusflow/
-├── frontend/                # React + Vite UI + Playwright e2e
-├── docker/
-│   ├── Dockerfile
-│   ├── docker-compose.yml
-│   ├── .env.example
-│   └── healthcheck.sh
+campus-flow/
+├── src/main/java/com/campusflow/   # Spring Boot API
+├── src/main/resources/db/migration # Flyway
+├── frontend/                       # React + Vite + Playwright
+├── docker/                         # Dockerfile + compose
 ├── .github/workflows/ci.yml
+├── .kiro/                          # AEOS specs, skills, memory
+├── LICENSE                         # MIT
 └── pom.xml
 ```
 
-## Development
-
-### Building the Application
-
-```bash
-mvn clean package
-```
-
-### Running Tests
-
-```bash
-mvn test
-```
-
-### Running with Test Coverage
-
-```bash
-mvn test jacoco:report
-```
-
-### Code Quality Checks
-
-```bash
-mvn clean verify
-```
-
-## Deployment
-
-### Building Docker Image
-
-```bash
-docker build -t campusflow:latest .
-```
-
-### Running in Production
-
-```bash
-docker run -d -p 8080:8080 \
-  -e SPRING_PROFILES_ACTIVE=prod \
-  -e SPRING_DATASOURCE_URL=your-production-db-url \
-  -e SPRING_DATASOURCE_USERNAME=your-username \
-  -e SPRING_DATASOURCE_PASSWORD=your-strong-password \
-  -e JWT_SECRET=your-random-secret-at-least-32-chars \
-  -e CORS_ALLOWED_ORIGIN_PATTERNS=https://app.example.com \
-  --name campusflow \
-  campusflow:latest
-```
-
-See `.kiro/specs/devops-deployment.md` for the production checklist. Flyway seed accounts (`Admin123!`) are for local/demo only.
-
-## Contributing
-
-We welcome contributions! Please read our contributing guidelines before submitting pull requests.
+---
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE).
 
-## Support
+You may use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, including in closed-source and commercial products, provided you keep the copyright notice and license text.
 
-For support, please open an issue in the GitHub repository or contact the development team.
+---
+
+## Contact
+
+| | |
+|--|--|
+| **Maintainer** | Nkosinathi Radebe ([Nathi2266](https://github.com/Nathi2266)) |
+| **Email** | [Nathiradebe20@gmail.com](mailto:Nathiradebe20@gmail.com) |
+| **Repository** | [github.com/Nathi2266/campus-flow](https://github.com/Nathi2266/campus-flow) |
+| **Issues** | [github.com/Nathi2266/campus-flow/issues](https://github.com/Nathi2266/campus-flow/issues) |
+
+Questions, bugs, and contribution ideas are welcome via GitHub Issues or email.

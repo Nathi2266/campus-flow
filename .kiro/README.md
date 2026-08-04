@@ -35,13 +35,17 @@ Cursor agents start at repo-root `AGENTS.md` and `.cursor/rules/aeos.mdc`. Thin 
 
 Set `AEOS_VERBOSE=true` to expose reasoning and handoffs (Task → Workflow → Specs → Skills → Constitution → Pipeline → Current Agent → Outputs → Next Agent → Loop Verification → Completed). See `project/verbose-mode.md` and `templates/verbose-trace.md`.
 
+## Feature discovery
+
+`workflows/feature-discovery.md`: Feature Engineer inventories specs, roles, shipped features, and code; seats all engineers for feasibility; ranks suggestions; presents a recommendation pack (`templates/feature-recommendation.md`) for **human decision**. No product code until the user selects an item.
+
 ## Engineering Council
 
-`workflows/engineering-council.md`: before coding, gather structured input from relevant engineers (PM, Architect, FE/BE/DB, QA, Security, Performance, …). Loop Engineer summarizes, resolves conflicts, and recommends the implementation plan. Template: `templates/council-review.md`.
+`workflows/engineering-council.md`: before coding, gather structured input from relevant engineers (Feature Engineer when from discovery, PM, Architect, FE/BE/DB, QA, Security, Performance, …). Loop Engineer summarizes, resolves conflicts, and recommends the implementation plan. Template: `templates/council-review.md`.
 
 ## Daily cycle
 
-`workflows/daily-cycle.md`: morning review → sprint planning → Engineering Council → implement one feature through the full pipeline → Loop Engineer verification (close or reassign).
+`workflows/daily-cycle.md`: morning review → sprint planning → Engineering Council → implement one feature through the full pipeline → Loop Engineer verification (close or reassign). Optional: run feature-discovery when choosing the next cycle item.
 
 ## Changing business rules
 

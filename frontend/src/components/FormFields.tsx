@@ -3,14 +3,18 @@ import {
   FormControl,
   FormErrorMessage,
   FormLabel,
+  IconButton,
   Input,
+  InputGroup,
+  InputRightElement,
   NumberInput,
   NumberInputField,
   Select,
   Textarea,
 } from '@chakra-ui/react'
 import type { InputProps, SelectProps, TextareaProps } from '@chakra-ui/react'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import { FiEye, FiEyeOff } from 'react-icons/fi'
 import type { FieldValues, Path, UseFormRegister, Control } from 'react-hook-form'
 import { Controller } from 'react-hook-form'
 
@@ -42,6 +46,45 @@ export function TextField<T extends FieldValues>({
         {...register(name, isNumber ? { valueAsNumber: true } : undefined)}
         {...rest}
       />
+      <FormErrorMessage>{error}</FormErrorMessage>
+    </FormControl>
+  )
+}
+
+/** Password input with show / hide toggle. */
+export function PasswordField<T extends FieldValues>({
+  name,
+  label,
+  register,
+  error,
+  isRequired,
+  ...rest
+}: FieldProps<T> & Omit<InputProps, 'type'>) {
+  const id = String(name)
+  const [visible, setVisible] = useState(false)
+
+  return (
+    <FormControl isInvalid={Boolean(error)} isRequired={isRequired}>
+      <FormLabel htmlFor={id}>{label}</FormLabel>
+      <InputGroup>
+        <Input
+          id={id}
+          type={visible ? 'text' : 'password'}
+          pr="3rem"
+          {...register(name)}
+          {...rest}
+        />
+        <InputRightElement h="full" width="3rem">
+          <IconButton
+            aria-label={visible ? 'Hide password' : 'Show password'}
+            icon={visible ? <FiEyeOff /> : <FiEye />}
+            variant="ghost"
+            size="sm"
+            onClick={() => setVisible((v) => !v)}
+            tabIndex={0}
+          />
+        </InputRightElement>
+      </InputGroup>
       <FormErrorMessage>{error}</FormErrorMessage>
     </FormControl>
   )

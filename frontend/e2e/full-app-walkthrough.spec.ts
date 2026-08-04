@@ -3,7 +3,7 @@
  * After the run, `npm run test:e2e:walkthrough` copies video → e2e-artifacts/campusflow-full-app-walkthrough.webm
  */
 import { expect, test } from '@playwright/test'
-import { loginAs, registerStudent, signOut, USERS } from './helpers/auth'
+import { expectDashboardRole, loginAs, registerStudent, signOut, USERS } from './helpers/auth'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -20,7 +20,7 @@ test('CampusFlow full app walkthrough — all roles & features', async ({ page }
 
   // ── 2. ADMIN nav + settings ──────────────────────────────────
   await loginAs(page, USERS.admin.email, USERS.admin.password)
-  await expect(page.getByText('ADMIN', { exact: true })).toBeVisible()
+  await expectDashboardRole(page, 'ADMIN')
   await expect(page.getByRole('heading', { name: /Campus overview|Administrator/i })).toBeVisible()
 
   for (const [nav, heading] of [
@@ -45,7 +45,7 @@ test('CampusFlow full app walkthrough — all roles & features', async ({ page }
   await page.getByTestId('nav-settings').click()
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
   await expect(page.getByLabel('Dark mode')).toBeVisible()
-  await expect(page.getByTestId('nav-notifications')).toHaveCount(0)
+  await expect(page.getByTestId('nav-notifications')).toBeVisible()
 
   // ── 3. ADMIN department + lecturer user (temp password) ──────
   const deptName = `Walk Dept ${stamp}`
@@ -104,7 +104,7 @@ test('CampusFlow full app walkthrough — all roles & features', async ({ page }
 
   // ── 6. LECTURER role gate + grade ────────────────────────────
   await loginAs(page, USERS.lecturer.email, USERS.lecturer.password)
-  await expect(page.getByText('LECTURER', { exact: true })).toBeVisible()
+  await expectDashboardRole(page, 'LECTURER')
   await expect(page.getByRole('heading', { name: /Teaching overview|Your courses|Lecturer/i })).toBeVisible()
   await expect(page.getByTestId('nav-departments')).toHaveCount(0)
   await expect(page.getByTestId('nav-users')).toHaveCount(0)
@@ -142,7 +142,7 @@ test('CampusFlow full app walkthrough — all roles & features', async ({ page }
 
   // ── 7. STUDENT nav + IDOR + profile + self-enroll ────────────
   await loginAs(page, USERS.student.email, USERS.student.password)
-  await expect(page.getByText('STUDENT', { exact: true })).toBeVisible()
+  await expectDashboardRole(page, 'STUDENT')
   await expect(page.getByTestId('nav-students')).toHaveCount(0)
   await expect(page.getByTestId('nav-reports')).toHaveCount(0)
 
@@ -285,7 +285,7 @@ test('CampusFlow full app walkthrough — all roles & features', async ({ page }
     firstName: 'Walk',
     lastName: 'Reg',
   })
-  await expect(page.getByText('STUDENT', { exact: true })).toBeVisible()
+  await expectDashboardRole(page, 'STUDENT')
   await expect(page.getByTestId('nav-students')).toHaveCount(0)
   await signOut(page)
 

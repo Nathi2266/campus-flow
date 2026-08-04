@@ -65,3 +65,8 @@ export async function updateThemePreference(preferredTheme: 'light' | 'dark'): P
   const { data } = await api.patch<User>('/auth/me/theme', { preferredTheme })
   return data
 }
+
+export async function updateNotifyPreference(notifyInApp: boolean): Promise<User> {
+  const { data } = await api.patch<User>('/auth/me/notifications', { notifyInApp })
+  return data
+}

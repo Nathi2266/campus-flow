@@ -51,10 +51,33 @@ public class ReportController {
     public ResponseEntity<byte[]> exportStudentsPerCourse(
         @Parameter(description = "Department ID filter") @RequestParam(required = false) Long departmentId
     ) {
-        String csv = reportService.exportStudentsPerCourseCsv(departmentId);
+        return csvResponse(reportService.exportStudentsPerCourseCsv(departmentId), "students-per-course.csv");
+    }
+
+    @GetMapping(value = "/active-courses/export", produces = "text/csv")
+    @Operation(summary = "Export active courses as CSV")
+    public ResponseEntity<byte[]> exportActiveCourses(
+        @Parameter(description = "Department ID filter") @RequestParam(required = false) Long departmentId
+    ) {
+        return csvResponse(reportService.exportActiveCoursesCsv(departmentId), "active-courses.csv");
+    }
+
+    @GetMapping(value = "/graduation-progress/export", produces = "text/csv")
+    @Operation(summary = "Export graduation progress as CSV")
+    public ResponseEntity<byte[]> exportGraduationProgress(
+        @Parameter(description = "Department ID filter") @RequestParam(required = false) Long departmentId,
+        @Parameter(description = "Year") @RequestParam(required = false) Integer year
+    ) {
+        return csvResponse(
+            reportService.exportGraduationProgressCsv(departmentId, year),
+            "graduation-progress.csv"
+        );
+    }
+
+    private ResponseEntity<byte[]> csvResponse(String csv, String filename) {
         byte[] body = csv.getBytes(StandardCharsets.UTF_8);
         return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"students-per-course.csv\"")
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
             .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
             .body(body);
     }

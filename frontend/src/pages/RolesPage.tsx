@@ -1,8 +1,6 @@
 import { Box, Container, Heading, SimpleGrid, Text, VStack, Link as CLink, List, ListItem } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router-dom'
 import { FiArrowRight } from 'react-icons/fi'
-import { MarketingLayout } from '@/layouts/MarketingLayout'
-
 const roleGuides = [
   {
     title: 'Administrator',
@@ -38,7 +36,6 @@ const roleGuides = [
 
 export function RolesPage() {
   return (
-    <MarketingLayout>
       <Box py={{ base: 14, md: 20 }} px={{ base: 5, md: 10 }}>
         <Container maxW="6xl">
           <Box maxW="2xl" mb={12}>
@@ -114,6 +111,5 @@ export function RolesPage() {
           </VStack>
         </Container>
       </Box>
-    </MarketingLayout>
   )
 }

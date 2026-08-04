@@ -15,9 +15,10 @@ import {
   DrawerBody,
   CloseButton,
 } from '@chakra-ui/react'
-import type { ReactNode } from 'react'
-import { Link as RouterLink, NavLink, Outlet } from 'react-router-dom'
+import { Link as RouterLink, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { FiMenu } from 'react-icons/fi'
+import { BrandLogo } from '@/components/BrandLogo'
+import { PageTransition } from '@/components/PageTransition'
 
 const exploreLinks = [
   { to: '/features', label: 'Features' },
@@ -45,7 +46,8 @@ function ExploreLinks({
           fontWeight="500"
           fontSize="sm"
           color={color}
-          _hover={{ color: activeColor, textDecoration: 'none' }}
+          transition="color 0.18s ease, transform 0.18s ease"
+          _hover={{ color: activeColor, textDecoration: 'none', transform: 'translateY(-1px)' }}
           sx={{
             '&.active': { color: activeColor, fontWeight: '600' },
           }}
@@ -57,20 +59,13 @@ function ExploreLinks({
   )
 }
 
-export function MarketingLayout({
-  children,
-  transparentHero,
-}: {
-  children?: ReactNode
-  /** When true, header sits over a dark hero (landing). */
-  transparentHero?: boolean
-}) {
+export function MarketingLayout() {
+  const location = useLocation()
+  const transparentHero = location.pathname === '/'
   const { isOpen, onOpen, onClose } = useDisclosure()
   const headerFg = transparentHero ? 'white' : 'app-text'
   const linkColor = transparentHero ? 'whiteAlpha.800' : 'app-muted'
   const linkActive = transparentHero ? 'white' : 'brand.600'
-
-  const content = children ?? <Outlet />
 
   return (
     <Box bg="app-bg" minH="100vh" display="flex" flexDirection="column">
@@ -81,9 +76,9 @@ export function MarketingLayout({
         left={0}
         right={0}
         zIndex={20}
-        bg={transparentHero ? 'transparent' : 'white'}
+        bg={transparentHero ? 'transparent' : 'app-surface'}
         borderBottomWidth={transparentHero ? 0 : '1px'}
-        borderColor="blackAlpha.100"
+        borderColor="app-border"
         backdropFilter={transparentHero ? undefined : 'blur(8px)'}
       >
         <Flex
@@ -95,24 +90,20 @@ export function MarketingLayout({
           mx="auto"
           w="full"
         >
-          <HStack as={RouterLink} to="/" spacing={3} _hover={{ textDecoration: 'none' }} color={headerFg}>
-            <Box
-              w="40px"
-              h="40px"
-              borderRadius="lg"
-              bg={transparentHero ? 'whiteAlpha.200' : 'brand.500'}
-              borderWidth={transparentHero ? '1px' : 0}
-              borderColor="whiteAlpha.300"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              color="white"
-              fontFamily="heading"
-              fontWeight="700"
-              fontSize="sm"
-            >
-              CF
-            </Box>
+          <HStack
+            as={RouterLink}
+            to="/"
+            spacing={3}
+            color={headerFg}
+            transition="opacity 0.18s ease, transform 0.18s ease"
+            _hover={{ textDecoration: 'none', opacity: 0.92, transform: 'translateY(-1px)' }}
+          >
+            <BrandLogo
+              boxSize="40px"
+              surface={transparentHero ? 'dark' : 'light'}
+              alt=""
+              aria-hidden
+            />
             <Text fontFamily="heading" fontWeight="700" fontSize="lg" letterSpacing="-0.02em">
               CampusFlow
             </Text>
@@ -129,7 +120,11 @@ export function MarketingLayout({
             color={headerFg}
             display={{ base: 'inline-flex', md: 'none' }}
             onClick={onOpen}
-            _hover={{ bg: transparentHero ? 'whiteAlpha.200' : 'blackAlpha.50' }}
+            transition="transform 0.18s ease, background 0.18s ease"
+            _hover={{
+              bg: transparentHero ? 'whiteAlpha.200' : 'blackAlpha.50',
+              transform: 'scale(1.05)',
+            }}
           />
         </Flex>
       </Box>
@@ -157,7 +152,9 @@ export function MarketingLayout({
       </Drawer>
 
       <Box as="main" flex="1">
-        {content}
+        <PageTransition>
+          <Outlet />
+        </PageTransition>
       </Box>
 
       <Box as="footer" py={10} px={5} bg="brand.900" color="whiteAlpha.700" mt="auto">
@@ -169,15 +166,24 @@ export function MarketingLayout({
             gap={6}
           >
             <Box>
-              <Text fontWeight="700" color="white" fontFamily="heading" letterSpacing="-0.02em">
-                CampusFlow
-              </Text>
+              <Flex align="center" gap={2} mb={1}>
+                <BrandLogo boxSize="28px" alt="" aria-hidden />
+                <Text fontWeight="700" color="white" fontFamily="heading" letterSpacing="-0.02em">
+                  CampusFlow
+                </Text>
+              </Flex>
               <Text mt={1} fontSize="sm" maxW="sm" lineHeight="tall">
                 Student management for modern campuses.
               </Text>
             </Box>
             <HStack as="nav" aria-label="Footer" spacing={5} flexWrap="wrap" fontSize="sm">
-              <CLink as={RouterLink} to="/" color="whiteAlpha.800" _hover={{ color: 'white' }}>
+              <CLink
+                as={RouterLink}
+                to="/"
+                color="whiteAlpha.800"
+                transition="color 0.18s ease, transform 0.18s ease"
+                _hover={{ color: 'white', transform: 'translateY(-1px)' }}
+              >
                 Home
               </CLink>
               <ExploreLinks color="whiteAlpha.800" activeColor="white" />

@@ -298,7 +298,7 @@ export function StudentsPage() {
             </Thead>
             <Tbody>
               {query.data.content.map((student) => (
-                <Tr key={student.id} _hover={{ bg: 'canvas.50' }}>
+                <Tr key={student.id}>
                   <Td fontFamily="mono" fontSize="sm">
                     {student.studentNumber}
                   </Td>

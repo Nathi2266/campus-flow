@@ -132,7 +132,8 @@ public class CourseService {
 
     @Transactional(readOnly = true)
     public PagedResponse<CourseResponse> listCourses(Integer page, Integer size, String sort,
-                                                     Long departmentId, Long lecturerId, Boolean active) {
+                                                     Long departmentId, Long lecturerId, Boolean active,
+                                                     String search) {
         User currentUser = securityUtils.getCurrentUser();
 
         // Auto-filter lecturers to own courses when lecturerId not provided
@@ -146,9 +147,15 @@ public class CourseService {
         }
 
         Pageable pageable = createPageable(page, size, sort);
+        String query = search != null ? search.trim() : null;
+        if (query != null && query.isEmpty()) {
+            query = null;
+        }
 
         Page<Course> coursePage;
-        if (departmentId != null) {
+        if (query != null) {
+            coursePage = courseRepository.searchFiltered(query, departmentId, lecturerId, active, pageable);
+        } else if (departmentId != null) {
             if (active != null) {
                 coursePage = courseRepository.findByDepartmentIdAndActive(departmentId, active, pageable);
             } else {

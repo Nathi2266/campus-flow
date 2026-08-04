@@ -311,7 +311,7 @@ export function UsersPage() {
                 const active = user.active !== false
                 const isSelf = user.id === currentUserId
                 return (
-                  <Tr key={user.id} _hover={{ bg: 'app-surface-muted' }}>
+                  <Tr key={user.id}>
                     <Td fontWeight="semibold" color="app-text">
                       {user.firstName} {user.lastName}
                     </Td>

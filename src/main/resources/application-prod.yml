@@ -42,3 +42,11 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+
+campusflow:
+  auth:
+    # Public self-registration off in prod unless explicitly enabled
+    registration-enabled: ${CAMPUSFLOW_REGISTRATION_ENABLED:false}
+    rate-limit:
+      max-requests: ${CAMPUSFLOW_AUTH_RATE_LIMIT_MAX:10}
+      window-seconds: ${CAMPUSFLOW_AUTH_RATE_LIMIT_WINDOW_SECONDS:60}

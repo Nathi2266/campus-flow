@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { loginAs, registerStudent, signOut, USERS } from './helpers/auth'
+import { expectDashboardRole, loginAs, registerStudent, signOut, USERS } from './helpers/auth'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -13,7 +13,7 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
 
   test('ADMIN: login seed user and walk primary nav', async ({ page }) => {
     await loginAs(page, USERS.admin.email, USERS.admin.password)
-    await expect(page.getByText('ADMIN', { exact: true })).toBeVisible()
+    await expectDashboardRole(page, 'ADMIN')
     await expect(page.getByRole('heading', { name: /Campus overview|Administrator/i })).toBeVisible()
 
     await page.getByTestId('nav-students').click()
@@ -45,8 +45,8 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
     await expect(page.getByLabel('Dark mode')).toBeVisible()
 
-    // Notifications nav hidden until API ships
-    await expect(page.getByTestId('nav-notifications')).toHaveCount(0)
+    // Notifications inbox (Cycle 3) — visible for all roles
+    await expect(page.getByTestId('nav-notifications')).toBeVisible()
 
     await signOut(page)
   })
@@ -183,7 +183,7 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
 
   test('LECTURER: login and role-gated screens', async ({ page }) => {
     await loginAs(page, USERS.lecturer.email, USERS.lecturer.password)
-    await expect(page.getByText('LECTURER', { exact: true })).toBeVisible()
+    await expectDashboardRole(page, 'LECTURER')
     await expect(page.getByRole('heading', { name: /Teaching overview|Your courses|Lecturer/i })).toBeVisible()
 
     await page.getByTestId('nav-courses').click()
@@ -200,7 +200,7 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
 
   test('STUDENT: login and limited nav', async ({ page }) => {
     await loginAs(page, USERS.student.email, USERS.student.password)
-    await expect(page.getByText('STUDENT', { exact: true })).toBeVisible()
+    await expectDashboardRole(page, 'STUDENT')
     await expect(page.getByRole('heading', { name: /Hello|Student|Welcome/i })).toBeVisible()
 
     await expect(page.getByTestId('nav-students')).toHaveCount(0)
@@ -213,7 +213,7 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await page.getByTestId('nav-enrollments').click()
     await expect(page.getByRole('heading', { name: 'Enrollments' })).toBeVisible()
 
-    await expect(page.getByTestId('nav-notifications')).toHaveCount(0)
+    await expect(page.getByTestId('nav-notifications')).toBeVisible()
 
     await page.getByTestId('nav-profile').click()
     await expect(page.getByText(USERS.student.email)).toBeVisible()
@@ -275,7 +275,7 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     const courseCode = `E2E${String(stamp).slice(-6)}`
 
     await loginAs(page, USERS.admin.email, USERS.admin.password)
-    await expect(page.getByText('ADMIN', { exact: true })).toBeVisible()
+    await expectDashboardRole(page, 'ADMIN')
 
     await page.getByTestId('nav-students').click()
     await page.getByRole('button', { name: 'Add student' }).click()
@@ -458,7 +458,7 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
       firstName: 'Reg',
       lastName: 'Student',
     })
-    await expect(page.getByText('STUDENT', { exact: true })).toBeVisible()
+    await expectDashboardRole(page, 'STUDENT')
     await expect(page.getByTestId('nav-students')).toHaveCount(0)
     await signOut(page)
   })

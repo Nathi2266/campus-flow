@@ -15,6 +15,13 @@ export async function clearSession(page: Page) {
   })
 }
 
+/** Dashboard eyebrow labels (not API role enums). */
+export const ROLE_EYEBROW = {
+  ADMIN: 'Administrator',
+  LECTURER: 'Lecturer',
+  STUDENT: 'Student',
+} as const
+
 export async function loginAs(page: Page, email: string, password: string) {
   await clearSession(page)
   await page.goto('/login')
@@ -30,6 +37,13 @@ export async function loginAs(page: Page, email: string, password: string) {
   expect(res.ok(), `login failed HTTP ${res.status()} for ${email}`).toBeTruthy()
   await expect(page).toHaveURL(/\/dashboard($|\?)/, { timeout: 45_000 })
   await expect(page.getByRole('heading').first()).toBeVisible({ timeout: 15_000 })
+}
+
+export async function expectDashboardRole(
+  page: Page,
+  role: keyof typeof ROLE_EYEBROW,
+) {
+  await expect(page.getByText(ROLE_EYEBROW[role], { exact: true })).toBeVisible()
 }
 
 /** Public registration creates STUDENT only. */

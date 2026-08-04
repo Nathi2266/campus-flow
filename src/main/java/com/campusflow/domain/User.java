@@ -62,6 +62,11 @@ public class User extends AuditBase {
     @Builder.Default
     private Boolean active = true;
 
+    /** When false, in-app notification events are not persisted. */
+    @Column(name = "notify_in_app", nullable = false)
+    @Builder.Default
+    private Boolean notifyInApp = true;
+
     // One-to-one relationship with Student
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Student student;

@@ -14,7 +14,7 @@ import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { PageHeader } from '@/components/feedback'
 import { Surface } from '@/components/ui'
-import { updateThemePreference } from '@/api/auth'
+import { updateNotifyPreference, updateThemePreference } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
 import { useAuthStore } from '@/features/auth/authStore'
 
@@ -46,19 +46,22 @@ function SettingRow({
 
 export function SettingsPage() {
   const { colorMode, setColorMode } = useColorMode()
+  const user = useAuthStore((s) => s.user)
   const updateUser = useAuthStore((s) => s.updateUser)
   const toast = useToast()
-  const [saving, setSaving] = useState(false)
+  const [savingTheme, setSavingTheme] = useState(false)
+  const [savingNotify, setSavingNotify] = useState(false)
+  const notifyInApp = user?.notifyInApp !== false
 
   async function handleDarkModeChange(nextDark: boolean) {
     const nextTheme = nextDark ? 'dark' : 'light'
     setColorMode(nextTheme)
-    setSaving(true)
+    setSavingTheme(true)
     try {
-      const user = await updateThemePreference(nextTheme)
+      const next = await updateThemePreference(nextTheme)
       updateUser({
-        ...user,
-        role: user.role as 'ADMIN' | 'LECTURER' | 'STUDENT',
+        ...next,
+        role: next.role as 'ADMIN' | 'LECTURER' | 'STUDENT',
       })
       toast({
         title: nextTheme === 'dark' ? 'Dark mode on' : 'Light mode on',
@@ -74,7 +77,31 @@ export function SettingsPage() {
         duration: 4000,
       })
     } finally {
-      setSaving(false)
+      setSavingTheme(false)
+    }
+  }
+
+  async function handleNotifyChange(next: boolean) {
+    setSavingNotify(true)
+    try {
+      const updated = await updateNotifyPreference(next)
+      updateUser({
+        ...updated,
+        role: updated.role as 'ADMIN' | 'LECTURER' | 'STUDENT',
+      })
+      toast({
+        title: next ? 'In-app notifications on' : 'In-app notifications off',
+        status: 'success',
+        duration: 2200,
+      })
+    } catch (error) {
+      toast({
+        title: getErrorMessage(error, 'Could not save notification preference'),
+        status: 'error',
+        duration: 4000,
+      })
+    } finally {
+      setSavingNotify(false)
     }
   }
 
@@ -82,7 +109,7 @@ export function SettingsPage() {
     <>
       <PageHeader
         title="Settings"
-        description="Appearance preferences sync to your account and apply on your next login."
+        description="Appearance and notification preferences sync to your account."
         eyebrow="Preferences"
       />
       <Surface p={{ base: 6, md: 8 }} maxW="3xl">
@@ -92,7 +119,7 @@ export function SettingsPage() {
         <Text fontSize="sm" color="app-muted" mb={6} lineHeight="tall">
           Dark mode applies across CampusFlow and is stored with your user profile.
         </Text>
-        <VStack align="stretch" spacing={6} divider={<Divider />}>
+        <VStack align="stretch" spacing={6} divider={<Divider />} mb={10}>
           <SettingRow
             id="color-mode"
             label="Dark mode"
@@ -102,16 +129,36 @@ export function SettingsPage() {
               id="color-mode"
               isChecked={colorMode === 'dark'}
               onChange={(e) => handleDarkModeChange(e.target.checked)}
-              isDisabled={saving}
+              isDisabled={savingTheme}
               colorScheme="brand"
               size="lg"
             />
           </SettingRow>
         </VStack>
-        <Text fontSize="sm" color="app-muted" lineHeight="tall" mt={8}>
-          Notification delivery preferences will appear here when the notifications API is available.
-          Theme is saved as <Text as="span" fontWeight="semibold">preferred_theme</Text> on your account.
+
+        <Text fontFamily="heading" fontWeight="600" fontSize="lg" mb={1} letterSpacing="-0.02em" color="app-text">
+          Notifications
         </Text>
+        <Text fontSize="sm" color="app-muted" mb={6} lineHeight="tall">
+          Control whether CampusFlow stores in-app alerts for your account.
+        </Text>
+        <VStack align="stretch" spacing={6} divider={<Divider />}>
+          <SettingRow
+            id="notify-in-app"
+            label="In-app notifications"
+            help="When off, new grade and enrollment alerts are not delivered to your inbox."
+          >
+            <Switch
+              id="notify-in-app"
+              isChecked={notifyInApp}
+              onChange={(e) => handleNotifyChange(e.target.checked)}
+              isDisabled={savingNotify}
+              colorScheme="brand"
+              size="lg"
+              data-testid="settings-notify-in-app"
+            />
+          </SettingRow>
+        </VStack>
       </Surface>
     </>
   )

@@ -5,11 +5,13 @@ import {
   DrawerBody,
   DrawerCloseButton,
   DrawerContent,
+  DrawerFooter,
   DrawerHeader,
   DrawerOverlay,
   Flex,
   HStack,
   IconButton,
+  Input,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -18,6 +20,7 @@ import {
   ModalHeader,
   ModalOverlay,
   Progress,
+  Select,
   Table,
   Tbody,
   Td,
@@ -29,18 +32,19 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FiEdit2, FiTrash2 } from 'react-icons/fi'
 import {
+  bulkUpdateEnrollmentGrades,
   dropEnrollment,
   listCourseEnrollments,
   updateEnrollmentGrade,
 } from '@/api/resources'
 import { getErrorMessage } from '@/api/client'
-import { CapacityBadge, EnrollmentStatusBadge } from '@/components/StatusBadge'
+import { CapacityBadge } from '@/components/StatusBadge'
 import { EmptyState, ErrorState, LoadingState } from '@/components/feedback'
 import { FormStack, SelectField, TextField } from '@/components/FormFields'
 import { fillRatio } from '@/utils/capacity'
@@ -52,6 +56,11 @@ const gradeSchema = z.object({
 })
 
 type GradeValues = z.infer<typeof gradeSchema>
+
+type DraftRow = {
+  grade: string
+  status: EnrollmentStatus | ''
+}
 
 export function CourseRosterDrawer({
   course,
@@ -66,12 +75,25 @@ export function CourseRosterDrawer({
   const queryClient = useQueryClient()
   const gradeModal = useDisclosure()
   const [grading, setGrading] = useState<Enrollment | null>(null)
+  const [drafts, setDrafts] = useState<Record<number, DraftRow>>({})
 
   const roster = useQuery({
     queryKey: ['enrollments', 'course', course?.id],
     queryFn: () => listCourseEnrollments(course!.id, { page: 0, size: 100 }),
     enabled: isOpen && course != null,
   })
+
+  useEffect(() => {
+    if (!roster.data) return
+    const next: Record<number, DraftRow> = {}
+    for (const row of roster.data.content) {
+      next[row.id] = {
+        grade: row.grade ?? '',
+        status: row.status,
+      }
+    }
+    setDrafts(next)
+  }, [roster.data])
 
   const gradeForm = useForm<GradeValues>({
     resolver: zodResolver(gradeSchema),
@@ -81,6 +103,7 @@ export function CourseRosterDrawer({
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['enrollments'] }),
       queryClient.invalidateQueries({ queryKey: ['courses'] }),
+      queryClient.invalidateQueries({ queryKey: ['notifications'] }),
     ])
   }
 
@@ -96,11 +119,46 @@ export function CourseRosterDrawer({
     onError: (error) => toast({ title: getErrorMessage(error), status: 'error' }),
   })
 
+  const bulkMutation = useMutation({
+    mutationFn: () => {
+      const grades: { enrollmentId: number; grade: string; status?: EnrollmentStatus }[] = []
+      for (const row of roster.data?.content ?? []) {
+        const draft = drafts[row.id]
+        if (!draft) continue
+        const grade = draft.grade.trim()
+        if (!grade) continue
+        const unchanged =
+          grade === (row.grade ?? '').trim() &&
+          (draft.status === '' || draft.status === row.status)
+        if (unchanged) continue
+        grades.push({
+          enrollmentId: row.id,
+          grade,
+          ...(draft.status ? { status: draft.status } : {}),
+        })
+      }
+      if (!grades.length) {
+        throw new Error('Enter at least one grade change before saving.')
+      }
+      return bulkUpdateEnrollmentGrades(grades)
+    },
+    onSuccess: async (result) => {
+      await invalidate()
+      const errCount = result.errors?.length ?? 0
+      toast({
+        title: `Saved ${result.successCount} grade${result.successCount === 1 ? '' : 's'}`,
+        description: errCount ? `${errCount} row(s) failed` : undefined,
+        status: errCount ? 'warning' : 'success',
+      })
+    },
+    onError: (error) => toast({ title: getErrorMessage(error), status: 'error' }),
+  })
+
   function openGrade(row: Enrollment) {
     setGrading(row)
     gradeForm.reset({
-      grade: row.grade ?? '',
-      status: row.status,
+      grade: drafts[row.id]?.grade ?? row.grade ?? '',
+      status: drafts[row.id]?.status || row.status,
     })
     gradeModal.onOpen()
   }
@@ -155,7 +213,7 @@ export function CourseRosterDrawer({
             {roster.data && roster.data.content.length > 0 ? (
               <Table variant="simple" size="sm">
                 <caption style={{ captionSide: 'top', paddingBottom: '0.75rem', textAlign: 'left' }}>
-                  Course enrollments
+                  Course enrollments — edit grades inline, then Save all
                 </caption>
                 <Thead>
                   <Tr>
@@ -170,9 +228,47 @@ export function CourseRosterDrawer({
                     <Tr key={row.id}>
                       <Td fontWeight="semibold">{row.studentName}</Td>
                       <Td>
-                        <EnrollmentStatusBadge status={row.status} />
+                        <Select
+                          size="sm"
+                          aria-label={`Status for ${row.studentName}`}
+                          value={drafts[row.id]?.status ?? row.status}
+                          onChange={(e) =>
+                            setDrafts((prev) => ({
+                              ...prev,
+                              [row.id]: {
+                                grade: prev[row.id]?.grade ?? row.grade ?? '',
+                                status: e.target.value as EnrollmentStatus | '',
+                              },
+                            }))
+                          }
+                          maxW="140px"
+                        >
+                          <option value="ACTIVE">ACTIVE</option>
+                          <option value="COMPLETED">COMPLETED</option>
+                          <option value="FAILED">FAILED</option>
+                          <option value="DROPPED">DROPPED</option>
+                        </Select>
                       </Td>
-                      <Td>{row.grade ?? '—'}</Td>
+                      <Td>
+                        <Input
+                          size="sm"
+                          maxLength={5}
+                          aria-label={`Grade for ${row.studentName}`}
+                          data-testid={`roster-grade-${row.id}`}
+                          value={drafts[row.id]?.grade ?? ''}
+                          onChange={(e) =>
+                            setDrafts((prev) => ({
+                              ...prev,
+                              [row.id]: {
+                                grade: e.target.value,
+                                status: prev[row.id]?.status ?? row.status,
+                              },
+                            }))
+                          }
+                          placeholder="e.g. A"
+                          maxW="88px"
+                        />
+                      </Td>
                       <Td>
                         <HStack>
                           <IconButton
@@ -206,6 +302,18 @@ export function CourseRosterDrawer({
               </Table>
             ) : null}
           </DrawerBody>
+          {roster.data && roster.data.content.length > 0 ? (
+            <DrawerFooter borderTopWidth="1px">
+              <Button
+                colorScheme="brand"
+                onClick={() => bulkMutation.mutate()}
+                isLoading={bulkMutation.isPending}
+                data-testid="roster-save-all-grades"
+              >
+                Save all grades
+              </Button>
+            </DrawerFooter>
+          ) : null}
         </DrawerContent>
       </Drawer>
 

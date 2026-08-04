@@ -13,7 +13,8 @@ This repository is **CampusFlow**: Spring Boot + React student management, orche
    - `.kiro/specs/database-schema.md`
    - `.kiro/specs/security-implementation.md`
 3. Use role skills via `.cursor/skills/<role>/` → `.kiro/skills/<role>/SKILL.md`.
-4. Non-trivial work: Engineering Council (`.kiro/workflows/engineering-council.md`) before implementation.
+4. Feature backlog discovery: `.cursor/skills/feature-engineer/` → `.kiro/workflows/feature-discovery.md` (recommend → user decides → then council/implement).
+5. Non-trivial work: Engineering Council (`.kiro/workflows/engineering-council.md`) before implementation.
 
 ## Stack facts (do not invent otherwise)
 

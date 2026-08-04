@@ -15,7 +15,7 @@ import { useState } from 'react'
 import { login } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
 import { useAuthStore } from '@/features/auth/authStore'
-import { FormStack, TextField } from '@/components/FormFields'
+import { FormStack, PasswordField, TextField } from '@/components/FormFields'
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -90,10 +90,9 @@ export function LoginPage() {
             isRequired
             data-testid="login-email"
           />
-          <TextField
+          <PasswordField
             name="password"
             label="Password"
-            type="password"
             autoComplete="current-password"
             register={register}
             error={errors.password?.message}

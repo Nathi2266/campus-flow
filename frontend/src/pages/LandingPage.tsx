@@ -5,6 +5,7 @@ import {
   Flex,
   Heading,
   HStack,
+  Image,
   Link as CLink,
   SimpleGrid,
   Text,
@@ -21,8 +22,8 @@ import {
   FiShield,
   FiUsers,
 } from 'react-icons/fi'
+import { BrandLogo } from '@/components/BrandLogo'
 import { useAuthStore } from '@/features/auth/authStore'
-import { MarketingLayout } from '@/layouts/MarketingLayout'
 import { fadeIn, heroVariants, heroVisualVariants, staggerContainer, staggerItem } from '@/theme/motion'
 
 const MotionBox = motion.create(Box)
@@ -109,53 +110,22 @@ const exploreCards = [
   },
 ] as const
 
+const LANDING_HERO_SRC = '/campus_landing.png'
+
 function CampusVisual() {
   return (
-    <Box
-      as="svg"
-      viewBox="0 0 960 720"
+    <Image
+      src={LANDING_HERO_SRC}
+      alt=""
+      aria-hidden
       w="full"
       h="full"
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden
-    >
-      <defs>
-        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#0F766E" />
-          <stop offset="55%" stopColor="#115E59" />
-          <stop offset="100%" stopColor="#042F2E" />
-        </linearGradient>
-        <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#CCFBF1" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#99F6E4" stopOpacity="0.08" />
-        </linearGradient>
-      </defs>
-      <rect width="960" height="720" fill="url(#sky)" />
-      <circle cx="780" cy="120" r="90" fill="#2DD4BF" opacity="0.18" />
-      <circle cx="160" cy="200" r="140" fill="#5EEAD4" opacity="0.1" />
-      <rect y="520" width="960" height="200" fill="#042F2E" opacity="0.55" />
-      <rect x="220" y="260" width="520" height="280" fill="#0D9488" opacity="0.55" />
-      <rect x="220" y="260" width="520" height="280" fill="url(#glass)" />
-      <rect x="240" y="290" width="70" height="90" fill="#F0FDFA" opacity="0.2" />
-      <rect x="330" y="290" width="70" height="90" fill="#F0FDFA" opacity="0.16" />
-      <rect x="420" y="290" width="70" height="90" fill="#F0FDFA" opacity="0.2" />
-      <rect x="510" y="290" width="70" height="90" fill="#F0FDFA" opacity="0.16" />
-      <rect x="600" y="290" width="70" height="90" fill="#F0FDFA" opacity="0.2" />
-      <rect x="240" y="400" width="70" height="90" fill="#F0FDFA" opacity="0.14" />
-      <rect x="330" y="400" width="70" height="90" fill="#F0FDFA" opacity="0.18" />
-      <rect x="560" y="400" width="110" height="140" fill="#042F2E" opacity="0.35" />
-      <rect x="80" y="340" width="140" height="200" fill="#134E4A" opacity="0.85" />
-      <rect x="100" y="370" width="40" height="55" fill="#CCFBF1" opacity="0.15" />
-      <rect x="160" y="370" width="40" height="55" fill="#CCFBF1" opacity="0.12" />
-      <rect x="100" y="450" width="40" height="55" fill="#CCFBF1" opacity="0.12" />
-      <rect x="740" y="200" width="100" height="340" fill="#0F766E" opacity="0.9" />
-      <rect x="760" y="230" width="28" height="40" fill="#F0FDFA" opacity="0.18" />
-      <rect x="800" y="230" width="28" height="40" fill="#F0FDFA" opacity="0.14" />
-      <rect x="760" y="300" width="28" height="40" fill="#F0FDFA" opacity="0.14" />
-      <rect x="800" y="300" width="28" height="40" fill="#F0FDFA" opacity="0.18" />
-      <polygon points="740,200 790,140 840,200" fill="#2DD4BF" opacity="0.45" />
-      <path d="M420 540 L480 720 L560 720 L500 540 Z" fill="#0B3A4A" opacity="0.5" />
-    </Box>
+      objectFit="cover"
+      objectPosition="center"
+      loading="eager"
+      decoding="async"
+      draggable={false}
+    />
   )
 }
 
@@ -167,12 +137,13 @@ export function LandingPage() {
   }
 
   return (
-    <MarketingLayout transparentHero>
+    <>
       {/* Hero — only place with the two auth buttons */}
       <Box as="section" position="relative" minH={{ base: '100svh', md: '100vh' }} color="white">
         <MotionBox
           position="absolute"
           inset={0}
+          overflow="hidden"
           variants={heroVisualVariants}
           initial="initial"
           animate="animate"
@@ -198,16 +169,19 @@ export function LandingPage() {
           animate="animate"
         >
           <VStack align="flex-start" spacing={6} maxW="2xl">
-            <Text
-              as="h1"
-              fontFamily="heading"
-              fontSize={{ base: '3.25rem', md: '4.5rem', lg: '5rem' }}
-              fontWeight="700"
-              letterSpacing="-0.04em"
-              lineHeight="0.95"
-            >
-              CampusFlow
-            </Text>
+            <HStack spacing={4} align="center">
+              <BrandLogo boxSize={{ base: '56px', md: '72px' }} />
+              <Text
+                as="h1"
+                fontFamily="heading"
+                fontSize={{ base: '3.25rem', md: '4.5rem', lg: '5rem' }}
+                fontWeight="700"
+                letterSpacing="-0.04em"
+                lineHeight="0.95"
+              >
+                CampusFlow
+              </Text>
+            </HStack>
             <Text
               as="p"
               fontSize={{ base: 'xl', md: '2xl' }}
@@ -229,7 +203,9 @@ export function LandingPage() {
                 size="lg"
                 bg="brand.500"
                 color="white"
-                _hover={{ bg: 'brand.400' }}
+                transition="transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease"
+                _hover={{ bg: 'brand.400', transform: 'translateY(-3px)', shadow: 'lg' }}
+                _active={{ transform: 'translateY(-1px)' }}
                 px={8}
                 data-testid="landing-cta-signin"
               >
@@ -242,7 +218,9 @@ export function LandingPage() {
                 variant="outline"
                 borderColor="whiteAlpha.700"
                 color="white"
-                _hover={{ bg: 'whiteAlpha.200' }}
+                transition="transform 0.2s ease, background 0.2s ease"
+                _hover={{ bg: 'whiteAlpha.200', transform: 'translateY(-3px)' }}
+                _active={{ transform: 'translateY(-1px)' }}
                 px={8}
                 data-testid="landing-cta-register"
               >
@@ -540,6 +518,6 @@ export function LandingPage() {
           </SimpleGrid>
         </Container>
       </Box>
-    </MarketingLayout>
+    </>
   )
 }

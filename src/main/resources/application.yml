@@ -96,6 +96,13 @@ jwt:
 cors:
   allowed-origin-patterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*}
 
+campusflow:
+  auth:
+    registration-enabled: ${CAMPUSFLOW_REGISTRATION_ENABLED:true}
+    rate-limit:
+      max-requests: ${CAMPUSFLOW_AUTH_RATE_LIMIT_MAX:20}
+      window-seconds: ${CAMPUSFLOW_AUTH_RATE_LIMIT_WINDOW_SECONDS:60}
+
 springdoc:
   api-docs:
     path: /v3/api-docs

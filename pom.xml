@@ -17,6 +17,23 @@
     <name>campusflow</name>
     <description>CampusFlow - Student Management System</description>
 
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>Nathi2266</id>
+            <name>Nkosinathi Radebe</name>
+            <email>Nathiradebe20@gmail.com</email>
+            <url>https://github.com/Nathi2266</url>
+        </developer>
+    </developers>
+
     <properties>
         <java.version>21</java.version>
         <springdoc-openapi.version>2.3.0</springdoc-openapi.version>

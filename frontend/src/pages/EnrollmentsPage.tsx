@@ -292,7 +292,7 @@ export function EnrollmentsPage() {
             </Thead>
             <Tbody>
               {query.data.content.map((row) => (
-                <Tr key={row.id} _hover={{ bg: 'canvas.50' }}>
+                <Tr key={row.id}>
                   {!isStudent ? <Td fontWeight="semibold">{row.studentName}</Td> : null}
                   <Td>
                     <Text as="span" fontWeight="bold" color="brand.700">

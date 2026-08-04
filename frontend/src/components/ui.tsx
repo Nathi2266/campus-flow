@@ -37,13 +37,16 @@ export function Surface({
       borderColor="app-border"
       borderRadius="lg"
       shadow="soft"
-      transition="box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease, background 0.15s ease"
+      transition="box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease, background 0.2s ease"
       {...(interactive
         ? {
             _hover: {
               shadow: 'lift',
-              transform: 'translateY(-2px)',
-              borderColor: 'brand.100',
+              transform: 'translateY(-3px)',
+              borderColor: 'brand.200',
+            },
+            _active: {
+              transform: 'translateY(-1px)',
             },
           }
         : {})}

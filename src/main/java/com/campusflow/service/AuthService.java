@@ -8,6 +8,7 @@ import com.campusflow.domain.enums.AcademicStatus;
 import com.campusflow.domain.enums.UserRole;
 import com.campusflow.dto.mapper.UserMapper;
 import com.campusflow.dto.request.LoginRequest;
+import com.campusflow.dto.request.NotifyPreferenceRequest;
 import com.campusflow.dto.request.ProfileUpdateRequest;
 import com.campusflow.dto.request.RefreshRequest;
 import com.campusflow.dto.request.ThemePreferenceRequest;
@@ -24,6 +25,7 @@ import com.campusflow.security.JwtTokenProvider;
 import com.campusflow.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,7 +56,17 @@ public class AuthService {
     private final SecurityUtils securityUtils;
     private final UserMapper userMapper;
 
+    @Value("${campusflow.auth.registration-enabled:true}")
+    private boolean registrationEnabled;
+
     public AuthResponse register(UserRegistrationRequest request) {
+        if (!registrationEnabled) {
+            throw new ValidationException(
+                "Public registration is disabled",
+                "registration",
+                "REGISTRATION_DISABLED"
+            );
+        }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new ValidationException("Email already exists", "email", "EMAIL_EXISTS");
         }
@@ -139,6 +151,13 @@ public class AuthService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new NotFoundException("User not found", "userId"));
 
+        if (Boolean.FALSE.equals(user.getActive())) {
+            storedToken.setRevoked(true);
+            storedToken.setExpired(true);
+            tokenRepository.save(storedToken);
+            throw new ValidationException("Account is deactivated", "credentials", "ACCOUNT_DEACTIVATED");
+        }
+
         // Rotate: revoke old refresh token
         storedToken.setRevoked(true);
         storedToken.setExpired(true);
@@ -182,6 +201,12 @@ public class AuthService {
             throw new ValidationException("Theme must be light or dark", "preferredTheme", "INVALID_THEME");
         }
         user.setPreferredTheme(theme);
+        return userMapper.toResponse(userRepository.save(user));
+    }
+
+    public UserResponse updateNotifyPreference(NotifyPreferenceRequest request) {
+        User user = securityUtils.getCurrentUser();
+        user.setNotifyInApp(Boolean.TRUE.equals(request.getNotifyInApp()));
         return userMapper.toResponse(userRepository.save(user));
     }
 

@@ -4,6 +4,7 @@ import {
   FormLabel,
   HStack,
   IconButton,
+  Input,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -23,7 +24,7 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -93,6 +94,16 @@ export function CoursesPage() {
   const [page, setPage] = useState(0)
   const [departmentId, setDepartmentId] = useState<string>('')
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all')
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(search.trim())
+      setPage(0)
+    }, 300)
+    return () => window.clearTimeout(timer)
+  }, [search])
 
   const activeParam =
     isStudent ? true : activeFilter === 'all' ? undefined : activeFilter === 'active'
@@ -105,6 +116,7 @@ export function CoursesPage() {
         student: isStudent,
         departmentId: isAdmin ? departmentId || null : null,
         active: isStudent ? true : activeFilter,
+        search: debouncedSearch || null,
       },
     ],
     queryFn: () =>
@@ -114,6 +126,7 @@ export function CoursesPage() {
         ...(isStudent ? { active: true } : {}),
         ...(isAdmin && departmentId ? { departmentId: Number(departmentId) } : {}),
         ...(isAdmin && activeParam !== undefined ? { active: activeParam } : {}),
+        ...(debouncedSearch ? { search: debouncedSearch } : {}),
       }),
   })
 
@@ -211,10 +224,25 @@ export function CoursesPage() {
       <DataTableShell
         toolbar={
           <HStack justify="space-between" flexWrap="wrap" gap={3}>
-            <Text fontSize="sm" color="app-muted">
-              {query.data?.totalElements ?? 0} course
-              {(query.data?.totalElements ?? 0) === 1 ? '' : 's'}
-            </Text>
+            <HStack flexWrap="wrap" gap={3} flex="1">
+              <FormControl maxW="260px">
+                <FormLabel htmlFor="course-search" mb={1} fontSize="sm">
+                  Search
+                </FormLabel>
+                <Input
+                  id="course-search"
+                  size="sm"
+                  placeholder="Code or name"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  data-testid="course-search"
+                />
+              </FormControl>
+              <Text fontSize="sm" color="app-muted" alignSelf="flex-end" pb={1}>
+                {query.data?.totalElements ?? 0} course
+                {(query.data?.totalElements ?? 0) === 1 ? '' : 's'}
+              </Text>
+            </HStack>
             {isAdmin ? (
               <HStack flexWrap="wrap" gap={3}>
                 <FormControl maxW="220px">
@@ -306,7 +334,7 @@ export function CoursesPage() {
             </Thead>
             <Tbody>
               {query.data.content.map((course) => (
-                <Tr key={course.id} _hover={{ bg: 'canvas.50' }}>
+                <Tr key={course.id}>
                   <Td fontWeight="bold" color="brand.700">
                     {course.code}
                   </Td>

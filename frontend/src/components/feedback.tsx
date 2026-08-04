@@ -6,7 +6,6 @@ import {
   Box,
   Button,
   Circle,
-  Spinner,
   Text,
   VStack,
 } from '@chakra-ui/react'
@@ -15,6 +14,7 @@ import { FiAlertCircle, FiInbox } from 'react-icons/fi'
 import { motion } from 'framer-motion'
 import { fadeIn } from '@/theme/motion'
 import { Surface } from '@/components/ui'
+import { RotatingLogo } from '@/components/RotatingLogo'
 
 const MotionBox = motion.create(Box)
 
@@ -22,7 +22,7 @@ export function LoadingState({ label = 'Loading…' }: { label?: string }) {
   return (
     <MotionBox variants={fadeIn} initial="initial" animate="animate">
       <VStack py={20} spacing={4} role="status" aria-busy="true" aria-live="polite">
-        <Spinner size="lg" color="brand.500" thickness="3px" speed="0.7s" />
+        <RotatingLogo boxSize="64px" />
         <Text color="app-muted" fontWeight="medium">
           {label}
         </Text>

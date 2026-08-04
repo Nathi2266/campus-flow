@@ -7,6 +7,7 @@ import type {
   Enrollment,
   EnrollmentStatus,
   GraduationProgress,
+  NotificationItem,
   PagedResponse,
   Statistics,
   Student,
@@ -127,6 +128,17 @@ export async function updateEnrollmentGrade(
   return data
 }
 
+export async function bulkUpdateEnrollmentGrades(
+  grades: { enrollmentId: number; grade: string; status?: EnrollmentStatus }[],
+) {
+  const { data } = await api.patch<{
+    updated: Enrollment[]
+    errors: { enrollmentId: number; code: string; message: string }[]
+    successCount: number
+  }>('/enrollments/grades/bulk', { grades })
+  return data
+}
+
 export async function dropEnrollment(id: number) {
   await api.delete(`/enrollments/${id}`)
 }
@@ -229,6 +241,41 @@ export async function exportStudentsPerCourseCsv(departmentId?: number) {
     responseType: 'blob',
   })
   return data
+}
+
+export async function exportActiveCoursesCsv(departmentId?: number) {
+  const { data } = await api.get<Blob>('/reports/active-courses/export', {
+    params: departmentId != null ? { departmentId } : undefined,
+    responseType: 'blob',
+  })
+  return data
+}
+
+export async function exportGraduationProgressCsv(departmentId?: number) {
+  const { data } = await api.get<Blob>('/reports/graduation-progress/export', {
+    params: departmentId != null ? { departmentId } : undefined,
+    responseType: 'blob',
+  })
+  return data
+}
+
+export async function listNotifications(params?: { page?: number; size?: number }) {
+  const { data } = await api.get<PagedResponse<NotificationItem>>('/notifications', { params })
+  return data
+}
+
+export async function getUnreadNotificationCount() {
+  const { data } = await api.get<{ count: number }>('/notifications/unread-count')
+  return data
+}
+
+export async function markNotificationRead(id: number) {
+  const { data } = await api.patch<NotificationItem>(`/notifications/${id}/read`)
+  return data
+}
+
+export async function markAllNotificationsRead() {
+  await api.post('/notifications/read-all')
 }
 
 export async function listAuditLogs(params?: { page?: number; size?: number }) {

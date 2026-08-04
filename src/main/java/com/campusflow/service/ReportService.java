@@ -91,6 +91,30 @@ public class ReportService {
         return csv.toString();
     }
 
+    public String exportActiveCoursesCsv(Long departmentId) {
+        StringBuilder csv = new StringBuilder("courseId,courseCode,courseName,enrolledCount,maxCapacity\n");
+        for (ActiveCourseResponse row : getActiveCourses(departmentId)) {
+            csv.append(row.getCourseId()).append(',')
+                .append(csvEscape(row.getCourseCode())).append(',')
+                .append(csvEscape(row.getCourseName())).append(',')
+                .append(row.getEnrolledCount() != null ? row.getEnrolledCount() : 0).append(',')
+                .append(row.getMaxCapacity() != null ? row.getMaxCapacity() : 0)
+                .append('\n');
+        }
+        return csv.toString();
+    }
+
+    public String exportGraduationProgressCsv(Long departmentId, Integer year) {
+        GraduationProgressResponse row = getGraduationProgress(departmentId, year);
+        return "totalStudents,graduatedStudents,expectedGraduates,graduationRate,averageGpa\n"
+            + (row.getTotalStudents() != null ? row.getTotalStudents() : 0) + ','
+            + (row.getGraduatedStudents() != null ? row.getGraduatedStudents() : 0) + ','
+            + (row.getExpectedGraduates() != null ? row.getExpectedGraduates() : 0) + ','
+            + (row.getGraduationRate() != null ? row.getGraduationRate() : "0") + ','
+            + (row.getAverageGpa() != null ? row.getAverageGpa() : "0")
+            + '\n';
+    }
+
     private String csvEscape(String value) {
         if (value == null) {
             return "";

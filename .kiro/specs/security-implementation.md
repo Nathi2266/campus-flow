@@ -35,11 +35,23 @@
 1. Access token has expired
 2. Client sends refresh token to /auth/refresh endpoint
 3. Backend validates refresh token from database
-4. New access token generated
-5. Old refresh token revoked (rotation)
-6. New refresh token generated
-7. Response returns new tokens
+4. If user.active is false → revoke refresh token and reject (ACCOUNT_DEACTIVATED)
+5. New access token generated
+6. Old refresh token revoked (rotation)
+7. New refresh token generated
+8. Response returns new tokens
 ```
+
+### Auth rate limiting (MVP)
+
+- Filter on `POST /api/v1/auth/login` and `POST /api/v1/auth/register`
+- Sliding window per client IP (config: `campusflow.auth.rate-limit.*`)
+- Exceeded → HTTP **429** with `errorCode: RATE_LIMITED`
+
+### Public registration
+
+- Controlled by `campusflow.auth.registration-enabled` (default **true** in dev; **false** in prod profile)
+- When disabled → `REGISTRATION_DISABLED`
 
 ### Logout
 ```

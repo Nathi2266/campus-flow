@@ -3,8 +3,10 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from '@/app/ProtectedRoute'
 import { AppLayout } from '@/layouts/AppLayout'
 import { AuthLayout } from '@/layouts/AuthLayout'
+import { MarketingLayout } from '@/layouts/MarketingLayout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { LoadingState } from '@/components/feedback'
+import { GlobalLogoLoaderHost } from '@/components/GlobalLogoLoader'
+import { GlobalLoadingBridge, SuspenseLoadingSignal } from '@/components/GlobalLoadingBridge'
 
 const LandingPage = lazy(() =>
   import('@/pages/LandingPage').then((m) => ({ default: m.LandingPage })),
@@ -52,46 +54,54 @@ const NotFoundPage = lazy(() =>
 )
 
 function Lazy({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={<LoadingState />}>{children}</Suspense>
+  return (
+    <Suspense fallback={<SuspenseLoadingSignal />}>
+      {children}
+    </Suspense>
+  )
 }
 
 export function AppRouter() {
   return (
     <BrowserRouter>
       <ErrorBoundary>
+        <GlobalLoadingBridge />
+        <GlobalLogoLoaderHost />
         <Routes>
-          <Route
-            path="/"
-            element={
-              <Lazy>
-                <LandingPage />
-              </Lazy>
-            }
-          />
-          <Route
-            path="/features"
-            element={
-              <Lazy>
-                <FeaturesPage />
-              </Lazy>
-            }
-          />
-          <Route
-            path="/roles"
-            element={
-              <Lazy>
-                <RolesPage />
-              </Lazy>
-            }
-          />
-          <Route
-            path="/about"
-            element={
-              <Lazy>
-                <AboutPage />
-              </Lazy>
-            }
-          />
+          <Route element={<MarketingLayout />}>
+            <Route
+              index
+              element={
+                <Lazy>
+                  <LandingPage />
+                </Lazy>
+              }
+            />
+            <Route
+              path="features"
+              element={
+                <Lazy>
+                  <FeaturesPage />
+                </Lazy>
+              }
+            />
+            <Route
+              path="roles"
+              element={
+                <Lazy>
+                  <RolesPage />
+                </Lazy>
+              }
+            />
+            <Route
+              path="about"
+              element={
+                <Lazy>
+                  <AboutPage />
+                </Lazy>
+              }
+            />
+          </Route>
 
           <Route element={<AuthLayout />}>
             <Route

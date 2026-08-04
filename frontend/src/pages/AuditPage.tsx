@@ -81,7 +81,7 @@ export function AuditPage() {
             </Thead>
             <Tbody>
               {query.data.content.map((row) => (
-                <Tr key={row.id} _hover={{ bg: 'canvas.50' }}>
+                <Tr key={row.id}>
                   <Td whiteSpace="nowrap" fontSize="sm">
                     {row.createdAt ? new Date(row.createdAt).toLocaleString() : '—'}
                   </Td>

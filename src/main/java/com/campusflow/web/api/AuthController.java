@@ -1,6 +1,7 @@
 package com.campusflow.web.api;
 
 import com.campusflow.dto.request.LoginRequest;
+import com.campusflow.dto.request.NotifyPreferenceRequest;
 import com.campusflow.dto.request.ProfileUpdateRequest;
 import com.campusflow.dto.request.RefreshRequest;
 import com.campusflow.dto.request.ThemePreferenceRequest;
@@ -78,5 +79,12 @@ public class AuthController {
     @Operation(summary = "Update theme preference", description = "Persist light or dark UI theme for the current user")
     public ResponseEntity<UserResponse> updateTheme(@Valid @RequestBody ThemePreferenceRequest request) {
         return ResponseEntity.ok(authService.updateThemePreference(request));
+    }
+
+    @PatchMapping("/me/notifications")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update notification preference", description = "Toggle in-app notification delivery")
+    public ResponseEntity<UserResponse> updateNotifyPreference(@Valid @RequestBody NotifyPreferenceRequest request) {
+        return ResponseEntity.ok(authService.updateNotifyPreference(request));
     }
 }

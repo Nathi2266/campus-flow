@@ -17,8 +17,22 @@ export interface User {
   preferredTheme?: 'light' | 'dark' | string | null
   /** Soft account status — inactive users cannot sign in */
   active?: boolean | null
+  /** When false, in-app notifications are not delivered */
+  notifyInApp?: boolean | null
   /** One-time password returned only on create when server-generated */
   temporaryPassword?: string | null
+}
+
+export interface NotificationItem {
+  id: number
+  type: string
+  title: string
+  body: string | null
+  entityType: string | null
+  entityId: number | null
+  readAt: string | null
+  createdAt: string
+  unread: boolean
 }
 
 export interface AuthResponse {

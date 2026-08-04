@@ -21,6 +21,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { FiAward, FiBook, FiDownload, FiLayers, FiUsers } from 'react-icons/fi'
 import {
+  exportActiveCoursesCsv,
+  exportGraduationProgressCsv,
   exportStudentsPerCourseCsv,
   getActiveCourses,
   getGraduationProgress,
@@ -41,25 +43,29 @@ export function ReportsPage() {
   const isLecturer = useAuthStore((s) => s.hasRole('LECTURER'))
   const toast = useToast()
   const [departmentId, setDepartmentId] = useState('')
-  const [exporting, setExporting] = useState(false)
+  const [exporting, setExporting] = useState<string | null>(null)
   const deptId = isAdmin && departmentId ? Number(departmentId) : undefined
   const deptKey = deptId ?? null
 
-  async function handleExportCsv() {
-    setExporting(true)
+  async function downloadCsv(
+    key: string,
+    filename: string,
+    fetcher: () => Promise<Blob>,
+  ) {
+    setExporting(key)
     try {
-      const blob = await exportStudentsPerCourseCsv(deptId)
+      const blob = await fetcher()
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
-      anchor.download = 'students-per-course.csv'
+      anchor.download = filename
       anchor.click()
       URL.revokeObjectURL(url)
       toast({ title: 'CSV downloaded', status: 'success', duration: 2200 })
     } catch (error) {
       toast({ title: getErrorMessage(error, 'Export failed'), status: 'error' })
     } finally {
-      setExporting(false)
+      setExporting(null)
     }
   }
 
@@ -145,11 +151,41 @@ export function ReportsPage() {
               leftIcon={<FiDownload />}
               size="sm"
               variant="outline"
-              onClick={handleExportCsv}
-              isLoading={exporting}
+              onClick={() =>
+                downloadCsv('spc', 'students-per-course.csv', () =>
+                  exportStudentsPerCourseCsv(deptId),
+                )
+              }
+              isLoading={exporting === 'spc'}
               data-testid="reports-export-csv"
             >
-              Export CSV
+              Students / course
+            </Button>
+            <Button
+              leftIcon={<FiDownload />}
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                downloadCsv('active', 'active-courses.csv', () => exportActiveCoursesCsv(deptId))
+              }
+              isLoading={exporting === 'active'}
+              data-testid="reports-export-active-csv"
+            >
+              Active courses
+            </Button>
+            <Button
+              leftIcon={<FiDownload />}
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                downloadCsv('grad', 'graduation-progress.csv', () =>
+                  exportGraduationProgressCsv(deptId),
+                )
+              }
+              isLoading={exporting === 'grad'}
+              data-testid="reports-export-graduation-csv"
+            >
+              Graduation
             </Button>
           </HStack>
         }

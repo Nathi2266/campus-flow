@@ -17,7 +17,15 @@ export function DashboardQuickLinks({ links, title = 'Quick actions' }: { links:
       <Wrap spacing={3}>
         {links.map((link) => (
           <WrapItem key={link.to}>
-            <Button as={RouterLink} to={link.to} leftIcon={link.icon} variant="outline" size="sm">
+            <Button
+              as={RouterLink}
+              to={link.to}
+              leftIcon={link.icon}
+              variant="outline"
+              size="sm"
+              transition="transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease"
+              _hover={{ transform: 'translateY(-2px)', shadow: 'soft', borderColor: 'brand.400' }}
+            >
               {link.label}
             </Button>
           </WrapItem>

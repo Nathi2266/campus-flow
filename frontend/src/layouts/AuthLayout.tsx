@@ -3,6 +3,8 @@ import { Outlet, Navigate, Link as RouterLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuthStore } from '@/features/auth/authStore'
 import { authPanelVariants, fadeIn } from '@/theme/motion'
+import { BrandLogo } from '@/components/BrandLogo'
+import { PageTransition } from '@/components/PageTransition'
 
 const MotionBox = motion.create(Box)
 const MotionVStack = motion.create(VStack)
@@ -60,25 +62,13 @@ export function AuthLayout() {
           <Box
             as={RouterLink}
             to="/"
-            w="48px"
-            h="48px"
-            borderRadius="xl"
-            bg="whiteAlpha.200"
-            borderWidth="1px"
-            borderColor="whiteAlpha.300"
-            backdropFilter="blur(8px)"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            color="white"
-            fontFamily="heading"
-            fontWeight="700"
-            fontSize="md"
+            display="inline-flex"
             mb={1}
-            _hover={{ bg: 'whiteAlpha.300', textDecoration: 'none' }}
+            transition="opacity 0.18s ease, transform 0.18s ease"
+            _hover={{ opacity: 0.92, textDecoration: 'none', transform: 'scale(1.04)' }}
             aria-label="CampusFlow home"
           >
-            CF
+            <BrandLogo boxSize="56px" />
           </Box>
           <Text
             as={RouterLink}
@@ -107,7 +97,9 @@ export function AuthLayout() {
           initial="initial"
           animate="animate"
         >
-          <Outlet />
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
         </MotionBox>
       </Container>
     </Box>

@@ -30,7 +30,7 @@ public interface CourseMapper {
     @Mapping(source = "lecturer", target = "lecturerName", qualifiedByName = "fullName")
     CourseResponse toResponseWithLecturer(Course course);
 
-    @IterableMapping(qualifiedByName = "toResponse")
+    @IterableMapping(elementTargetType = CourseResponse.class)
     List<CourseResponse> toResponseList(List<Course> courses);
 
     @Named("fullName")

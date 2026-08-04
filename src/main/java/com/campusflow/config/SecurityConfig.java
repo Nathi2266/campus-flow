@@ -1,5 +1,6 @@
 package com.campusflow.config;
 
+import com.campusflow.security.AuthRateLimitFilter;
 import com.campusflow.security.JwtAuthenticationFilter;
 import com.campusflow.security.JwtTokenProvider;
 import com.campusflow.service.CustomUserDetailsService;
@@ -38,6 +39,7 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService userDetailsService;
+    private final AuthRateLimitFilter authRateLimitFilter;
 
     @Value("${cors.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*}")
     private String corsAllowedOriginPatterns;
@@ -86,6 +88,7 @@ public class SecurityConfig {
                     .anyRequest().authenticated();
             })
             .authenticationProvider(authenticationProvider())
+            .addFilterBefore(authRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

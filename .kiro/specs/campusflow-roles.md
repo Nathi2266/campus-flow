@@ -27,7 +27,11 @@ Roles: `ADMIN` | `LECTURER` | `STUDENT` (JWT claim `role`, authority `ROLE_*`).
 | User list / search / create / role+dept assign | Yes | — | — |
 | User soft activate / deactivate (block login) | Yes | — | — |
 | Staff create returns one-time temp password when password omitted | Yes | — | — |
-| Report CSV export (students-per-course) | Yes | Yes (own scope) | — |
+| Report CSV export (students-per-course, active-courses, graduation-progress) | Yes | Yes (own scope) | — |
+| Course catalogue text search | Yes | Yes (own scope) | Yes (active catalog) |
+| Bulk grade update on roster | Yes | Own courses | — |
+| In-app notifications list / mark read | Yes | Yes | Yes |
+| Toggle own `notifyInApp` preference | Yes | Yes | Yes |
 | Students list | Yes | Yes (read) | Own record only |
 | Students get by id | Yes | Yes (read) | Own record only |
 | Students create / update / delete | Yes | — | — |
