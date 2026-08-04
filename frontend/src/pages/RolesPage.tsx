@@ -62,7 +62,7 @@ export function RolesPage() {
             >
               The right tools for each person on campus
             </Heading>
-            <Text mt={4} color="gray.500" fontSize="lg" lineHeight="tall">
+            <Text mt={4} color="app-muted" fontSize="lg" lineHeight="tall">
               CampusFlow uses three roles — ADMIN, LECTURER, and STUDENT — so navigation and permissions stay
               focused on real academic work.
             </Text>
@@ -72,9 +72,9 @@ export function RolesPage() {
             {roleGuides.map((role) => (
               <Box
                 key={role.title}
-                bg="white"
+                bg="app-surface"
                 borderWidth="1px"
-                borderColor="blackAlpha.100"
+                borderColor="app-border"
                 borderRadius="lg"
                 p={{ base: 6, md: 7 }}
                 shadow="soft"
@@ -82,12 +82,12 @@ export function RolesPage() {
                 <Text fontFamily="heading" fontWeight="700" fontSize="xl" letterSpacing="-0.02em">
                   {role.title}
                 </Text>
-                <Text mt={2} color="gray.500" lineHeight="tall" mb={5}>
+                <Text mt={2} color="app-muted" lineHeight="tall" mb={5}>
                   {role.summary}
                 </Text>
                 <List spacing={2}>
                   {role.points.map((point) => (
-                    <ListItem key={point} color="gray.700" fontSize="sm" pl={3} borderLeftWidth="2px" borderColor="brand.200">
+                    <ListItem key={point} color="app-text" fontSize="sm" pl={3} borderLeftWidth="2px" borderColor="brand.200">
                       {point}
                     </ListItem>
                   ))}
@@ -97,7 +97,7 @@ export function RolesPage() {
           </SimpleGrid>
 
           <VStack align="flex-start" spacing={3}>
-            <Text color="gray.500" lineHeight="tall">
+            <Text color="app-muted" lineHeight="tall">
               Public registration creates a student account. Staff accounts are provisioned by an administrator.
             </Text>
             <CLink

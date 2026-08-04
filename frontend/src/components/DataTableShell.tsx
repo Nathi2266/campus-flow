@@ -14,7 +14,7 @@ export function DataTableShell({
   return (
     <Surface overflow="hidden">
       {toolbar ? (
-        <Box px={{ base: 4, md: 5 }} py={3.5} borderBottomWidth="1px" borderColor="gray.100" bg="canvas.50">
+        <Box px={{ base: 4, md: 5 }} py={3.5} borderBottomWidth="1px" borderColor="app-border" bg="table-header-bg">
           {toolbar}
         </Box>
       ) : null}

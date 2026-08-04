@@ -29,17 +29,36 @@ React 19, TypeScript, Vite, Chakra UI, React Router, TanStack Query, React Hook 
 | `/about` | About CampusFlow | Public |
 | `/login`, `/register` | Auth (register = STUDENT only) | Public |
 | `/dashboard` | Role dashboard | Authenticated |
-| `/students` | Student management (ADMIN write; LECTURER read) | ADMIN, LECTURER |
-| `/courses` | Course catalogue (ADMIN full; LECTURER edit own; STUDENT active read-only) | Authenticated |
-| `/enrollments` | Enrollments + grade entry (STUDENT self-enroll/drop) | Authenticated |
+| `/students` | Student management + academic record drawer; ADMIN dept filter | ADMIN, LECTURER |
+| `/courses` | Course catalogue + roster drawer (ADMIN/LECTURER); ADMIN dept/active filters; capacity badges | Authenticated |
+| `/enrollments` | Enrollments + grade entry; status/course filters; COURSE_FULL toast | Authenticated |
 | `/departments` | Department CRUD | ADMIN |
 | `/users` | User administration | ADMIN |
-| `/reports` | Reports | ADMIN, LECTURER |
+| `/reports` | Reports (ADMIN dept filter; LECTURER own-course scope note) | ADMIN, LECTURER |
 | `/audit` | Audit log viewer | ADMIN |
 | `/profile` | Profile edit (GET/PATCH `/auth/me`) | Authenticated |
-| `/settings` | Settings | Authenticated |
-| `/notifications` | Notifications shell (P2 API deferred) | Authenticated |
+| `/settings` | Settings (dark mode toggle; persists `preferredTheme`) | Authenticated |
+| `/notifications` | Notifications shell (P2; **nav hidden** until API) | Authenticated (unlinked) |
 | `*` | Not found | Public |
+
+## Theme preference
+
+- Chakra color mode applies app-wide via semantic tokens (`app-bg`, `app-surface`, `app-border`, …) in `frontend/src/theme/index.ts`
+- Settings → Dark mode calls `PATCH /api/v1/auth/me/theme` with `{ preferredTheme: "light" | "dark" }`
+- DB: `users.preferred_theme` (Flyway `V4__user_preferred_theme.sql`); returned on login / `GET /auth/me`
+- `ThemePreferenceSync` restores the saved theme into Chakra on session load so logout/login keeps the preference
+
+## ADMIN Cycle 2 surfaces
+
+- `/users`: search (name/email), role filter, soft activate/deactivate, optional password on create with one-time temp-password dialog
+- `/reports`: Export CSV for students-per-course (`GET /reports/students-per-course/export`)
+- Notifications nav item removed from `AppLayout` until a notifications API exists
+
+## Demo credentials policy
+
+- Login UI must **not** embed demo emails/passwords or fill buttons (production anti-pattern).
+- Local/E2E seed accounts live in Flyway (`V2`/`V3`) and are documented in `README.md` + `frontend/e2e/helpers/auth.ts` only.
+- Role dashboards and reports consume live APIs only — no fabricated KPI arrays in the UI.
 
 ## Landing (public `/`)
 
@@ -77,6 +96,26 @@ frontend/src/
   types/
   assets/
 ```
+
+## Dashboard composition (`/dashboard`)
+
+Role-specific home. Summary KPIs and lightweight graphics; deep analytics remain on `/reports`.
+
+| Role | Data sources | UI |
+|------|----------------|-----|
+| ADMIN | `GET /reports/statistics`, students-per-course, graduation-progress, inactive-courses; `listStudents`; `listAuditLogs` | KPI tiles, active/graduation meters, top-course bars, recent students + audit, quick links |
+| LECTURER | Scoped `listCourses`, `listEnrollments`, report stats (own courses) | KPI tiles (courses, seats, near-full), capacity bars, course cards + roster, recent enrollments, quick links |
+| STUDENT | `getStudent` (GPA), `listEnrollments`, active `listCourses` teaser | KPI tiles (GPA, active/completed/graded), status breakdown, enrollment cards, catalogue teaser, quick links |
+
+Charts use Chakra/SVG meters (no separate chart library required). Empty/error/loading states required.
+
+## Cycle 1 role-expansion features
+
+- **Course roster:** ADMIN/LECTURER open roster drawer from Courses (and lecturer dashboard) via `GET /enrollments/course/{id}`; grade/drop with query invalidation
+- **List filters:** Enrollments (`status`, staff `courseId`); Courses ADMIN (`departmentId`, `active`); Students ADMIN (`departmentId`)
+- **Academic record:** Students “View record” drawer (`GET /students/{id}/courses` + stored GPA); student dashboard GPA; Profile compact academic summary for STUDENT
+- **Capacity UX:** `fillRatio` / Full · Near full (≥80%) · Open badges; enroll create surfaces COURSE_FULL clearly
+- **Reports:** ADMIN department Select wired into report query keys; LECTURER note “Showing metrics for your courses”
 
 ## State
 

@@ -60,3 +60,8 @@ export async function updateProfile(payload: ProfileUpdatePayload): Promise<User
   const { data } = await api.patch<User>('/auth/me', payload)
   return data
 }
+
+export async function updateThemePreference(preferredTheme: 'light' | 'dark'): Promise<User> {
+  const { data } = await api.patch<User>('/auth/me/theme', { preferredTheme })
+  return data
+}

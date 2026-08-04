@@ -35,13 +35,13 @@ export class ErrorBoundary extends Component<Props, State> {
           justifyContent="center"
           px={6}
           py={12}
-          bg="canvas.50"
+          bg="app-bg"
         >
           <VStack spacing={4} maxW="md" textAlign="center">
-            <Text fontFamily="heading" fontSize="2xl" fontWeight="700" color="gray.900">
+            <Text fontFamily="heading" fontSize="2xl" fontWeight="700" color="app-text">
               Something went wrong
             </Text>
-            <Text color="gray.600" lineHeight="tall">
+            <Text color="app-muted" lineHeight="tall">
               An unexpected error occurred. Reload the page to continue.
             </Text>
             <Button onClick={this.handleReload} autoFocus>

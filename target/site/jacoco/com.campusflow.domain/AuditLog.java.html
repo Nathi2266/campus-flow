@@ -15,8 +15,8 @@ import java.util.Map;
 @Table(name = &quot;audit_logs&quot;)
 @Getter
 <span class="nc" id="L17">@Setter</span>
-<span class="nc bnc" id="L18" title="All 2 branches missed.">@Builder</span>
-<span class="nc" id="L19">@NoArgsConstructor</span>
+<span class="pc bnc" id="L18" title="All 2 branches missed.">@Builder</span>
+<span class="fc" id="L19">@NoArgsConstructor</span>
 <span class="nc" id="L20">@AllArgsConstructor</span>
 public class AuditLog {
 
@@ -49,6 +49,6 @@ public class AuditLog {
 
     @Column(name = &quot;created_at&quot;, nullable = false, updatable = false)
     @Builder.Default
-<span class="nc" id="L52">    private OffsetDateTime createdAt = OffsetDateTime.now();</span>
+<span class="pc" id="L52">    private OffsetDateTime createdAt = OffsetDateTime.now();</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

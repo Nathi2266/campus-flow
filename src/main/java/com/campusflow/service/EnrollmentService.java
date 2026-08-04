@@ -89,7 +89,18 @@ public class EnrollmentService {
             .status(EnrollmentStatus.ACTIVE)
             .build();
 
-        return toResponse(enrollmentRepository.save(enrollment));
+        Enrollment saved = enrollmentRepository.save(enrollment);
+        auditLogRepository.save(AuditLog.builder()
+            .user(currentUser)
+            .action("ENROLLMENT_CREATE")
+            .entityType("ENROLLMENT")
+            .entityId(saved.getId())
+            .details(Map.of(
+                "studentId", studentId,
+                "courseId", request.getCourseId()
+            ))
+            .build());
+        return toResponse(saved);
     }
 
     public EnrollmentResponse getEnrollment(Long id) {
@@ -152,6 +163,13 @@ public class EnrollmentService {
 
         enrollment.setStatus(EnrollmentStatus.DROPPED);
         enrollmentRepository.save(enrollment);
+        auditLogRepository.save(AuditLog.builder()
+            .user(currentUser)
+            .action("ENROLLMENT_DROP")
+            .entityType("ENROLLMENT")
+            .entityId(id)
+            .details(Map.of())
+            .build());
     }
 
     public void cancelEnrollment(Long id) {

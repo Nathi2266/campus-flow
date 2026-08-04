@@ -44,7 +44,21 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     List<Course> findByDepartmentIdAndActiveFalse(Long departmentId);
 
+    List<Course> findByLecturerId(Long lecturerId);
+
+    List<Course> findByLecturerIdAndActiveTrue(Long lecturerId);
+
+    List<Course> findByLecturerIdAndActiveFalse(Long lecturerId);
+
     long countByActiveTrue();
+
+    long countByDepartmentId(Long departmentId);
+
+    long countByDepartmentIdAndActiveTrue(Long departmentId);
+
+    long countByLecturerId(Long lecturerId);
+
+    long countByLecturerIdAndActiveTrue(Long lecturerId);
 
     @Query("SELECT c FROM Course c LEFT JOIN FETCH c.enrollments WHERE c.id = :id")
     Optional<Course> findByIdWithEnrollments(@Param("id") Long id);

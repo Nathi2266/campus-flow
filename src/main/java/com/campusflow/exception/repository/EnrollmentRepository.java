@@ -46,4 +46,21 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     Page<Enrollment> findByCourseLecturerId(Long lecturerId, Pageable pageable);
 
     Page<Enrollment> findByCourseLecturerIdAndStatus(Long lecturerId, EnrollmentStatus status, Pageable pageable);
+
+    long countByCourseLecturerId(Long lecturerId);
+
+    long countByCourseDepartmentId(Long departmentId);
+
+    @Query("SELECT COUNT(DISTINCT e.student.id) FROM Enrollment e WHERE e.course.lecturer.id = :lecturerId")
+    long countDistinctStudentsByCourseLecturerId(@Param("lecturerId") Long lecturerId);
+
+    @Query("SELECT COUNT(DISTINCT e.student.id) FROM Enrollment e WHERE e.course.lecturer.id = :lecturerId "
+        + "AND e.student.academicStatus = :status")
+    long countDistinctStudentsByCourseLecturerIdAndAcademicStatus(
+        @Param("lecturerId") Long lecturerId,
+        @Param("status") com.campusflow.domain.enums.AcademicStatus status);
+
+    @Query("SELECT AVG(e.student.gpa) FROM Enrollment e WHERE e.course.lecturer.id = :lecturerId "
+        + "AND e.student.gpa IS NOT NULL")
+    java.util.Optional<java.math.BigDecimal> findAverageGpaByCourseLecturerId(@Param("lecturerId") Long lecturerId);
 }

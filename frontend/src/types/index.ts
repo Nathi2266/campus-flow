@@ -13,6 +13,12 @@ export interface User {
   departmentId: number | null
   phoneNumber: string | null
   studentId?: number | null
+  /** Persisted UI theme: light or dark */
+  preferredTheme?: 'light' | 'dark' | string | null
+  /** Soft account status — inactive users cannot sign in */
+  active?: boolean | null
+  /** One-time password returned only on create when server-generated */
+  temporaryPassword?: string | null
 }
 
 export interface AuthResponse {

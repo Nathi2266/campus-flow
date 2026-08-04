@@ -27,8 +27,8 @@ const exploreLinks = [
 
 function ExploreLinks({
   onNavigate,
-  color = 'gray.600',
-  activeColor = 'brand.700',
+  color = 'app-muted',
+  activeColor = 'brand.600',
 }: {
   onNavigate?: () => void
   color?: string
@@ -66,14 +66,14 @@ export function MarketingLayout({
   transparentHero?: boolean
 }) {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const headerFg = transparentHero ? 'white' : 'gray.800'
-  const linkColor = transparentHero ? 'whiteAlpha.800' : 'gray.600'
-  const linkActive = transparentHero ? 'white' : 'brand.700'
+  const headerFg = transparentHero ? 'white' : 'app-text'
+  const linkColor = transparentHero ? 'whiteAlpha.800' : 'app-muted'
+  const linkActive = transparentHero ? 'white' : 'brand.600'
 
   const content = children ?? <Outlet />
 
   return (
-    <Box bg="canvas.100" minH="100vh" display="flex" flexDirection="column">
+    <Box bg="app-bg" minH="100vh" display="flex" flexDirection="column">
       <Box
         as="header"
         position={transparentHero ? 'absolute' : 'sticky'}
@@ -139,7 +139,7 @@ export function MarketingLayout({
         <DrawerContent>
           <DrawerHeader borderBottomWidth="1px">
             <Flex justify="space-between" align="center">
-              <Text fontFamily="heading" fontWeight="700" color="brand.700">
+              <Text fontFamily="heading" fontWeight="700" color="brand.600">
                 Explore
               </Text>
               <CloseButton onClick={onClose} />
@@ -147,7 +147,7 @@ export function MarketingLayout({
           </DrawerHeader>
           <DrawerBody>
             <VStack as="nav" aria-label="Explore" align="stretch" spacing={4} pt={4}>
-              <CLink as={RouterLink} to="/" onClick={onClose} fontWeight="600" color="gray.800">
+              <CLink as={RouterLink} to="/" onClick={onClose} fontWeight="600" color="app-text">
                 Home
               </CLink>
               <ExploreLinks onNavigate={onClose} />

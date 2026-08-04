@@ -3,6 +3,7 @@ package com.campusflow.web.api;
 import com.campusflow.dto.request.LoginRequest;
 import com.campusflow.dto.request.ProfileUpdateRequest;
 import com.campusflow.dto.request.RefreshRequest;
+import com.campusflow.dto.request.ThemePreferenceRequest;
 import com.campusflow.dto.request.UserRegistrationRequest;
 import com.campusflow.dto.response.AuthResponse;
 import com.campusflow.dto.response.UserResponse;
@@ -70,5 +71,12 @@ public class AuthController {
     @Operation(summary = "Update profile", description = "Update first name, last name, and phone number")
     public ResponseEntity<UserResponse> updateProfile(@Valid @RequestBody ProfileUpdateRequest request) {
         return ResponseEntity.ok(authService.updateProfile(request));
+    }
+
+    @PatchMapping("/me/theme")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update theme preference", description = "Persist light or dark UI theme for the current user")
+    public ResponseEntity<UserResponse> updateTheme(@Valid @RequestBody ThemePreferenceRequest request) {
+        return ResponseEntity.ok(authService.updateThemePreference(request));
     }
 }

@@ -7,6 +7,7 @@ import lombok.*;
 
 /**
  * Request DTO for ADMIN user creation.
+ * Password is optional — when omitted, a temporary password is generated.
  */
 @Data
 @Builder
@@ -18,7 +19,7 @@ public class UserAdminCreateRequest {
     @Email(message = "Invalid email format")
     private String email;
 
-    @NotBlank(message = "Password is required")
+    /** Optional. When blank/null, server generates a one-time temporary password. */
     private String password;
 
     @NotBlank(message = "First name is required")

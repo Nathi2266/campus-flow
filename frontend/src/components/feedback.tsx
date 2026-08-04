@@ -23,7 +23,7 @@ export function LoadingState({ label = 'Loading…' }: { label?: string }) {
     <MotionBox variants={fadeIn} initial="initial" animate="animate">
       <VStack py={20} spacing={4} role="status" aria-busy="true" aria-live="polite">
         <Spinner size="lg" color="brand.500" thickness="3px" speed="0.7s" />
-        <Text color="gray.500" fontWeight="medium">
+        <Text color="app-muted" fontWeight="medium">
           {label}
         </Text>
       </VStack>
@@ -43,14 +43,14 @@ export function EmptyState({
   return (
     <Surface p={{ base: 8, md: 12 }} textAlign="center">
       <VStack spacing={4}>
-        <Circle size="56px" bg="brand.50" color="brand.600" fontSize="xl">
+        <Circle size="56px" bg="brand-soft-bg" color="brand-soft-fg" fontSize="xl">
           <FiInbox aria-hidden />
         </Circle>
-        <Text fontFamily="heading" fontWeight="semibold" fontSize="xl">
+        <Text fontFamily="heading" fontWeight="semibold" fontSize="xl" color="app-text">
           {title}
         </Text>
         {description ? (
-          <Text color="gray.500" maxW="md" lineHeight="tall">
+          <Text color="app-muted" maxW="md" lineHeight="tall">
             {description}
           </Text>
         ) : null}
@@ -80,13 +80,14 @@ export function ErrorState({
       borderWidth="1px"
       borderColor="red.100"
       bg="red.50"
+      _dark={{ bg: 'rgba(254, 178, 178, 0.12)', borderColor: 'red.300' }}
     >
       <AlertIcon as={FiAlertCircle} boxSize={5} />
-      <AlertTitle mt={3} fontFamily="heading" fontSize="lg">
+      <AlertTitle mt={3} fontFamily="heading" fontSize="lg" color="app-text">
         {title}
       </AlertTitle>
       {message ? (
-        <AlertDescription mt={1} color="gray.700">
+        <AlertDescription mt={1} color="app-text">
           {message}
         </AlertDescription>
       ) : null}
@@ -139,12 +140,12 @@ export function PageHeader({
           fontWeight="700"
           letterSpacing="-0.03em"
           lineHeight="1.15"
-          color="gray.900"
+          color="app-text"
         >
           {title}
         </Text>
         {description ? (
-          <Text mt={2} color="gray.500" fontSize="md" lineHeight="tall" maxW="42rem">
+          <Text mt={2} color="app-muted" fontSize="md" lineHeight="tall" maxW="42rem">
             {description}
           </Text>
         ) : null}

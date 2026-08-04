@@ -37,8 +37,19 @@ public class UserController {
         return ResponseEntity.ok(userAdminService.listUsers(page, size, role));
     }
 
+    @GetMapping("/search")
+    @Operation(summary = "Search users by name or email")
+    public ResponseEntity<PagedResponse<UserResponse>> searchUsers(
+        @Parameter(description = "Search query") @RequestParam String search,
+        @Parameter(description = "Page number") @RequestParam(defaultValue = "0") Integer page,
+        @Parameter(description = "Page size") @RequestParam(defaultValue = "20") Integer size,
+        @Parameter(description = "Role filter") @RequestParam(required = false) String role
+    ) {
+        return ResponseEntity.ok(userAdminService.searchUsers(search, page, size, role));
+    }
+
     @PostMapping
-    @Operation(summary = "Create user")
+    @Operation(summary = "Create user (optional password — generates temporary password when omitted)")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserAdminCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userAdminService.createUser(request));
     }
@@ -50,5 +61,21 @@ public class UserController {
         @Valid @RequestBody UserAdminUpdateRequest request
     ) {
         return ResponseEntity.ok(userAdminService.updateUser(id, request));
+    }
+
+    @PostMapping("/{id}/deactivate")
+    @Operation(summary = "Deactivate user (blocks login)")
+    public ResponseEntity<UserResponse> deactivateUser(
+        @Parameter(description = "User ID") @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(userAdminService.deactivateUser(id));
+    }
+
+    @PostMapping("/{id}/activate")
+    @Operation(summary = "Activate user")
+    public ResponseEntity<UserResponse> activateUser(
+        @Parameter(description = "User ID") @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(userAdminService.activateUser(id));
     }
 }

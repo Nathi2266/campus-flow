@@ -29,7 +29,7 @@ export function AboutPage() {
           >
             CampusFlow is a student management system for modern campuses
           </Heading>
-          <VStack align="stretch" spacing={5} color="gray.600" fontSize="lg" lineHeight="tall" mb={12}>
+          <VStack align="stretch" spacing={5} color="app-muted" fontSize="lg" lineHeight="tall" mb={12}>
             <Text>
               It helps administrators run the organisation, lecturers teach and grade, and students manage
               their own enrollments — with a calm teal interface and Poppins typography designed for everyday
@@ -43,30 +43,30 @@ export function AboutPage() {
 
           <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={8} mb={12}>
             <Box>
-              <Text fontFamily="heading" fontWeight="700" fontSize="lg" mb={2} color="gray.900">
+              <Text fontFamily="heading" fontWeight="700" fontSize="lg" mb={2} color="app-text">
                 Purpose
               </Text>
-              <Text color="gray.500" lineHeight="tall">
+              <Text color="app-muted" lineHeight="tall">
                 One system for student records, courses, enrollments, grades, reporting, and audit — without
                 timesheet or unrelated legacy workflows.
               </Text>
             </Box>
             <Box>
-              <Text fontFamily="heading" fontWeight="700" fontSize="lg" mb={2} color="gray.900">
+              <Text fontFamily="heading" fontWeight="700" fontSize="lg" mb={2} color="app-text">
                 Experience
               </Text>
-              <Text color="gray.500" lineHeight="tall">
+              <Text color="app-muted" lineHeight="tall">
                 Brand-first marketing pages for guests; a focused app shell after sign-in with role-aware
                 navigation and accessible controls.
               </Text>
             </Box>
           </SimpleGrid>
 
-          <Box bg="canvas.100" p={{ base: 6, md: 8 }} borderRadius="lg">
+          <Box bg="app-bg" p={{ base: 6, md: 8 }} borderRadius="lg">
             <Text fontFamily="heading" fontWeight="700" fontSize="lg" mb={2}>
               Ready to go deeper?
             </Text>
-            <Text color="gray.500" lineHeight="tall" mb={4}>
+            <Text color="app-muted" lineHeight="tall" mb={4}>
               Browse features, or return home when you are ready to use CampusFlow.
             </Text>
             <CLink

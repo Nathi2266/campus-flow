@@ -28,7 +28,7 @@ export function StatTile({
       <Surface p={{ base: 5, md: 6 }} h="full" interactive>
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={3}>
           <Stat>
-            <StatLabel color="gray.500" fontSize="sm" fontWeight="500">
+            <StatLabel color="app-muted" fontSize="sm" fontWeight="500">
               {label}
             </StatLabel>
             <StatNumber
@@ -37,18 +37,24 @@ export function StatTile({
               fontSize="2.25rem"
               fontWeight="700"
               letterSpacing="-0.03em"
-              color="gray.900"
+              color="app-text"
             >
               {value}
             </StatNumber>
             {help ? (
-              <StatHelpText mb={0} color="gray.500">
+              <StatHelpText mb={0} color="app-muted">
                 {help}
               </StatHelpText>
             ) : null}
           </Stat>
           {icon ? (
-            <Circle size="42px" bg={`${accent}.50`} color={`${accent}.600`} fontSize="lg">
+            <Circle
+              size="42px"
+              bg={`${accent}.50`}
+              color={`${accent}.600`}
+              _dark={{ bg: 'whiteAlpha.100', color: `${accent}.300` }}
+              fontSize="lg"
+            >
               {icon}
             </Circle>
           ) : null}
@@ -61,11 +67,11 @@ export function StatTile({
 export function SectionTitle({ children, hint }: { children: ReactNode; hint?: string }) {
   return (
     <Box mb={4}>
-      <Text fontFamily="heading" fontSize="xl" fontWeight="600" letterSpacing="-0.02em">
+      <Text fontFamily="heading" fontSize="xl" fontWeight="600" letterSpacing="-0.02em" color="app-text">
         {children}
       </Text>
       {hint ? (
-        <Text mt={1} color="gray.500" fontSize="sm">
+        <Text mt={1} color="app-muted" fontSize="sm">
           {hint}
         </Text>
       ) : null}

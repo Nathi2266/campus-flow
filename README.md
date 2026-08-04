@@ -33,7 +33,78 @@ CampusFlow is a comprehensive Student Management System for universities, built 
 
 ## Quick Start
 
-### Frontend (React)
+**Important (Windows):** Docker Desktop must be running before `docker compose`. If you see `npipe:////./pipe/dockerDesktopLinuxEngine`, open **Docker Desktop** and wait until it says Engine running.
+
+### Option A — Full stack with Docker (recommended)
+
+From the repo root (`campus/`):
+
+```powershell
+# 1) Start Docker Desktop, then:
+docker compose -f docker/docker-compose.yml up -d --build
+
+# 2) Check status
+docker compose -f docker/docker-compose.yml ps
+
+# 3) Open the app
+# UI:  http://localhost:5173
+# API: http://localhost:8090
+# Swagger: http://localhost:8090/swagger-ui.html
+
+# Logs / stop
+docker compose -f docker/docker-compose.yml logs -f app
+docker compose -f docker/docker-compose.yml down
+```
+
+Local seed logins (Flyway only — **not** shown in the login UI):  
+`admin@campusflow.edu`, `lecturer1@campusflow.edu`, `student1@campusflow.edu` — password `Admin123!`.
+
+### Option B — Local backend + frontend (Postgres via Docker)
+
+Use this when developing. Vite proxies `/api` → backend.
+
+**Terminal 1 — Postgres only**
+
+```powershell
+docker compose -f docker/docker-compose.yml up -d postgres
+```
+
+**Terminal 2 — Backend** (needs Maven on PATH, or use Docker Maven below)
+
+```powershell
+# From campus/
+$env:SPRING_PROFILES_ACTIVE="dev"
+$env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5433/campusflow"
+$env:SPRING_DATASOURCE_USERNAME="campusflow"
+$env:SPRING_DATASOURCE_PASSWORD="campusflow123"
+$env:JWT_SECRET="campusflow-dev-secret-key-min-32-bytes!!"
+mvn spring-boot:run
+```
+
+If `mvn` is not installed, run the API with Docker instead:
+
+```powershell
+docker compose -f docker/docker-compose.yml up -d postgres app
+# API on http://localhost:8090
+```
+
+**Terminal 3 — Frontend**
+
+```powershell
+cd frontend
+npm install
+
+# If API is Docker on 8090 (default Vite proxy):
+npm run dev
+
+# If API is local Maven on 8080:
+$env:VITE_API_PROXY_TARGET="http://localhost:8080"
+npm run dev
+```
+
+UI: http://localhost:5173
+
+### Frontend (React) only reminder
 
 ```bash
 cd frontend
@@ -41,48 +112,7 @@ npm install
 npm run dev
 ```
 
-UI: http://localhost:5173 (proxies `/api` to Spring Boot on 8080)
-
-### Running with Docker
-
-```bash
-# Start the application, database, and frontend
-docker-compose -f docker/docker-compose.yml up -d
-
-# Access
-# API: http://localhost:8090
-# Frontend (compose): http://localhost:5173
-# Swagger UI: http://localhost:8090/swagger-ui.html
-
-# View logs
-docker-compose -f docker/docker-compose.yml logs -f
-
-# Stop the application
-docker-compose -f docker/docker-compose.yml down
-```
-
-### Running with Maven (Local Development)
-
-```bash
-# Start PostgreSQL (using Docker)
-docker run -d -p 5432:5432 \
-  -e POSTGRES_DB=campusflow \
-  -e POSTGRES_USER=campusflow \
-  -e POSTGRES_PASSWORD=campusflow123 \
-  --name campusflow-postgres \
-  postgres:15-alpine
-
-# Run database migrations (Flyway runs automatically)
-# Build the application
-mvn clean package
-
-# Run the application
-mvn spring-boot:run
-
-# Access the application
-# API: http://localhost:8080
-# Swagger UI: http://localhost:8080/swagger-ui.html
-```
+UI: http://localhost:5173 (proxies `/api` to Spring Boot — default `http://localhost:8090`)
 
 ### Environment Variables
 

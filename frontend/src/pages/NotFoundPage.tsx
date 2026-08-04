@@ -19,7 +19,7 @@ export function NotFoundPage() {
         <Heading mt={4} size="lg" fontFamily="heading" fontWeight="700">
           Page not found
         </Heading>
-        <Text mt={3} color="gray.500" lineHeight="tall">
+        <Text mt={3} color="app-muted" lineHeight="tall">
           This page does not exist in CampusFlow.
         </Text>
         <HStack mt={8} justify="center" spacing={3} flexWrap="wrap">

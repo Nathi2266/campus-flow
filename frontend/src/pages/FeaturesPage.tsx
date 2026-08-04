@@ -62,7 +62,7 @@ export function FeaturesPage() {
             >
               Everything you need to run campus academics
             </Heading>
-            <Text mt={4} color="gray.500" fontSize="lg" lineHeight="tall">
+            <Text mt={4} color="app-muted" fontSize="lg" lineHeight="tall">
               CampusFlow focuses on the student-management loop: people, courses, enrollments, grades, and
               oversight — without clutter.
             </Text>
@@ -73,25 +73,25 @@ export function FeaturesPage() {
               const Icon = item.icon
               return (
                 <HStack key={item.title} align="flex-start" spacing={4}>
-                  <Box
-                    w="44px"
-                    h="44px"
-                    borderRadius="md"
-                    bg="brand.50"
-                    color="brand.700"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    flexShrink={0}
-                    aria-hidden
-                  >
+                    <Box
+                      w="44px"
+                      h="44px"
+                      borderRadius="md"
+                      bg="brand-soft-bg"
+                      color="brand-soft-fg"
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      flexShrink={0}
+                      aria-hidden
+                    >
                     <Icon />
                   </Box>
                   <Box>
                     <Text fontFamily="heading" fontWeight="700" fontSize="xl" letterSpacing="-0.02em" mb={2}>
                       {item.title}
                     </Text>
-                    <Text color="gray.500" lineHeight="tall">
+                    <Text color="app-muted" lineHeight="tall">
                       {item.body}
                     </Text>
                   </Box>
@@ -100,11 +100,11 @@ export function FeaturesPage() {
             })}
           </SimpleGrid>
 
-          <VStack align="flex-start" spacing={3} bg="canvas.100" p={{ base: 6, md: 8 }} borderRadius="lg">
+          <VStack align="flex-start" spacing={3} bg="app-bg" p={{ base: 6, md: 8 }} borderRadius="lg">
             <Text fontFamily="heading" fontWeight="700" fontSize="lg">
               Next: see how roles differ
             </Text>
-            <Text color="gray.500" lineHeight="tall">
+            <Text color="app-muted" lineHeight="tall">
               Capabilities appear differently for administrators, lecturers, and students.
             </Text>
             <CLink

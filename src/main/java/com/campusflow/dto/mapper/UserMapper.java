@@ -16,5 +16,6 @@ public interface UserMapper {
 
     @Mapping(source = "department.id", target = "departmentId")
     @Mapping(source = "student.id", target = "studentId")
+    @Mapping(target = "temporaryPassword", ignore = true)
     UserResponse toResponse(User user);
 }

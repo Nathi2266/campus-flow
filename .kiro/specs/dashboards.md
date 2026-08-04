@@ -1,32 +1,17 @@
 # Dashboards
 
-Route: `/` — role-specific dashboard composition.
+> **Legacy (Khonofy timesheets).** This file describes staff/admin/superuser timesheet dashboards and does **not** govern CampusFlow.
 
-## Staff — My Dashboard
+## CampusFlow (authoritative)
 
-- Hours today
-- Open / completed tasks
-- Timesheet status
-- Active tasks
-- Recent sheets
-- Weekly progress snapshot
+Role dashboards live at **`/dashboard`**. Contracts: `.kiro/specs/campusflow-frontend.md` (Dashboard composition) and `.kiro/specs/campusflow-roles.md`.
 
-## Admin — Team Dashboard
+| Role | Focus |
+|------|--------|
+| ADMIN | Org KPIs, enrollment pressure charts, graduation snapshot, recent students/audit, quick links |
+| LECTURER | Own-course KPIs, capacity graphics, course cards + roster, scoped enrollments |
+| STUDENT | GPA / enrollment KPIs, status breakdown, own courses, catalogue teaser |
 
-- Team size
-- Open tasks
-- Pending approval alerts
-- Task-status charts
-- Recent submissions awaiting review
+## Historical Khonofy notes (ignored by CampusFlow)
 
-## Superuser — Global Dashboard
-
-- Staff and department counts
-- Approved hours
-- Pending approvals
-- Org-level charts
-- Recent activity linking into the audit trail
-
-## Team Management (`/team`)
-
-Department roster with per-member open/completed tasks, approved hours, latest timesheet status, and completion indicators (admin).
+Route was `/` — role-specific timesheet composition (hours, tasks, approvals). Retain only for archival AEOS templates.

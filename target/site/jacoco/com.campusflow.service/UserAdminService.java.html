@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +32,7 @@ import java.util.Map;
  * ADMIN user administration service.
  */
 @Service
-<span class="nc" id="L34">@RequiredArgsConstructor</span>
+<span class="fc" id="L35">@RequiredArgsConstructor</span>
 @Transactional
 public class UserAdminService {
 
@@ -45,111 +46,115 @@ public class UserAdminService {
 
     @Transactional(readOnly = true)
     public PagedResponse&lt;UserResponse&gt; listUsers(Integer page, Integer size, String role) {
-<span class="nc bnc" id="L48" title="All 4 branches missed.">        Pageable pageable = PageRequest.of(page != null ? page : 0, size != null ? size : 20);</span>
+<span class="nc" id="L49">        Pageable pageable = PageRequest.of(</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">            page != null ? page : 0,</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">            size != null ? size : 20,</span>
+<span class="nc" id="L52">            Sort.by(Sort.Direction.DESC, &quot;id&quot;)</span>
+        );
         Page&lt;User&gt; userPage;
-<span class="nc bnc" id="L50" title="All 4 branches missed.">        if (role != null &amp;&amp; !role.isBlank()) {</span>
-<span class="nc" id="L51">            userPage = userRepository.findByRole(parseRole(role), pageable);</span>
+<span class="nc bnc" id="L55" title="All 4 branches missed.">        if (role != null &amp;&amp; !role.isBlank()) {</span>
+<span class="nc" id="L56">            userPage = userRepository.findByRole(parseRole(role), pageable);</span>
         } else {
-<span class="nc" id="L53">            userPage = userRepository.findAll(pageable);</span>
+<span class="nc" id="L58">            userPage = userRepository.findAll(pageable);</span>
         }
 
-<span class="nc" id="L56">        return PagedResponse.&lt;UserResponse&gt;builder()</span>
-<span class="nc" id="L57">            .content(userPage.getContent().stream().map(userMapper::toResponse).toList())</span>
-<span class="nc" id="L58">            .page(userPage.getNumber())</span>
-<span class="nc" id="L59">            .size(userPage.getSize())</span>
-<span class="nc" id="L60">            .totalElements(userPage.getTotalElements())</span>
-<span class="nc" id="L61">            .totalPages(userPage.getTotalPages())</span>
-<span class="nc" id="L62">            .isFirst(userPage.isFirst())</span>
-<span class="nc" id="L63">            .isLast(userPage.isLast())</span>
-<span class="nc" id="L64">            .hasContent(userPage.hasContent())</span>
-<span class="nc" id="L65">            .build();</span>
+<span class="nc" id="L61">        return PagedResponse.&lt;UserResponse&gt;builder()</span>
+<span class="nc" id="L62">            .content(userPage.getContent().stream().map(userMapper::toResponse).toList())</span>
+<span class="nc" id="L63">            .page(userPage.getNumber())</span>
+<span class="nc" id="L64">            .size(userPage.getSize())</span>
+<span class="nc" id="L65">            .totalElements(userPage.getTotalElements())</span>
+<span class="nc" id="L66">            .totalPages(userPage.getTotalPages())</span>
+<span class="nc" id="L67">            .isFirst(userPage.isFirst())</span>
+<span class="nc" id="L68">            .isLast(userPage.isLast())</span>
+<span class="nc" id="L69">            .hasContent(userPage.hasContent())</span>
+<span class="nc" id="L70">            .build();</span>
     }
 
     public UserResponse createUser(UserAdminCreateRequest request) {
-<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (userRepository.existsByEmail(request.getEmail())) {</span>
-<span class="nc" id="L70">            throw new ValidationException(&quot;Email already exists&quot;, &quot;email&quot;, &quot;EMAIL_EXISTS&quot;);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (userRepository.existsByEmail(request.getEmail())) {</span>
+<span class="nc" id="L75">            throw new ValidationException(&quot;Email already exists&quot;, &quot;email&quot;, &quot;EMAIL_EXISTS&quot;);</span>
         }
 
-<span class="nc" id="L73">        UserRole role = parseRole(request.getRole());</span>
+<span class="nc" id="L78">        UserRole role = parseRole(request.getRole());</span>
 
-<span class="nc" id="L75">        User user = User.builder()</span>
-<span class="nc" id="L76">            .email(request.getEmail())</span>
-<span class="nc" id="L77">            .passwordHash(passwordEncoder.encode(request.getPassword()))</span>
-<span class="nc" id="L78">            .firstName(request.getFirstName())</span>
-<span class="nc" id="L79">            .lastName(request.getLastName())</span>
-<span class="nc" id="L80">            .role(role)</span>
-<span class="nc" id="L81">            .phoneNumber(request.getPhoneNumber())</span>
-<span class="nc" id="L82">            .build();</span>
+<span class="nc" id="L80">        User user = User.builder()</span>
+<span class="nc" id="L81">            .email(request.getEmail())</span>
+<span class="nc" id="L82">            .passwordHash(passwordEncoder.encode(request.getPassword()))</span>
+<span class="nc" id="L83">            .firstName(request.getFirstName())</span>
+<span class="nc" id="L84">            .lastName(request.getLastName())</span>
+<span class="nc" id="L85">            .role(role)</span>
+<span class="nc" id="L86">            .phoneNumber(request.getPhoneNumber())</span>
+<span class="nc" id="L87">            .build();</span>
 
-<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (request.getDepartmentId() != null) {</span>
-<span class="nc" id="L85">            user.setDepartment(departmentRepository.findById(request.getDepartmentId())</span>
-<span class="nc" id="L86">                .orElseThrow(() -&gt; new NotFoundException(&quot;Department not found&quot;, &quot;departmentId&quot;)));</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (request.getDepartmentId() != null) {</span>
+<span class="nc" id="L90">            user.setDepartment(departmentRepository.findById(request.getDepartmentId())</span>
+<span class="nc" id="L91">                .orElseThrow(() -&gt; new NotFoundException(&quot;Department not found&quot;, &quot;departmentId&quot;)));</span>
         }
 
-<span class="nc" id="L89">        user = userRepository.save(user);</span>
+<span class="nc" id="L94">        user = userRepository.save(user);</span>
 
-<span class="nc bnc" id="L91" title="All 4 branches missed.">        if (role == UserRole.STUDENT &amp;&amp; !studentRepository.existsByUserId(user.getId())) {</span>
-<span class="nc" id="L92">            Student student = Student.builder()</span>
-<span class="nc" id="L93">                .user(user)</span>
-<span class="nc" id="L94">                .studentNumber(generateUniqueStudentNumber())</span>
-<span class="nc" id="L95">                .firstName(user.getFirstName())</span>
-<span class="nc" id="L96">                .lastName(user.getLastName())</span>
-<span class="nc" id="L97">                .enrollmentDate(java.time.LocalDate.now())</span>
-<span class="nc" id="L98">                .academicStatus(AcademicStatus.ACTIVE)</span>
-<span class="nc" id="L99">                .build();</span>
-<span class="nc" id="L100">            studentRepository.save(student);</span>
-<span class="nc" id="L101">            user.setStudent(student);</span>
+<span class="nc bnc" id="L96" title="All 4 branches missed.">        if (role == UserRole.STUDENT &amp;&amp; !studentRepository.existsByUserId(user.getId())) {</span>
+<span class="nc" id="L97">            Student student = Student.builder()</span>
+<span class="nc" id="L98">                .user(user)</span>
+<span class="nc" id="L99">                .studentNumber(generateUniqueStudentNumber())</span>
+<span class="nc" id="L100">                .firstName(user.getFirstName())</span>
+<span class="nc" id="L101">                .lastName(user.getLastName())</span>
+<span class="nc" id="L102">                .enrollmentDate(java.time.LocalDate.now())</span>
+<span class="nc" id="L103">                .academicStatus(AcademicStatus.ACTIVE)</span>
+<span class="nc" id="L104">                .build();</span>
+<span class="nc" id="L105">            studentRepository.save(student);</span>
+<span class="nc" id="L106">            user.setStudent(student);</span>
         }
 
-<span class="nc" id="L104">        UserResponse response = userMapper.toResponse(user);</span>
-<span class="nc" id="L105">        auditLogRepository.save(AuditLog.builder()</span>
-<span class="nc" id="L106">            .user(securityUtils.getCurrentUser())</span>
-<span class="nc" id="L107">            .action(&quot;USER_CREATE&quot;)</span>
-<span class="nc" id="L108">            .entityType(&quot;USER&quot;)</span>
-<span class="nc" id="L109">            .entityId(user.getId())</span>
-<span class="nc" id="L110">            .details(Map.of(&quot;email&quot;, user.getEmail(), &quot;role&quot;, role.name()))</span>
-<span class="nc" id="L111">            .build());</span>
-<span class="nc" id="L112">        return response;</span>
+<span class="nc" id="L109">        UserResponse response = userMapper.toResponse(user);</span>
+<span class="nc" id="L110">        auditLogRepository.save(AuditLog.builder()</span>
+<span class="nc" id="L111">            .user(securityUtils.getCurrentUser())</span>
+<span class="nc" id="L112">            .action(&quot;USER_CREATE&quot;)</span>
+<span class="nc" id="L113">            .entityType(&quot;USER&quot;)</span>
+<span class="nc" id="L114">            .entityId(user.getId())</span>
+<span class="nc" id="L115">            .details(Map.of(&quot;email&quot;, user.getEmail(), &quot;role&quot;, role.name()))</span>
+<span class="nc" id="L116">            .build());</span>
+<span class="nc" id="L117">        return response;</span>
     }
 
     public UserResponse updateUser(Long id, UserAdminUpdateRequest request) {
-<span class="nc" id="L116">        User user = userRepository.findById(id)</span>
-<span class="nc" id="L117">            .orElseThrow(() -&gt; new NotFoundException(&quot;User not found&quot;, &quot;id&quot;));</span>
+<span class="nc" id="L121">        User user = userRepository.findById(id)</span>
+<span class="nc" id="L122">            .orElseThrow(() -&gt; new NotFoundException(&quot;User not found&quot;, &quot;id&quot;));</span>
 
-<span class="nc bnc" id="L119" title="All 4 branches missed.">        if (request.getRole() != null &amp;&amp; !request.getRole().isBlank()) {</span>
-<span class="nc" id="L120">            user.setRole(parseRole(request.getRole()));</span>
+<span class="nc bnc" id="L124" title="All 4 branches missed.">        if (request.getRole() != null &amp;&amp; !request.getRole().isBlank()) {</span>
+<span class="nc" id="L125">            user.setRole(parseRole(request.getRole()));</span>
         }
 
-<span class="nc bnc" id="L123" title="All 2 branches missed.">        if (request.getDepartmentId() != null) {</span>
-<span class="nc" id="L124">            user.setDepartment(departmentRepository.findById(request.getDepartmentId())</span>
-<span class="nc" id="L125">                .orElseThrow(() -&gt; new NotFoundException(&quot;Department not found&quot;, &quot;departmentId&quot;)));</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        if (request.getDepartmentId() != null) {</span>
+<span class="nc" id="L129">            user.setDepartment(departmentRepository.findById(request.getDepartmentId())</span>
+<span class="nc" id="L130">                .orElseThrow(() -&gt; new NotFoundException(&quot;Department not found&quot;, &quot;departmentId&quot;)));</span>
         }
 
-<span class="nc" id="L128">        User saved = userRepository.save(user);</span>
-<span class="nc" id="L129">        auditLogRepository.save(AuditLog.builder()</span>
-<span class="nc" id="L130">            .user(securityUtils.getCurrentUser())</span>
-<span class="nc" id="L131">            .action(&quot;USER_UPDATE&quot;)</span>
-<span class="nc" id="L132">            .entityType(&quot;USER&quot;)</span>
-<span class="nc" id="L133">            .entityId(saved.getId())</span>
-<span class="nc" id="L134">            .details(Map.of(&quot;role&quot;, saved.getRole().name()))</span>
-<span class="nc" id="L135">            .build());</span>
-<span class="nc" id="L136">        return userMapper.toResponse(saved);</span>
+<span class="nc" id="L133">        User saved = userRepository.save(user);</span>
+<span class="nc" id="L134">        auditLogRepository.save(AuditLog.builder()</span>
+<span class="nc" id="L135">            .user(securityUtils.getCurrentUser())</span>
+<span class="nc" id="L136">            .action(&quot;USER_UPDATE&quot;)</span>
+<span class="nc" id="L137">            .entityType(&quot;USER&quot;)</span>
+<span class="nc" id="L138">            .entityId(saved.getId())</span>
+<span class="nc" id="L139">            .details(Map.of(&quot;role&quot;, saved.getRole().name()))</span>
+<span class="nc" id="L140">            .build());</span>
+<span class="nc" id="L141">        return userMapper.toResponse(saved);</span>
     }
 
     private UserRole parseRole(String role) {
         try {
-<span class="nc" id="L141">            return UserRole.valueOf(role.trim().toUpperCase());</span>
-<span class="nc" id="L142">        } catch (IllegalArgumentException e) {</span>
-<span class="nc" id="L143">            throw new ValidationException(&quot;Invalid role. Must be ADMIN, LECTURER, or STUDENT&quot;, &quot;role&quot;, &quot;INVALID_ROLE&quot;);</span>
+<span class="nc" id="L146">            return UserRole.valueOf(role.trim().toUpperCase());</span>
+<span class="nc" id="L147">        } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L148">            throw new ValidationException(&quot;Invalid role. Must be ADMIN, LECTURER, or STUDENT&quot;, &quot;role&quot;, &quot;INVALID_ROLE&quot;);</span>
         }
     }
 
     private String generateUniqueStudentNumber() {
         String number;
         do {
-<span class="nc" id="L150">            number = &quot;STU&quot; + System.currentTimeMillis() % 100000000L + (int) (Math.random() * 1000);</span>
-<span class="nc bnc" id="L151" title="All 2 branches missed.">        } while (studentRepository.existsByStudentNumber(number));</span>
-<span class="nc" id="L152">        return number;</span>
+<span class="nc" id="L155">            number = &quot;STU&quot; + System.currentTimeMillis() % 100000000L + (int) (Math.random() * 1000);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">        } while (studentRepository.existsByStudentNumber(number));</span>
+<span class="nc" id="L157">        return number;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

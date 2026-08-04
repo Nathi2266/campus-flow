@@ -22,7 +22,7 @@ import java.util.Set;
 @Getter
 <span class="pc" id="L23">@Setter</span>
 <span class="pc" id="L24">@Builder</span>
-<span class="nc" id="L25">@NoArgsConstructor</span>
+<span class="fc" id="L25">@NoArgsConstructor</span>
 <span class="fc" id="L26">@AllArgsConstructor</span>
 public class Student extends AuditBase {
 
@@ -46,7 +46,7 @@ public class Student extends AuditBase {
     @Column(name = &quot;enrollment_date&quot;, nullable = false)
 <span class="fc" id="L47">    private java.time.LocalDate enrollmentDate;</span>
 
-<span class="pc" id="L49">    @Enumerated(EnumType.STRING)</span>
+<span class="fc" id="L49">    @Enumerated(EnumType.STRING)</span>
     @Column(name = &quot;academic_status&quot;, nullable = false, length = 20)
 <span class="fc" id="L51">    private AcademicStatus academicStatus = AcademicStatus.ACTIVE;</span>
 
@@ -57,7 +57,7 @@ public class Student extends AuditBase {
 <span class="fc" id="L57">    private java.time.LocalDate graduationDate;</span>
 
     // One-to-many relationship with enrollments
-<span class="pc" id="L60">    @OneToMany(mappedBy = &quot;student&quot;, fetch = FetchType.LAZY, cascade = CascadeType.ALL)</span>
+<span class="fc" id="L60">    @OneToMany(mappedBy = &quot;student&quot;, fetch = FetchType.LAZY, cascade = CascadeType.ALL)</span>
 <span class="nc" id="L61">    private Set&lt;Enrollment&gt; enrollments = new HashSet&lt;&gt;();</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

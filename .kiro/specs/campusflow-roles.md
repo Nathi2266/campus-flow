@@ -24,7 +24,10 @@ Roles: `ADMIN` | `LECTURER` | `STUDENT` (JWT claim `role`, authority `ROLE_*`).
 | Password login / refresh / logout / me | Yes | Yes | Yes |
 | Patch own profile (name, phone) | Yes | Yes | Yes |
 | Department CRUD | Yes | — | — |
-| User list / create / role+dept assign | Yes | — | — |
+| User list / search / create / role+dept assign | Yes | — | — |
+| User soft activate / deactivate (block login) | Yes | — | — |
+| Staff create returns one-time temp password when password omitted | Yes | — | — |
+| Report CSV export (students-per-course) | Yes | Yes (own scope) | — |
 | Students list | Yes | Yes (read) | Own record only |
 | Students get by id | Yes | Yes (read) | Own record only |
 | Students create / update / delete | Yes | — | — |
@@ -36,18 +39,21 @@ Roles: `ADMIN` | `LECTURER` | `STUDENT` (JWT claim `role`, authority `ROLE_*`).
 | Enrollments create | Yes | Yes | Own student only |
 | Enrollments drop | Yes | Yes | Own only |
 | Grade update | Yes | Own courses | — |
-| Reports | Yes | Yes | — |
+| Course roster view | Yes | Own courses | — |
+| Student academic courses view | Yes | Yes (read) | Own only |
+| Reports | Yes (org / dept filter) | Own courses only | — |
 | Audit log view | Yes | — | — |
 
 ## API scoping rules
 
 - **ADMIN:** no department filter required; may filter by query params.
-- **LECTURER:** course lists default to `lecturerId = self`; enrollment mutations/grades only when enrollment’s course belongs to self; student write denied.
-- **STUDENT:** enrollment list/create/drop only for linked `Student.user_id = self`; course list may return active courses for catalog.
+- **LECTURER:** course lists default to `lecturerId = self`; enrollment mutations/grades only when enrollment’s course belongs to self; reports limited to own courses; student write denied.
+- **STUDENT:** enrollment list/create/drop only for linked `Student.user_id = self`; course list may return active courses for catalog; academic courses endpoint own-only.
 - Never rely on client-only role gates; enforce with `@PreAuthorize` + service checks.
 
 ## Related
 
+- Data flows: `campusflow-data-flows.md`
 - Grades: `campusflow-grades.md`
 - Security matrix detail: `security-implementation.md`
 - Frontend routes: `campusflow-frontend.md`

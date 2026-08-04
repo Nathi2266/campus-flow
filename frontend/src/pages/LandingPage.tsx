@@ -254,7 +254,7 @@ export function LandingPage() {
       </Box>
 
       {/* How it works */}
-      <Box as="section" py={{ base: 16, md: 24 }} px={{ base: 5, md: 10 }} bg="white">
+      <Box as="section" py={{ base: 16, md: 24 }} px={{ base: 5, md: 10 }} bg="app-surface">
         <Container maxW="6xl">
           <MotionVStack
             align="stretch"
@@ -274,7 +274,7 @@ export function LandingPage() {
               >
                 How CampusFlow works
               </Heading>
-              <Text mt={3} color="gray.500" fontSize="lg" lineHeight="tall">
+              <Text mt={3} color="app-muted" fontSize="lg" lineHeight="tall">
                 A clear path from campus setup to day-to-day teaching and student progress.
               </Text>
             </Box>
@@ -294,7 +294,7 @@ export function LandingPage() {
                   <Text fontFamily="heading" fontWeight="700" fontSize="xl" letterSpacing="-0.02em" mb={2}>
                     {item.title}
                   </Text>
-                  <Text color="gray.500" lineHeight="tall">
+                  <Text color="app-muted" lineHeight="tall">
                     {item.body}
                   </Text>
                 </MotionBox>
@@ -305,7 +305,7 @@ export function LandingPage() {
       </Box>
 
       {/* Roles */}
-      <Box as="section" py={{ base: 16, md: 24 }} px={{ base: 5, md: 10 }} bg="canvas.100">
+      <Box as="section" py={{ base: 16, md: 24 }} px={{ base: 5, md: 10 }} bg="app-bg">
         <Container maxW="6xl">
           <MotionVStack
             align="stretch"
@@ -325,7 +325,7 @@ export function LandingPage() {
               >
                 Built for every campus role
               </Heading>
-              <Text mt={3} color="gray.500" fontSize="lg" lineHeight="tall">
+              <Text mt={3} color="app-muted" fontSize="lg" lineHeight="tall">
                 Access is scoped to what each role needs — from organisation-wide administration to a
                 student’s own enrollments.
               </Text>
@@ -340,8 +340,8 @@ export function LandingPage() {
                         w="48px"
                         h="48px"
                         borderRadius="md"
-                        bg="brand.50"
-                        color="brand.700"
+                        bg="brand-soft-bg"
+                        color="brand-soft-fg"
                         display="flex"
                         alignItems="center"
                         justifyContent="center"
@@ -353,7 +353,7 @@ export function LandingPage() {
                       <Text fontFamily="heading" fontWeight="700" fontSize="xl" letterSpacing="-0.02em">
                         {role.title}
                       </Text>
-                      <Text color="gray.500" lineHeight="tall" flex="1">
+                      <Text color="app-muted" lineHeight="tall" flex="1">
                         {role.body}
                       </Text>
                       <CLink
@@ -379,7 +379,7 @@ export function LandingPage() {
       </Box>
 
       {/* Capabilities */}
-      <Box as="section" py={{ base: 16, md: 24 }} px={{ base: 5, md: 10 }} bg="white">
+      <Box as="section" py={{ base: 16, md: 24 }} px={{ base: 5, md: 10 }} bg="app-surface">
         <Container maxW="6xl">
           <MotionVStack
             align="stretch"
@@ -399,7 +399,7 @@ export function LandingPage() {
               >
                 What CampusFlow covers
               </Heading>
-              <Text mt={3} color="gray.500" fontSize="lg" lineHeight="tall">
+              <Text mt={3} color="app-muted" fontSize="lg" lineHeight="tall">
                 Core student-management workflows for departments, courses, and academic progress.
               </Text>
             </Box>
@@ -415,7 +415,7 @@ export function LandingPage() {
                       <Text fontWeight="700" fontSize="lg" letterSpacing="-0.01em" mb={1}>
                         {item.title}
                       </Text>
-                      <Text color="gray.500" lineHeight="tall">
+                      <Text color="app-muted" lineHeight="tall">
                         {item.body}
                       </Text>
                     </Box>
@@ -440,7 +440,7 @@ export function LandingPage() {
       </Box>
 
       {/* Trust */}
-      <Box as="section" py={{ base: 16, md: 20 }} px={{ base: 5, md: 10 }} bg="canvas.100">
+      <Box as="section" py={{ base: 16, md: 20 }} px={{ base: 5, md: 10 }} bg="app-bg">
         <Container maxW="6xl">
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10} alignItems="center">
             <Box>
@@ -453,7 +453,7 @@ export function LandingPage() {
               >
                 Designed for clarity and control
               </Heading>
-              <Text mt={4} color="gray.500" fontSize="lg" lineHeight="tall">
+              <Text mt={4} color="app-muted" fontSize="lg" lineHeight="tall">
                 CampusFlow keeps academic workflows organised without noise — teal academic branding,
                 Poppins typography, and role-aware navigation once you sign in.
               </Text>
@@ -465,7 +465,7 @@ export function LandingPage() {
                 </Box>
                 <Box>
                   <Text fontWeight="600">Role-scoped access</Text>
-                  <Text color="gray.500" fontSize="sm" lineHeight="tall">
+                  <Text color="app-muted" fontSize="sm" lineHeight="tall">
                     Administrators, lecturers, and students each see the tools that match their
                     responsibilities.
                   </Text>
@@ -477,7 +477,7 @@ export function LandingPage() {
                 </Box>
                 <Box>
                   <Text fontWeight="600">Audit-ready administration</Text>
-                  <Text color="gray.500" fontSize="sm" lineHeight="tall">
+                  <Text color="app-muted" fontSize="sm" lineHeight="tall">
                     Key administrative actions can be reviewed when you have audit access.
                   </Text>
                 </Box>
@@ -488,7 +488,7 @@ export function LandingPage() {
                 </Box>
                 <Box>
                   <Text fontWeight="600">Honest product surface</Text>
-                  <Text color="gray.500" fontSize="sm" lineHeight="tall">
+                  <Text color="app-muted" fontSize="sm" lineHeight="tall">
                     Public pages describe shipped capabilities — no invented campus metrics for guests.
                   </Text>
                 </Box>
@@ -499,7 +499,7 @@ export function LandingPage() {
       </Box>
 
       {/* Explore teasers — text links, no auth buttons */}
-      <Box as="section" py={{ base: 16, md: 24 }} px={{ base: 5, md: 10 }} bg="white">
+      <Box as="section" py={{ base: 16, md: 24 }} px={{ base: 5, md: 10 }} bg="app-surface">
         <Container maxW="6xl">
           <Heading
             as="h2"
@@ -511,7 +511,7 @@ export function LandingPage() {
           >
             Explore CampusFlow
           </Heading>
-          <Text color="gray.500" fontSize="lg" lineHeight="tall" maxW="2xl" mb={10}>
+          <Text color="app-muted" fontSize="lg" lineHeight="tall" maxW="2xl" mb={10}>
             Learn more before you sign in. These pages are open to everyone.
           </Text>
           <SimpleGrid columns={{ base: 1, md: 3 }} spacing={8}>
@@ -520,7 +520,7 @@ export function LandingPage() {
                 <Text fontFamily="heading" fontWeight="700" fontSize="xl" letterSpacing="-0.02em" mb={2}>
                   {card.title}
                 </Text>
-                <Text color="gray.500" lineHeight="tall" mb={4}>
+                <Text color="app-muted" lineHeight="tall" mb={4}>
                   {card.body}
                 </Text>
                 <CLink

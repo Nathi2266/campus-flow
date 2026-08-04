@@ -32,12 +32,12 @@ export function Surface({
 }: BoxProps & { children?: ReactNode; interactive?: boolean }) {
   return (
     <Box
-      bg="white"
+      bg="app-surface"
       borderWidth="1px"
-      borderColor="blackAlpha.100"
+      borderColor="app-border"
       borderRadius="lg"
       shadow="soft"
-      transition="box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease"
+      transition="box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease, background 0.15s ease"
       {...(interactive
         ? {
             _hover: {

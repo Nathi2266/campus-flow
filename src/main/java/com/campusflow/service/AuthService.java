@@ -10,6 +10,7 @@ import com.campusflow.dto.mapper.UserMapper;
 import com.campusflow.dto.request.LoginRequest;
 import com.campusflow.dto.request.ProfileUpdateRequest;
 import com.campusflow.dto.request.RefreshRequest;
+import com.campusflow.dto.request.ThemePreferenceRequest;
 import com.campusflow.dto.request.UserRegistrationRequest;
 import com.campusflow.dto.response.AuthResponse;
 import com.campusflow.dto.response.UserResponse;
@@ -100,6 +101,10 @@ public class AuthService {
             throw new ValidationException("Invalid credentials", "credentials", "INVALID_CREDENTIALS");
         }
 
+        if (Boolean.FALSE.equals(user.getActive())) {
+            throw new ValidationException("Account is deactivated", "credentials", "ACCOUNT_DEACTIVATED");
+        }
+
         log.info("User logged in: {}", user.getEmail());
         auditLogRepository.save(AuditLog.builder()
             .user(user)
@@ -167,6 +172,16 @@ public class AuthService {
             user.getStudent().setLastName(request.getLastName());
         }
 
+        return userMapper.toResponse(userRepository.save(user));
+    }
+
+    public UserResponse updateThemePreference(ThemePreferenceRequest request) {
+        User user = securityUtils.getCurrentUser();
+        String theme = request.getPreferredTheme().trim().toLowerCase();
+        if (!"light".equals(theme) && !"dark".equals(theme)) {
+            throw new ValidationException("Theme must be light or dark", "preferredTheme", "INVALID_THEME");
+        }
+        user.setPreferredTheme(theme);
         return userMapper.toResponse(userRepository.save(user));
     }
 

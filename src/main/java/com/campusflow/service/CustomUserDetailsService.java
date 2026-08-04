@@ -32,11 +32,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        return new org.springframework.security.core.userdetails.User(
-            user.getEmail(),
-            user.getPasswordHash(),
-            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
-        );
+        return toUserDetails(user);
     }
 
     @Transactional(readOnly = true)
@@ -44,9 +40,18 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
 
+        return toUserDetails(user);
+    }
+
+    private UserDetails toUserDetails(User user) {
+        boolean enabled = !Boolean.FALSE.equals(user.getActive());
         return new org.springframework.security.core.userdetails.User(
             user.getEmail(),
             user.getPasswordHash(),
+            enabled,
+            true,
+            true,
+            true,
             Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
         );
     }

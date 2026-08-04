@@ -1,12 +1,15 @@
 package com.campusflow.service;
 
 import com.campusflow.domain.Course;
+import com.campusflow.domain.User;
 import com.campusflow.domain.enums.AcademicStatus;
+import com.campusflow.domain.enums.UserRole;
 import com.campusflow.dto.response.*;
 import com.campusflow.repository.CourseRepository;
 import com.campusflow.repository.DepartmentRepository;
 import com.campusflow.repository.EnrollmentRepository;
 import com.campusflow.repository.StudentRepository;
+import com.campusflow.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,10 +19,7 @@ import java.math.RoundingMode;
 import java.util.List;
 
 /**
- * Service class for Reports and Statistics.
- *
- * @author CampusFlow Team
- * @version 1.0.0
+ * Reports and statistics — ADMIN org/dept scope; LECTURER own courses only.
  */
 @Service
 @RequiredArgsConstructor
@@ -30,14 +30,31 @@ public class ReportService {
     private final CourseRepository courseRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final DepartmentRepository departmentRepository;
+    private final SecurityUtils securityUtils;
 
-    public StatisticsResponse getStatistics() {
+    public StatisticsResponse getStatistics(Long departmentId) {
+        User current = securityUtils.getCurrentUser();
+        if (current.getRole() == UserRole.LECTURER) {
+            return lecturerStatistics(current.getId());
+        }
+
+        if (departmentId != null) {
+            long totalStudents = studentRepository.countByUserDepartmentId(departmentId);
+            long graduated = studentRepository.countByUserDepartmentIdAndAcademicStatus(
+                departmentId, AcademicStatus.GRADUATED);
+            return StatisticsResponse.builder()
+                .totalStudents(totalStudents)
+                .totalCourses(courseRepository.countByDepartmentId(departmentId))
+                .activeCourses((int) courseRepository.countByDepartmentIdAndActiveTrue(departmentId))
+                .totalEnrollments(enrollmentRepository.countByCourseDepartmentId(departmentId))
+                .totalDepartments(1L)
+                .graduationRate(rate(graduated, totalStudents))
+                .build();
+        }
+
         long totalStudents = studentRepository.count();
         long graduated = studentRepository.countByAcademicStatus(AcademicStatus.GRADUATED);
-        BigDecimal graduationRate = totalStudents == 0
-            ? BigDecimal.ZERO
-            : BigDecimal.valueOf(graduated)
-                .divide(BigDecimal.valueOf(totalStudents), 4, RoundingMode.HALF_UP);
+        BigDecimal graduationRate = rate(graduated, totalStudents);
 
         return StatisticsResponse.builder()
             .totalStudents(totalStudents)
@@ -50,10 +67,7 @@ public class ReportService {
     }
 
     public List<StudentsPerCourseResponse> getStudentsPerCourse(Long departmentId) {
-        List<Course> courses = departmentId != null
-            ? courseRepository.findByDepartmentId(departmentId)
-            : courseRepository.findAll();
-
+        List<Course> courses = resolveCourses(departmentId, null);
         return courses.stream()
             .map(course -> StudentsPerCourseResponse.builder()
                 .courseId(course.getId())
@@ -64,10 +78,50 @@ public class ReportService {
             .toList();
     }
 
+    /** CSV export of students-per-course (same scope rules as JSON endpoint). */
+    public String exportStudentsPerCourseCsv(Long departmentId) {
+        StringBuilder csv = new StringBuilder("courseId,courseCode,courseName,enrolledStudents\n");
+        for (StudentsPerCourseResponse row : getStudentsPerCourse(departmentId)) {
+            csv.append(row.getCourseId()).append(',')
+                .append(csvEscape(row.getCourseCode())).append(',')
+                .append(csvEscape(row.getCourseName())).append(',')
+                .append(row.getEnrolledStudents() != null ? row.getEnrolledStudents() : 0)
+                .append('\n');
+        }
+        return csv.toString();
+    }
+
+    private String csvEscape(String value) {
+        if (value == null) {
+            return "";
+        }
+        String escaped = value.replace("\"", "\"\"");
+        if (escaped.contains(",") || escaped.contains("\"") || escaped.contains("\n")) {
+            return "\"" + escaped + "\"";
+        }
+        return escaped;
+    }
+
     public GraduationProgressResponse getGraduationProgress(Long departmentId, Integer year) {
+        User current = securityUtils.getCurrentUser();
+        if (current.getRole() == UserRole.LECTURER) {
+            // Course-centric: students enrolled in own courses
+            long totalStudents = enrollmentRepository.countDistinctStudentsByCourseLecturerId(current.getId());
+            long graduatedStudents = enrollmentRepository.countDistinctStudentsByCourseLecturerIdAndAcademicStatus(
+                current.getId(), AcademicStatus.GRADUATED);
+            BigDecimal averageGpa = enrollmentRepository.findAverageGpaByCourseLecturerId(current.getId())
+                .orElse(BigDecimal.ZERO);
+            return GraduationProgressResponse.builder()
+                .totalStudents((int) totalStudents)
+                .graduatedStudents((int) graduatedStudents)
+                .expectedGraduates((int) Math.max(0, totalStudents - graduatedStudents))
+                .graduationRate(rate(graduatedStudents, totalStudents))
+                .averageGpa(averageGpa)
+                .build();
+        }
+
         long totalStudents;
         long graduatedStudents;
-
         if (departmentId != null) {
             totalStudents = studentRepository.countByUserDepartmentId(departmentId);
             graduatedStudents = studentRepository.countByUserDepartmentIdAndAcademicStatus(
@@ -78,27 +132,19 @@ public class ReportService {
         }
 
         long expectedGraduates = studentRepository.countByAcademicStatus(AcademicStatus.ACTIVE);
-        BigDecimal graduationRate = totalStudents == 0
-            ? BigDecimal.ZERO
-            : BigDecimal.valueOf(graduatedStudents)
-                .divide(BigDecimal.valueOf(totalStudents), 4, RoundingMode.HALF_UP);
-
         BigDecimal averageGpa = studentRepository.findAverageGpa().orElse(BigDecimal.ZERO);
 
         return GraduationProgressResponse.builder()
             .totalStudents((int) totalStudents)
             .graduatedStudents((int) graduatedStudents)
             .expectedGraduates((int) expectedGraduates)
-            .graduationRate(graduationRate)
+            .graduationRate(rate(graduatedStudents, totalStudents))
             .averageGpa(averageGpa)
             .build();
     }
 
     public List<ActiveCourseResponse> getActiveCourses(Long departmentId) {
-        List<Course> courses = departmentId != null
-            ? courseRepository.findByDepartmentIdAndActiveTrue(departmentId)
-            : courseRepository.findByActiveTrue();
-
+        List<Course> courses = resolveCourses(departmentId, true);
         return courses.stream()
             .map(course -> ActiveCourseResponse.builder()
                 .courseId(course.getId())
@@ -111,13 +157,65 @@ public class ReportService {
     }
 
     public List<CourseResponse> getInactiveCourses(Long departmentId) {
-        List<Course> courses = departmentId != null
-            ? courseRepository.findByDepartmentIdAndActiveFalse(departmentId)
-            : courseRepository.findByActiveFalse();
+        List<Course> courses = resolveCourses(departmentId, false);
+        return courses.stream().map(this::toCourseResponse).toList();
+    }
 
-        return courses.stream()
-            .map(this::toCourseResponse)
-            .toList();
+    private StatisticsResponse lecturerStatistics(Long lecturerId) {
+        long totalCourses = courseRepository.countByLecturerId(lecturerId);
+        long activeCourses = courseRepository.countByLecturerIdAndActiveTrue(lecturerId);
+        long totalEnrollments = enrollmentRepository.countByCourseLecturerId(lecturerId);
+        long totalStudents = enrollmentRepository.countDistinctStudentsByCourseLecturerId(lecturerId);
+        long graduated = enrollmentRepository.countDistinctStudentsByCourseLecturerIdAndAcademicStatus(
+            lecturerId, AcademicStatus.GRADUATED);
+
+        return StatisticsResponse.builder()
+            .totalStudents(totalStudents)
+            .totalCourses(totalCourses)
+            .activeCourses((int) activeCourses)
+            .totalEnrollments(totalEnrollments)
+            .totalDepartments(1L)
+            .graduationRate(rate(graduated, totalStudents))
+            .build();
+    }
+
+    private List<Course> resolveCourses(Long departmentId, Boolean active) {
+        User current = securityUtils.getCurrentUser();
+        if (current.getRole() == UserRole.LECTURER) {
+            if (Boolean.TRUE.equals(active)) {
+                return courseRepository.findByLecturerIdAndActiveTrue(current.getId());
+            }
+            if (Boolean.FALSE.equals(active)) {
+                return courseRepository.findByLecturerIdAndActiveFalse(current.getId());
+            }
+            return courseRepository.findByLecturerId(current.getId());
+        }
+
+        if (departmentId != null) {
+            if (Boolean.TRUE.equals(active)) {
+                return courseRepository.findByDepartmentIdAndActiveTrue(departmentId);
+            }
+            if (Boolean.FALSE.equals(active)) {
+                return courseRepository.findByDepartmentIdAndActiveFalse(departmentId);
+            }
+            return courseRepository.findByDepartmentId(departmentId);
+        }
+
+        if (Boolean.TRUE.equals(active)) {
+            return courseRepository.findByActiveTrue();
+        }
+        if (Boolean.FALSE.equals(active)) {
+            return courseRepository.findByActiveFalse();
+        }
+        return courseRepository.findAll();
+    }
+
+    private BigDecimal rate(long numerator, long denominator) {
+        if (denominator == 0) {
+            return BigDecimal.ZERO;
+        }
+        return BigDecimal.valueOf(numerator)
+            .divide(BigDecimal.valueOf(denominator), 4, RoundingMode.HALF_UP);
     }
 
     private CourseResponse toCourseResponse(Course course) {

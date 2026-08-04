@@ -1,4 +1,5 @@
 import { Badge } from '@chakra-ui/react'
+import { capacityLabel, capacityLevel } from '@/utils/capacity'
 import type { AcademicStatus, EnrollmentStatus } from '@/types'
 
 const academicColor: Record<AcademicStatus, string> = {
@@ -35,6 +36,27 @@ export function ActiveBadge({ active }: { active: boolean }) {
   return (
     <Badge colorScheme={active ? 'green' : 'gray'} variant="subtle">
       {active ? 'Active' : 'Inactive'}
+    </Badge>
+  )
+}
+
+const capacityColor = {
+  full: 'red',
+  near: 'orange',
+  open: 'green',
+} as const
+
+export function CapacityBadge({
+  enrolled,
+  max,
+}: {
+  enrolled: number | null | undefined
+  max: number
+}) {
+  const level = capacityLevel(enrolled, max)
+  return (
+    <Badge colorScheme={capacityColor[level]} variant="subtle">
+      {capacityLabel(level)}
     </Badge>
   )
 }

@@ -1,47 +1,55 @@
 # Future Features
 
-<!-- Product ideas only. Promote into specs when scheduled for delivery. -->
-<!-- Source: Engineering Council 2026-07-28/29 — role-value + E2E production loop -->
 <!-- Product: CampusFlow (ADMIN | LECTURER | STUDENT) -->
 
-## Shipped (P0–P1) — 2026-07-29
+## Shipped
 
-- Real password verification + V3 seed hash (`Admin123!`) constrained to seed emails
-- `/auth/me` GET/PATCH, profile edit, refresh/logout via `tokens`; logout permitAll
-- Method-level RBAC + list scoping; STUDENT student API own-only; course roster denied to STUDENT
-- Unique temp password on admin student create (returned once)
-- JWT secret via env / profile; fail-fast when missing in prod; swagger off in prod
-- Public register = STUDENT only
-- Department CRUD + pickers; User admin; Audit viewer
-- Student/course edit + global search; real report endpoints
-- Lecturer own-course update + grade entry + scoped lists
-- Student self-enroll/drop, course catalog, grades on dashboard
-- FE 401 refresh retry, ErrorBoundary, list pagination
-- Playwright all-roles suite green (10/10)
+### Foundations + production hygiene (through 2026-07-29)
+- Auth, RBAC, departments/users/audit, grades, self-enroll, reports, JWT/env, FE refresh, E2E suite
 
-## Highest-impact improvements still open
+### Role expansion Cycle 1 (2026-07-30)
+- Course roster workspace (grade/drop inline)
+- Enrollment/course/student list filters
+- Student academic record drawer + GPA display + profile summary
+- Capacity badges / near-full / COURSE_FULL toasts
+- Lecturer-scoped reports + ADMIN department filter
+- Mutate audit: enrollment create/drop, course create/activate/deactivate, grades, students, users
+- Spec: `campusflow-data-flows.md`
 
-### P1 — next Loop
+### Role dashboards enrichment (2026-08-03)
+- Admin / Lecturer / Student `/dashboard` KPIs, meters/bars, recent activity, quick links
+- Shared Chakra/SVG chart primitives (no recharts)
+- Specs: `campusflow-frontend.md` dashboard composition; `dashboards.md` legacy pointer
+- Council: `council-review-role-dashboards.md`
 
-1. **Broader audit coverage** — mutate events beyond login (student/course/enrollment/grade)
-2. **Password policy enforcement** — complexity on register / admin create (spec vs `@NotBlank`)
-3. **Reports least-privilege for LECTURER** — own-course / department scope vs campus-wide
-4. **Departments pagination** — other lists already paginated
-5. **Forbidden → HTTP 403** — map `ValidationException` FORBIDDEN codes to 403 (not 400)
-6. **BE unit/integration security tests in CI** — StudentService scoping + JWT fail-fast already unit-tested locally; wire into pipeline
-7. **Flyway repair note** — if V3 checksum changed on existing volumes, document `down -v` or repair
+### UI hygiene (2026-08-03)
+- Removed fake settings/notification toggles; semantic `app-text` / `app-muted` for light + dark
+- Consistent sidebar: bold labels, brand-green active state, centered CampusFlow title (no CF mark)
 
-### P2 — later
+### Mock cleanup + ADMIN readiness (2026-08-03)
+- Removed login demo-account fillers (ADMIN/LECTURER/STUDENT) from `LoginPage` — seed creds only in README + E2E helpers
+- ADMIN reports statistics honor `departmentId` (aligned with other report endpoints)
+- Expanded ADMIN Playwright coverage: departments, users, course activate/deactivate, reports filter, settings theme, audit, notifications shell
+- Council: `.kiro/memory/council-review-mock-cleanup-admin-e2e.md`
 
-- Notifications MVP (enrollment, grade, capacity) — FE shell exists
-- Settings persistence for notification prefs
-- Report CSV export
-- httpOnly cookie session (replace localStorage tokens)
-- Rate limiting on auth endpoints
-- Refresh JWT `jti` + reuse detection
-- Redis cache only when Redis is provisioned (now `cache.type: simple`)
+### ADMIN Cycle 2 (2026-08-03)
+- Notifications nav **hidden** (page route kept unlinked; full MVP deferred)
+- User search + role filter; soft activate/deactivate (`users.active` V5); block login when inactive
+- Staff create generates temp password when password omitted (invite flow)
+- Report CSV export: students-per-course
+- ADMIN API security `@WebMvcTest` matrix (`AdminApiSecurityTest`)
+- Council: `.kiro/memory/council-review-admin-cycle2.md`
 
-## Spec hygiene (ongoing)
+## Next highest impact (Cycle 3+)
 
-- Prefer `campusflow-roles.md` / `campusflow-grades.md` over Khonofy staff/admin/superuser docs
-- Align `security-implementation.md` snippets with current `SecurityConfig` (logout permitAll, springdoc prod off)
+1. Notifications MVP + settings prefs
+2. Bulk grade entry on roster
+3. GPA auto-recompute + transcript view (`campusflow-grades.md` update)
+4. Waitlists + academic term/year (schema)
+5. FORBIDDEN → HTTP 403 mapping; auth rate limiting; httpOnly cookies
+6. Expand report CSV pack / user email invite delivery
+
+## Spec hygiene
+
+- Prefer `campusflow-roles.md`, `campusflow-data-flows.md`, `campusflow-grades.md`
+- Ignore Khonofy timesheet leftovers for product decisions

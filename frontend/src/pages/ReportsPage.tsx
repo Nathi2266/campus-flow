@@ -1,6 +1,11 @@
 import {
+  Button,
   Flex,
+  FormControl,
+  FormLabel,
+  HStack,
   Progress,
+  Select,
   SimpleGrid,
   Table,
   Tbody,
@@ -10,39 +15,79 @@ import {
   Thead,
   Tr,
   VStack,
+  useToast,
 } from '@chakra-ui/react'
 import { useQuery } from '@tanstack/react-query'
-import { FiAward, FiBook, FiLayers, FiUsers } from 'react-icons/fi'
+import { useState } from 'react'
+import { FiAward, FiBook, FiDownload, FiLayers, FiUsers } from 'react-icons/fi'
 import {
+  exportStudentsPerCourseCsv,
   getActiveCourses,
   getGraduationProgress,
   getInactiveCourses,
   getStatistics,
   getStudentsPerCourse,
+  listDepartments,
 } from '@/api/resources'
 import { getErrorMessage } from '@/api/client'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '@/components/feedback'
 import { StatTile, SectionTitle } from '@/components/StatTile'
 import { Stagger, Surface } from '@/components/ui'
 import { DataTableShell } from '@/components/DataTableShell'
+import { useAuthStore } from '@/features/auth/authStore'
 
 export function ReportsPage() {
-  const stats = useQuery({ queryKey: ['reports', 'statistics'], queryFn: getStatistics })
+  const isAdmin = useAuthStore((s) => s.hasRole('ADMIN'))
+  const isLecturer = useAuthStore((s) => s.hasRole('LECTURER'))
+  const toast = useToast()
+  const [departmentId, setDepartmentId] = useState('')
+  const [exporting, setExporting] = useState(false)
+  const deptId = isAdmin && departmentId ? Number(departmentId) : undefined
+  const deptKey = deptId ?? null
+
+  async function handleExportCsv() {
+    setExporting(true)
+    try {
+      const blob = await exportStudentsPerCourseCsv(deptId)
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = 'students-per-course.csv'
+      anchor.click()
+      URL.revokeObjectURL(url)
+      toast({ title: 'CSV downloaded', status: 'success', duration: 2200 })
+    } catch (error) {
+      toast({ title: getErrorMessage(error, 'Export failed'), status: 'error' })
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const departments = useQuery({
+    queryKey: ['departments'],
+    queryFn: listDepartments,
+    enabled: isAdmin,
+  })
+
+  const stats = useQuery({
+    queryKey: ['reports', 'statistics', deptKey],
+    queryFn: () => getStatistics(deptId),
+  })
   const perCourse = useQuery({
-    queryKey: ['reports', 'students-per-course'],
-    queryFn: () => getStudentsPerCourse(),
+    queryKey: ['reports', 'students-per-course', deptKey],
+    queryFn: () => getStudentsPerCourse(deptId),
   })
   const activeCourses = useQuery({
-    queryKey: ['reports', 'active-courses'],
-    queryFn: () => getActiveCourses(),
+    queryKey: ['reports', 'active-courses', deptKey],
+    queryFn: () => getActiveCourses(deptId),
   })
   const inactiveCourses = useQuery({
-    queryKey: ['reports', 'inactive-courses'],
-    queryFn: () => getInactiveCourses(),
+    queryKey: ['reports', 'inactive-courses', deptKey],
+    queryFn: () => getInactiveCourses(deptId),
   })
   const graduation = useQuery({
-    queryKey: ['reports', 'graduation-progress'],
-    queryFn: () => getGraduationProgress(),
+    queryKey: ['reports', 'graduation-progress', deptKey],
+    queryFn: () => getGraduationProgress(deptId != null ? { departmentId: deptId } : undefined),
   })
 
   const graduationPct = stats.data ? Number(stats.data.graduationRate) * 100 : 0
@@ -69,8 +114,51 @@ export function ReportsPage() {
       <PageHeader
         eyebrow="Analytics"
         title="Reports"
-        description="Campus analytics: statistics, enrollment pressure, and graduation progress."
+        description={
+          isLecturer
+            ? 'Metrics scoped to your courses.'
+            : 'Campus analytics: statistics, enrollment pressure, and graduation progress.'
+        }
+        actions={
+          <HStack spacing={3} flexWrap="wrap">
+            {isAdmin ? (
+              <FormControl maxW="240px">
+                <FormLabel htmlFor="reports-department-filter" mb={1} fontSize="sm">
+                  Department
+                </FormLabel>
+                <Select
+                  id="reports-department-filter"
+                  size="sm"
+                  value={departmentId}
+                  onChange={(e) => setDepartmentId(e.target.value)}
+                >
+                  <option value="">All departments</option>
+                  {(departments.data ?? []).map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+            ) : null}
+            <Button
+              leftIcon={<FiDownload />}
+              size="sm"
+              variant="outline"
+              onClick={handleExportCsv}
+              isLoading={exporting}
+              data-testid="reports-export-csv"
+            >
+              Export CSV
+            </Button>
+          </HStack>
+        }
       />
+      {isLecturer ? (
+        <Text fontSize="sm" color="app-muted" mb={6}>
+          Showing metrics for your courses
+        </Text>
+      ) : null}
       {anyLoading && !stats.data ? <LoadingState /> : null}
       {stats.isError && !stats.data ? (
         <ErrorState message={getErrorMessage(primaryError)} onRetry={() => stats.refetch()} />
@@ -104,7 +192,7 @@ export function ReportsPage() {
                 <Text fontFamily="heading" fontSize="3xl" fontWeight="700" letterSpacing="-0.03em">
                   {stats.data.activeCourses}
                 </Text>
-                <Text fontSize="sm" color="gray.500" fontWeight="medium">
+                <Text fontSize="sm" color="app-muted" fontWeight="medium">
                   of {stats.data.totalCourses} total
                 </Text>
               </Flex>
@@ -113,7 +201,7 @@ export function ReportsPage() {
                 size="md"
                 colorScheme="brand"
                 borderRadius="full"
-                bg="canvas.200"
+                bg="progress-track"
                 aria-label={`Active courses ${activeShare.toFixed(0)} percent`}
               />
             </Surface>
@@ -124,7 +212,7 @@ export function ReportsPage() {
                 <Text fontFamily="heading" fontSize="3xl" fontWeight="700" letterSpacing="-0.03em">
                   {graduationReportPct.toFixed(1)}%
                 </Text>
-                <Text fontSize="sm" color="gray.500" fontWeight="medium">
+                <Text fontSize="sm" color="app-muted" fontWeight="medium">
                   {graduation.data
                     ? `${graduation.data.graduatedStudents} of ${graduation.data.totalStudents} students`
                     : 'reported rate'}
@@ -135,11 +223,11 @@ export function ReportsPage() {
                 size="md"
                 colorScheme="green"
                 borderRadius="full"
-                bg="canvas.200"
+                bg="progress-track"
                 aria-label={`Graduation rate ${graduationReportPct.toFixed(1)} percent`}
               />
               {graduation.data?.averageGpa != null ? (
-                <Text mt={3} fontSize="sm" color="gray.600">
+                <Text mt={3} fontSize="sm" color="app-muted">
                   Average GPA: {Number(graduation.data.averageGpa).toFixed(2)} · Expected graduates:{' '}
                   {graduation.data.expectedGraduates}
                 </Text>
@@ -152,7 +240,7 @@ export function ReportsPage() {
       <VStack align="stretch" spacing={8}>
         <DataTableShell
           toolbar={
-            <Text fontSize="sm" fontWeight="600" color="gray.700">
+            <Text fontSize="sm" fontWeight="600" color="app-text">
               Students per course
             </Text>
           }
@@ -196,7 +284,7 @@ export function ReportsPage() {
         <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
           <DataTableShell
             toolbar={
-              <Text fontSize="sm" fontWeight="600" color="gray.700">
+              <Text fontSize="sm" fontWeight="600" color="app-text">
                 Active courses
               </Text>
             }
@@ -237,7 +325,7 @@ export function ReportsPage() {
 
           <DataTableShell
             toolbar={
-              <Text fontSize="sm" fontWeight="600" color="gray.700">
+              <Text fontSize="sm" fontWeight="600" color="app-text">
                 Inactive courses
               </Text>
             }

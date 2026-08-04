@@ -1,5 +1,6 @@
 package com.campusflow.service;
 
+import com.campusflow.domain.AuditLog;
 import com.campusflow.domain.Course;
 import com.campusflow.domain.Department;
 import com.campusflow.domain.User;
@@ -10,6 +11,7 @@ import com.campusflow.dto.response.CourseResponse;
 import com.campusflow.dto.response.PagedResponse;
 import com.campusflow.exception.NotFoundException;
 import com.campusflow.exception.ValidationException;
+import com.campusflow.repository.AuditLogRepository;
 import com.campusflow.repository.CourseRepository;
 import com.campusflow.repository.DepartmentRepository;
 import com.campusflow.repository.UserRepository;
@@ -21,6 +23,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
 
 /**
  * Service class for Course management.
@@ -37,6 +41,7 @@ public class CourseService {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final SecurityUtils securityUtils;
+    private final AuditLogRepository auditLogRepository;
 
     public CourseResponse createCourse(CourseCreateRequest request) {
         if (courseRepository.existsByCode(request.getCode())) {
@@ -63,7 +68,9 @@ public class CourseService {
             .active(true)
             .build();
 
-        return toResponse(courseRepository.save(course));
+        Course saved = courseRepository.save(course);
+        audit("COURSE_CREATE", saved.getId(), Map.of("code", saved.getCode()));
+        return toResponse(saved);
     }
 
     public CourseResponse getCourse(Long id) {
@@ -102,6 +109,7 @@ public class CourseService {
             .orElseThrow(() -> new NotFoundException("Course not found", "id"));
         course.setActive(false);
         courseRepository.save(course);
+        audit("COURSE_DEACTIVATE", id, Map.of("via", "delete"));
     }
 
     public CourseResponse activateCourse(Long id) {
@@ -109,6 +117,7 @@ public class CourseService {
             .orElseThrow(() -> new NotFoundException("Course not found", "id"));
         course.setActive(true);
         courseRepository.save(course);
+        audit("COURSE_ACTIVATE", id, Map.of());
         return toResponse(course);
     }
 
@@ -117,6 +126,7 @@ public class CourseService {
             .orElseThrow(() -> new NotFoundException("Course not found", "id"));
         course.setActive(false);
         courseRepository.save(course);
+        audit("COURSE_DEACTIVATE", id, Map.of());
         return toResponse(course);
     }
 
@@ -198,5 +208,15 @@ public class CourseService {
             .createdAt(course.getCreatedAt().toLocalDateTime())
             .updatedAt(course.getUpdatedAt().toLocalDateTime())
             .build();
+    }
+
+    private void audit(String action, Long entityId, Map<String, Object> details) {
+        auditLogRepository.save(AuditLog.builder()
+            .user(securityUtils.getCurrentUser())
+            .action(action)
+            .entityType("COURSE")
+            .entityId(entityId)
+            .details(details)
+            .build());
     }
 }

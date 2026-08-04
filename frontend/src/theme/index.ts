@@ -34,6 +34,25 @@ export const theme = extendTheme({
       50: '#F8FAF9',
       100: '#F4F7F6',
       200: '#E8EEEC',
+      800: '#1A2332',
+      900: '#0F172A',
+    },
+  },
+  semanticTokens: {
+    colors: {
+      'app-bg': { default: 'canvas.100', _dark: 'gray.900' },
+      'app-surface': { default: 'white', _dark: 'gray.800' },
+      'app-surface-muted': { default: 'canvas.50', _dark: 'whiteAlpha.100' },
+      'app-border': { default: 'blackAlpha.100', _dark: 'whiteAlpha.200' },
+      'app-text': { default: 'gray.800', _dark: 'gray.100' },
+      'app-muted': { default: 'gray.500', _dark: 'gray.400' },
+      'nav-hover-bg': { default: 'brand.50', _dark: 'whiteAlpha.100' },
+      'nav-hover-color': { default: 'brand.600', _dark: 'brand.300' },
+      'nav-active-bg': { default: 'brand.50', _dark: 'whiteAlpha.200' },
+      'table-header-bg': { default: 'canvas.50', _dark: 'whiteAlpha.100' },
+      'progress-track': { default: 'canvas.200', _dark: 'whiteAlpha.200' },
+      'brand-soft-bg': { default: 'brand.50', _dark: 'whiteAlpha.100' },
+      'brand-soft-fg': { default: 'brand.700', _dark: 'brand.200' },
     },
   },
   shadows,
@@ -43,10 +62,10 @@ export const theme = extendTheme({
     xl: '20px',
   },
   styles: {
-    global: {
+    global: (props: { colorMode: 'light' | 'dark' }) => ({
       body: {
-        bg: 'canvas.100',
-        color: 'gray.800',
+        bg: props.colorMode === 'dark' ? 'gray.900' : 'canvas.100',
+        color: props.colorMode === 'dark' ? 'gray.100' : 'gray.800',
         fontFamily: 'body',
         letterSpacing: '0.005em',
         lineHeight: '1.55',
@@ -66,7 +85,7 @@ export const theme = extendTheme({
           transitionDuration: '0.01ms !important',
         },
       },
-    },
+    }),
   },
   components: {
     Button: {
@@ -90,8 +109,8 @@ export const theme = extendTheme({
       variants: {
         outline: {
           field: {
-            bg: 'white',
-            borderColor: 'gray.200',
+            bg: 'app-surface',
+            borderColor: 'app-border',
             borderRadius: 'md',
             _hover: { borderColor: 'gray.300' },
           },
@@ -104,11 +123,40 @@ export const theme = extendTheme({
     Textarea: {
       defaultProps: { focusBorderColor: 'brand.500' },
     },
+    FormLabel: {
+      baseStyle: {
+        color: 'app-text',
+      },
+    },
+    Heading: {
+      baseStyle: {
+        color: 'app-text',
+      },
+    },
     Modal: {
       baseStyle: {
         dialog: {
           borderRadius: 'xl',
           shadow: 'lift',
+          bg: 'app-surface',
+          color: 'app-text',
+        },
+        header: {
+          color: 'app-text',
+        },
+        body: {
+          color: 'app-text',
+        },
+      },
+    },
+    Drawer: {
+      baseStyle: {
+        dialog: {
+          bg: 'app-surface',
+          color: 'app-text',
+        },
+        header: {
+          color: 'app-text',
         },
       },
     },
@@ -120,12 +168,13 @@ export const theme = extendTheme({
             fontSize: 'xs',
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
-            color: 'gray.500',
-            borderColor: 'gray.100',
-            bg: 'canvas.50',
+            color: 'app-muted',
+            borderColor: 'app-border',
+            bg: 'table-header-bg',
           },
           td: {
-            borderColor: 'gray.100',
+            borderColor: 'app-border',
+            color: 'app-text',
             py: 3.5,
           },
         },
@@ -134,6 +183,11 @@ export const theme = extendTheme({
     Link: {
       baseStyle: {
         color: 'brand.600',
+      },
+    },
+    Divider: {
+      baseStyle: {
+        borderColor: 'app-border',
       },
     },
   },

@@ -131,6 +131,26 @@ export async function dropEnrollment(id: number) {
   await api.delete(`/enrollments/${id}`)
 }
 
+export async function listCourseEnrollments(
+  courseId: number,
+  params?: Record<string, string | number | undefined>,
+) {
+  const { data } = await api.get<PagedResponse<Enrollment>>(`/enrollments/course/${courseId}`, {
+    params,
+  })
+  return data
+}
+
+export async function listStudentCourses(
+  studentId: number,
+  params?: { activeOnly?: boolean },
+) {
+  const { data } = await api.get<PagedResponse<Enrollment>>(`/students/${studentId}/courses`, {
+    params,
+  })
+  return data
+}
+
 export async function listDepartments() {
   const { data } = await api.get<Department[]>('/departments')
   return data
@@ -162,9 +182,19 @@ export async function listUsers(params?: {
   return data
 }
 
+export async function searchUsers(
+  search: string,
+  params?: { page?: number; size?: number; role?: UserRole | string },
+) {
+  const { data } = await api.get<PagedResponse<User>>('/users/search', {
+    params: { search, ...params },
+  })
+  return data
+}
+
 export async function createUser(payload: {
   email: string
-  password: string
+  password?: string
   firstName: string
   lastName: string
   role: UserRole | string
@@ -183,13 +213,33 @@ export async function updateUser(
   return data
 }
 
+export async function deactivateUser(id: number) {
+  const { data } = await api.post<User>(`/users/${id}/deactivate`)
+  return data
+}
+
+export async function activateUser(id: number) {
+  const { data } = await api.post<User>(`/users/${id}/activate`)
+  return data
+}
+
+export async function exportStudentsPerCourseCsv(departmentId?: number) {
+  const { data } = await api.get<Blob>('/reports/students-per-course/export', {
+    params: departmentId != null ? { departmentId } : undefined,
+    responseType: 'blob',
+  })
+  return data
+}
+
 export async function listAuditLogs(params?: { page?: number; size?: number }) {
   const { data } = await api.get<PagedResponse<AuditLog>>('/audit-logs', { params })
   return data
 }
 
-export async function getStatistics() {
-  const { data } = await api.get<Statistics>('/reports/statistics')
+export async function getStatistics(departmentId?: number) {
+  const { data } = await api.get<Statistics>('/reports/statistics', {
+    params: departmentId != null ? { departmentId } : undefined,
+  })
   return data
 }
 

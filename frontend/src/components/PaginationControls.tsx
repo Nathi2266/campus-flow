@@ -29,10 +29,10 @@ export function PaginationControls({
       px={{ base: 4, md: 5 }}
       py={3}
       borderTopWidth="1px"
-      borderColor="gray.100"
-      bg="canvas.50"
+      borderColor="app-border"
+      bg="table-header-bg"
     >
-      <Text fontSize="sm" color="gray.500">
+      <Text fontSize="sm" color="app-muted">
         {totalElements} total
       </Text>
       <HStack spacing={3}>
@@ -45,7 +45,7 @@ export function PaginationControls({
         >
           Previous
         </Button>
-        <Text fontSize="sm" color="gray.700" aria-live="polite">
+        <Text fontSize="sm" color="app-text" aria-live="polite">
           Page {currentDisplay} of {safeTotalPages}
         </Text>
         <Button

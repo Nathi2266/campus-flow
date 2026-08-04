@@ -41,13 +41,150 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible()
     await expect(page.getByText(USERS.admin.email)).toBeVisible()
 
+    await page.getByTestId('nav-settings').click()
+    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
+    await expect(page.getByLabel('Dark mode')).toBeVisible()
+
+    // Notifications nav hidden until API ships
+    await expect(page.getByTestId('nav-notifications')).toHaveCount(0)
+
+    await signOut(page)
+  })
+
+  test('login page has no demo credential fillers', async ({ page }) => {
+    await page.goto('/login')
+    await expect(page.getByTestId('demo-login-panel')).toHaveCount(0)
+    await expect(page.getByText(/Demo accounts/i)).toHaveCount(0)
+    await expect(page.getByText('Admin123!')).toHaveCount(0)
+  })
+
+  test('ADMIN: create department and lecturer user', async ({ page }) => {
+    const stamp = Date.now()
+    const deptName = `E2E Dept ${stamp}`
+    const lecturerEmail = `e2e.lecturer.${stamp}@campus.edu`
+
+    await loginAs(page, USERS.admin.email, USERS.admin.password)
+
+    await page.getByTestId('nav-departments').click()
+    await page.getByRole('button', { name: 'Add department' }).click()
+    await page.getByLabel('Name').fill(deptName)
+    await page.getByLabel('Description').fill('Created by ADMIN E2E')
+    await page.getByRole('button', { name: 'Create' }).click()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page.getByText(deptName)).toBeVisible({ timeout: 20_000 })
+
+    await page.getByTestId('nav-users').click()
+    await page.getByRole('button', { name: 'Add user' }).click()
+    const userDialog = page.getByRole('dialog')
+    await userDialog.getByLabel('First name').fill('E2E')
+    await userDialog.getByLabel('Last name').fill('Lecturer')
+    await userDialog.getByLabel('Email').fill(lecturerEmail)
+    // Leave password blank → temporary invite password
+    await userDialog.getByLabel('Role').selectOption('LECTURER')
+    await userDialog.getByLabel('Department').selectOption({ label: deptName })
+    await userDialog.getByRole('button', { name: 'Create' }).click()
+    await expect(page.getByText(/User created/i).first()).toBeVisible({ timeout: 20_000 })
+
+    const tempDialog = page.getByRole('alertdialog')
+    await expect(tempDialog).toBeVisible({ timeout: 15_000 })
+    await expect(tempDialog.getByText(/Temporary password/i)).toBeVisible()
+    await expect(page.getByTestId('user-temp-password')).not.toBeEmpty()
+    await tempDialog.getByRole('button', { name: 'Done' }).click()
+
+    await page.getByTestId('user-search').fill(lecturerEmail)
+    await expect(page.getByText(lecturerEmail)).toBeVisible({ timeout: 20_000 })
+    await page.getByRole('button', { name: `Deactivate ${lecturerEmail}` }).click()
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Deactivate' }).click()
+    await expect(page.getByText(/User deactivated/i).first()).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText('Inactive').first()).toBeVisible()
+
+    await page.getByTestId('nav-audit').click()
+    await expect(page.getByRole('heading', { name: /Audit log/i })).toBeVisible()
+    await expect(page.getByText(/entr/i).first()).toBeVisible({ timeout: 15_000 })
+
+    await signOut(page)
+  })
+
+  test('ADMIN: deactivate then reactivate a course', async ({ page }) => {
+    await loginAs(page, USERS.admin.email, USERS.admin.password)
+    await page.getByTestId('nav-courses').click()
+    await expect(page.getByRole('heading', { name: 'Courses' })).toBeVisible()
+
+    const deactivate = page.getByRole('button', { name: 'Deactivate course' }).first()
+    await expect(deactivate).toBeVisible({ timeout: 20_000 })
+    await deactivate.click()
+    await expect(page.getByRole('button', { name: 'Activate course' }).first()).toBeVisible({
+      timeout: 15_000,
+    })
+
+    await page.getByRole('button', { name: 'Activate course' }).first().click()
+    await expect(page.getByRole('button', { name: 'Deactivate course' }).first()).toBeVisible({
+      timeout: 15_000,
+    })
+    await signOut(page)
+  })
+
+  test('ADMIN: reports department filter updates statistics', async ({ page }) => {
+    await loginAs(page, USERS.admin.email, USERS.admin.password)
+    await page.getByTestId('nav-reports').click()
+    await expect(page.getByRole('heading', { name: 'Reports' })).toBeVisible()
+    await expect(page.getByText('Total students')).toBeVisible()
+
+    const deptFilter = page.getByLabel(/Department/i)
+    await expect(deptFilter).toBeVisible()
+    await expect
+      .poll(async () => deptFilter.locator('option').count(), { timeout: 20_000 })
+      .toBeGreaterThan(1)
+    await deptFilter.selectOption({ index: 1 })
+    await expect(page.getByText('Total students')).toBeVisible()
+    await expect(page.getByText('Total courses')).toBeVisible()
+
+    const downloadPromise = page.waitForEvent('download', { timeout: 20_000 })
+    await page.getByTestId('reports-export-csv').click()
+    const download = await downloadPromise
+    expect(download.suggestedFilename()).toMatch(/students-per-course\.csv/i)
+
+    await signOut(page)
+  })
+
+  test('ADMIN: settings dark mode persists preference', async ({ page }) => {
+    await loginAs(page, USERS.admin.email, USERS.admin.password)
+    await page.getByTestId('nav-settings').click()
+    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
+
+    const darkSwitch = page.locator('#color-mode')
+    const switchControl = page.locator('label.chakra-switch').filter({ has: darkSwitch })
+    const wasDark = await darkSwitch.isChecked()
+    await switchControl.click()
+    await expect(page.getByText(/Dark mode on|Light mode on/i).first()).toBeVisible({
+      timeout: 15_000,
+    })
+    await expect(darkSwitch).toBeChecked({ checked: !wasDark })
+
+    const preferred = await page.evaluate(async () => {
+      const raw = localStorage.getItem('campusflow-auth')
+      const parsed = raw ? JSON.parse(raw) : null
+      const token = parsed?.state?.accessToken as string
+      const res = await fetch('/api/v1/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const body = await res.json()
+      return body.preferredTheme as string
+    })
+    expect(preferred).toBe(wasDark ? 'light' : 'dark')
+
+    // Restore original preference so later runs stay stable
+    await switchControl.click()
+    await expect(page.getByText(/Dark mode on|Light mode on/i).first()).toBeVisible({
+      timeout: 15_000,
+    })
     await signOut(page)
   })
 
   test('LECTURER: login and role-gated screens', async ({ page }) => {
     await loginAs(page, USERS.lecturer.email, USERS.lecturer.password)
     await expect(page.getByText('LECTURER', { exact: true })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /Your courses|Lecturer/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Teaching overview|Your courses|Lecturer/i })).toBeVisible()
 
     await page.getByTestId('nav-courses').click()
     await expect(page.getByRole('heading', { name: 'Courses' })).toBeVisible()
@@ -76,8 +213,7 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
     await page.getByTestId('nav-enrollments').click()
     await expect(page.getByRole('heading', { name: 'Enrollments' })).toBeVisible()
 
-    await page.getByTestId('nav-notifications').click()
-    await expect(page.getByRole('heading', { name: 'Notifications' })).toBeVisible()
+    await expect(page.getByTestId('nav-notifications')).toHaveCount(0)
 
     await page.getByTestId('nav-profile').click()
     await expect(page.getByText(USERS.student.email)).toBeVisible()
@@ -143,11 +279,12 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
 
     await page.getByTestId('nav-students').click()
     await page.getByRole('button', { name: 'Add student' }).click()
-    await page.getByLabel('First name').fill('Flow')
-    await page.getByLabel('Last name').fill('Student')
-    await page.getByLabel('Email').fill(studentEmail)
-    await page.getByLabel('Department').selectOption({ index: 1 })
-    await page.getByRole('button', { name: 'Create' }).click()
+    const studentDialog = page.getByRole('dialog')
+    await studentDialog.getByLabel('First name').fill('Flow')
+    await studentDialog.getByLabel('Last name').fill('Student')
+    await studentDialog.getByLabel('Email').fill(studentEmail)
+    await studentDialog.locator('#departmentId').selectOption({ index: 1 })
+    await studentDialog.getByRole('button', { name: 'Create' }).click()
 
     // Temporary password shown once (AlertDialog)
     const tempDialog = page.getByRole('alertdialog')
@@ -159,12 +296,13 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
 
     await page.getByTestId('nav-courses').click()
     await page.getByRole('button', { name: 'Add course' }).click()
-    await page.getByLabel('Code').fill(courseCode)
-    await page.getByLabel('Name').fill(`E2E Course ${stamp}`)
-    await page.getByLabel('Credits').fill('3')
-    await page.getByLabel('Department').selectOption({ index: 1 })
-    await page.getByLabel('Max capacity').fill('25')
-    await page.getByRole('button', { name: 'Create' }).click()
+    const courseDialog = page.getByRole('dialog')
+    await courseDialog.getByLabel('Code').fill(courseCode)
+    await courseDialog.getByLabel('Name').fill(`E2E Course ${stamp}`)
+    await courseDialog.getByLabel('Credits').fill('3')
+    await courseDialog.locator('#departmentId').selectOption({ index: 1 })
+    await courseDialog.getByLabel('Max capacity').fill('25')
+    await courseDialog.getByRole('button', { name: 'Create' }).click()
     await expect(page.getByText(courseCode)).toBeVisible({ timeout: 20_000 })
     await expect(page.getByRole('dialog')).toHaveCount(0)
 
@@ -186,9 +324,10 @@ test.describe('CampusFlow E2E — all roles & data flow', () => {
 
     await page.getByTestId('nav-enrollments').click()
     await page.getByRole('button', { name: 'New enrollment' }).click()
-    await page.getByLabel('Student').selectOption(String(ids.studentId))
-    await page.getByLabel('Course').selectOption(String(ids.courseId))
-    await page.getByRole('button', { name: 'Enroll', exact: true }).click()
+    const enrollDialog = page.getByRole('dialog')
+    await enrollDialog.locator('#studentId').selectOption(String(ids.studentId))
+    await enrollDialog.locator('#courseId').selectOption(String(ids.courseId))
+    await enrollDialog.getByRole('button', { name: 'Enroll', exact: true }).click()
     await expect(page.getByRole('dialog')).toHaveCount(0)
     await expect(page.getByRole('row').filter({ hasText: courseCode })).toBeVisible({ timeout: 20_000 })
 

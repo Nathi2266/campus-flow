@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CourseService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">campusflow</a> &gt; <a href="index.source.html" class="el_package">com.campusflow.service</a> &gt; <span class="el_source">CourseService.java</span></div><h1>CourseService.java</h1><pre class="source lang-java linenums">package com.campusflow.service;
 
+import com.campusflow.domain.AuditLog;
 import com.campusflow.domain.Course;
 import com.campusflow.domain.Department;
 import com.campusflow.domain.User;
@@ -10,6 +11,7 @@ import com.campusflow.dto.response.CourseResponse;
 import com.campusflow.dto.response.PagedResponse;
 import com.campusflow.exception.NotFoundException;
 import com.campusflow.exception.ValidationException;
+import com.campusflow.repository.AuditLogRepository;
 import com.campusflow.repository.CourseRepository;
 import com.campusflow.repository.DepartmentRepository;
 import com.campusflow.repository.UserRepository;
@@ -22,6 +24,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 /**
  * Service class for Course management.
  *
@@ -29,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @version 1.0.0
  */
 @Service
-<span class="nc" id="L32">@RequiredArgsConstructor</span>
+<span class="fc" id="L36">@RequiredArgsConstructor</span>
 @Transactional
 public class CourseService {
 
@@ -37,167 +41,183 @@ public class CourseService {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final SecurityUtils securityUtils;
+    private final AuditLogRepository auditLogRepository;
 
     public CourseResponse createCourse(CourseCreateRequest request) {
-<span class="nc bnc" id="L42" title="All 2 branches missed.">        if (courseRepository.existsByCode(request.getCode())) {</span>
-<span class="nc" id="L43">            throw new ValidationException(&quot;Course code already exists&quot;, &quot;code&quot;, &quot;COURSE_CODE_EXISTS&quot;);</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        if (courseRepository.existsByCode(request.getCode())) {</span>
+<span class="nc" id="L48">            throw new ValidationException(&quot;Course code already exists&quot;, &quot;code&quot;, &quot;COURSE_CODE_EXISTS&quot;);</span>
         }
 
-<span class="nc" id="L46">        Department department = departmentRepository.findById(request.getDepartmentId())</span>
-<span class="nc" id="L47">            .orElseThrow(() -&gt; new NotFoundException(&quot;Department not found&quot;, &quot;departmentId&quot;));</span>
+<span class="nc" id="L51">        Department department = departmentRepository.findById(request.getDepartmentId())</span>
+<span class="nc" id="L52">            .orElseThrow(() -&gt; new NotFoundException(&quot;Department not found&quot;, &quot;departmentId&quot;));</span>
 
-<span class="nc" id="L49">        User lecturer = null;</span>
-<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (request.getLecturerId() != null) {</span>
-<span class="nc" id="L51">            lecturer = userRepository.findById(request.getLecturerId())</span>
-<span class="nc" id="L52">                .orElseThrow(() -&gt; new NotFoundException(&quot;Lecturer not found&quot;, &quot;lecturerId&quot;));</span>
+<span class="nc" id="L54">        User lecturer = null;</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (request.getLecturerId() != null) {</span>
+<span class="nc" id="L56">            lecturer = userRepository.findById(request.getLecturerId())</span>
+<span class="nc" id="L57">                .orElseThrow(() -&gt; new NotFoundException(&quot;Lecturer not found&quot;, &quot;lecturerId&quot;));</span>
         }
 
-<span class="nc" id="L55">        Course course = Course.builder()</span>
-<span class="nc" id="L56">            .code(request.getCode())</span>
-<span class="nc" id="L57">            .name(request.getName())</span>
-<span class="nc" id="L58">            .description(request.getDescription())</span>
-<span class="nc" id="L59">            .credits(request.getCredits())</span>
-<span class="nc" id="L60">            .department(department)</span>
-<span class="nc" id="L61">            .lecturer(lecturer)</span>
-<span class="nc" id="L62">            .maxCapacity(request.getMaxCapacity())</span>
-<span class="nc" id="L63">            .active(true)</span>
-<span class="nc" id="L64">            .build();</span>
+<span class="nc" id="L60">        Course course = Course.builder()</span>
+<span class="nc" id="L61">            .code(request.getCode())</span>
+<span class="nc" id="L62">            .name(request.getName())</span>
+<span class="nc" id="L63">            .description(request.getDescription())</span>
+<span class="nc" id="L64">            .credits(request.getCredits())</span>
+<span class="nc" id="L65">            .department(department)</span>
+<span class="nc" id="L66">            .lecturer(lecturer)</span>
+<span class="nc" id="L67">            .maxCapacity(request.getMaxCapacity())</span>
+<span class="nc" id="L68">            .active(true)</span>
+<span class="nc" id="L69">            .build();</span>
 
-<span class="nc" id="L66">        return toResponse(courseRepository.save(course));</span>
+<span class="nc" id="L71">        Course saved = courseRepository.save(course);</span>
+<span class="nc" id="L72">        audit(&quot;COURSE_CREATE&quot;, saved.getId(), Map.of(&quot;code&quot;, saved.getCode()));</span>
+<span class="nc" id="L73">        return toResponse(saved);</span>
     }
 
     public CourseResponse getCourse(Long id) {
-<span class="nc" id="L70">        Course course = courseRepository.findById(id)</span>
-<span class="nc" id="L71">            .orElseThrow(() -&gt; new NotFoundException(&quot;Course not found&quot;, &quot;id&quot;));</span>
-<span class="nc" id="L72">        return toResponse(course);</span>
+<span class="nc" id="L77">        Course course = courseRepository.findById(id)</span>
+<span class="nc" id="L78">            .orElseThrow(() -&gt; new NotFoundException(&quot;Course not found&quot;, &quot;id&quot;));</span>
+<span class="nc" id="L79">        return toResponse(course);</span>
     }
 
     public CourseResponse updateCourse(Long id, CourseUpdateRequest request) {
-<span class="nc" id="L76">        Course course = courseRepository.findById(id)</span>
-<span class="nc" id="L77">            .orElseThrow(() -&gt; new NotFoundException(&quot;Course not found&quot;, &quot;id&quot;));</span>
+<span class="nc" id="L83">        Course course = courseRepository.findById(id)</span>
+<span class="nc" id="L84">            .orElseThrow(() -&gt; new NotFoundException(&quot;Course not found&quot;, &quot;id&quot;));</span>
 
-<span class="nc" id="L79">        User currentUser = securityUtils.getCurrentUser();</span>
-<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (currentUser.getRole() == UserRole.LECTURER) {</span>
-<span class="nc bnc" id="L81" title="All 4 branches missed.">            if (course.getLecturer() == null || !course.getLecturer().getId().equals(currentUser.getId())) {</span>
-<span class="nc" id="L82">                throw new ValidationException(&quot;Lecturers may only update their own courses&quot;, &quot;id&quot;, &quot;FORBIDDEN&quot;);</span>
+<span class="nc" id="L86">        User currentUser = securityUtils.getCurrentUser();</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        if (currentUser.getRole() == UserRole.LECTURER) {</span>
+<span class="nc bnc" id="L88" title="All 4 branches missed.">            if (course.getLecturer() == null || !course.getLecturer().getId().equals(currentUser.getId())) {</span>
+<span class="nc" id="L89">                throw new ValidationException(&quot;Lecturers may only update their own courses&quot;, &quot;id&quot;, &quot;FORBIDDEN&quot;);</span>
             }
         }
 
-<span class="nc" id="L86">        course.setName(request.getName());</span>
-<span class="nc" id="L87">        course.setDescription(request.getDescription());</span>
-<span class="nc" id="L88">        course.setCredits(request.getCredits());</span>
-<span class="nc" id="L89">        course.setMaxCapacity(request.getMaxCapacity());</span>
+<span class="nc" id="L93">        course.setName(request.getName());</span>
+<span class="nc" id="L94">        course.setDescription(request.getDescription());</span>
+<span class="nc" id="L95">        course.setCredits(request.getCredits());</span>
+<span class="nc" id="L96">        course.setMaxCapacity(request.getMaxCapacity());</span>
 
-<span class="nc bnc" id="L91" title="All 4 branches missed.">        if (request.getLecturerId() != null &amp;&amp; currentUser.getRole() == UserRole.ADMIN) {</span>
-<span class="nc" id="L92">            User lecturer = userRepository.findById(request.getLecturerId())</span>
-<span class="nc" id="L93">                .orElseThrow(() -&gt; new NotFoundException(&quot;Lecturer not found&quot;, &quot;lecturerId&quot;));</span>
-<span class="nc" id="L94">            course.setLecturer(lecturer);</span>
+<span class="nc bnc" id="L98" title="All 4 branches missed.">        if (request.getLecturerId() != null &amp;&amp; currentUser.getRole() == UserRole.ADMIN) {</span>
+<span class="nc" id="L99">            User lecturer = userRepository.findById(request.getLecturerId())</span>
+<span class="nc" id="L100">                .orElseThrow(() -&gt; new NotFoundException(&quot;Lecturer not found&quot;, &quot;lecturerId&quot;));</span>
+<span class="nc" id="L101">            course.setLecturer(lecturer);</span>
         }
 
-<span class="nc" id="L97">        return toResponse(courseRepository.save(course));</span>
+<span class="nc" id="L104">        return toResponse(courseRepository.save(course));</span>
     }
 
     public void deleteCourse(Long id) {
-<span class="nc" id="L101">        Course course = courseRepository.findById(id)</span>
-<span class="nc" id="L102">            .orElseThrow(() -&gt; new NotFoundException(&quot;Course not found&quot;, &quot;id&quot;));</span>
-<span class="nc" id="L103">        course.setActive(false);</span>
-<span class="nc" id="L104">        courseRepository.save(course);</span>
-<span class="nc" id="L105">    }</span>
-
-    public CourseResponse activateCourse(Long id) {
 <span class="nc" id="L108">        Course course = courseRepository.findById(id)</span>
 <span class="nc" id="L109">            .orElseThrow(() -&gt; new NotFoundException(&quot;Course not found&quot;, &quot;id&quot;));</span>
-<span class="nc" id="L110">        course.setActive(true);</span>
+<span class="nc" id="L110">        course.setActive(false);</span>
 <span class="nc" id="L111">        courseRepository.save(course);</span>
-<span class="nc" id="L112">        return toResponse(course);</span>
+<span class="nc" id="L112">        audit(&quot;COURSE_DEACTIVATE&quot;, id, Map.of(&quot;via&quot;, &quot;delete&quot;));</span>
+<span class="nc" id="L113">    }</span>
+
+    public CourseResponse activateCourse(Long id) {
+<span class="nc" id="L116">        Course course = courseRepository.findById(id)</span>
+<span class="nc" id="L117">            .orElseThrow(() -&gt; new NotFoundException(&quot;Course not found&quot;, &quot;id&quot;));</span>
+<span class="nc" id="L118">        course.setActive(true);</span>
+<span class="nc" id="L119">        courseRepository.save(course);</span>
+<span class="nc" id="L120">        audit(&quot;COURSE_ACTIVATE&quot;, id, Map.of());</span>
+<span class="nc" id="L121">        return toResponse(course);</span>
     }
 
     public CourseResponse deactivateCourse(Long id) {
-<span class="nc" id="L116">        Course course = courseRepository.findById(id)</span>
-<span class="nc" id="L117">            .orElseThrow(() -&gt; new NotFoundException(&quot;Course not found&quot;, &quot;id&quot;));</span>
-<span class="nc" id="L118">        course.setActive(false);</span>
-<span class="nc" id="L119">        courseRepository.save(course);</span>
-<span class="nc" id="L120">        return toResponse(course);</span>
+<span class="nc" id="L125">        Course course = courseRepository.findById(id)</span>
+<span class="nc" id="L126">            .orElseThrow(() -&gt; new NotFoundException(&quot;Course not found&quot;, &quot;id&quot;));</span>
+<span class="nc" id="L127">        course.setActive(false);</span>
+<span class="nc" id="L128">        courseRepository.save(course);</span>
+<span class="nc" id="L129">        audit(&quot;COURSE_DEACTIVATE&quot;, id, Map.of());</span>
+<span class="nc" id="L130">        return toResponse(course);</span>
     }
 
     @Transactional(readOnly = true)
     public PagedResponse&lt;CourseResponse&gt; listCourses(Integer page, Integer size, String sort,
                                                      Long departmentId, Long lecturerId, Boolean active) {
-<span class="nc" id="L126">        User currentUser = securityUtils.getCurrentUser();</span>
+<span class="nc" id="L136">        User currentUser = securityUtils.getCurrentUser();</span>
 
         // Auto-filter lecturers to own courses when lecturerId not provided
-<span class="nc bnc" id="L129" title="All 4 branches missed.">        if (currentUser.getRole() == UserRole.LECTURER &amp;&amp; lecturerId == null) {</span>
-<span class="nc" id="L130">            lecturerId = currentUser.getId();</span>
+<span class="nc bnc" id="L139" title="All 4 branches missed.">        if (currentUser.getRole() == UserRole.LECTURER &amp;&amp; lecturerId == null) {</span>
+<span class="nc" id="L140">            lecturerId = currentUser.getId();</span>
         }
 
         // Students default to active catalog when active not specified
-<span class="nc bnc" id="L134" title="All 4 branches missed.">        if (currentUser.getRole() == UserRole.STUDENT &amp;&amp; active == null) {</span>
-<span class="nc" id="L135">            active = true;</span>
+<span class="nc bnc" id="L144" title="All 4 branches missed.">        if (currentUser.getRole() == UserRole.STUDENT &amp;&amp; active == null) {</span>
+<span class="nc" id="L145">            active = true;</span>
         }
 
-<span class="nc" id="L138">        Pageable pageable = createPageable(page, size, sort);</span>
+<span class="nc" id="L148">        Pageable pageable = createPageable(page, size, sort);</span>
 
         Page&lt;Course&gt; coursePage;
-<span class="nc bnc" id="L141" title="All 2 branches missed.">        if (departmentId != null) {</span>
-<span class="nc bnc" id="L142" title="All 2 branches missed.">            if (active != null) {</span>
-<span class="nc" id="L143">                coursePage = courseRepository.findByDepartmentIdAndActive(departmentId, active, pageable);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">        if (departmentId != null) {</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">            if (active != null) {</span>
+<span class="nc" id="L153">                coursePage = courseRepository.findByDepartmentIdAndActive(departmentId, active, pageable);</span>
             } else {
-<span class="nc" id="L145">                coursePage = courseRepository.findByDepartmentId(departmentId, pageable);</span>
+<span class="nc" id="L155">                coursePage = courseRepository.findByDepartmentId(departmentId, pageable);</span>
             }
-<span class="nc bnc" id="L147" title="All 2 branches missed.">        } else if (lecturerId != null) {</span>
-<span class="nc bnc" id="L148" title="All 2 branches missed.">            if (active != null) {</span>
-<span class="nc" id="L149">                coursePage = courseRepository.findByLecturerIdAndActive(lecturerId, active, pageable);</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">        } else if (lecturerId != null) {</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">            if (active != null) {</span>
+<span class="nc" id="L159">                coursePage = courseRepository.findByLecturerIdAndActive(lecturerId, active, pageable);</span>
             } else {
-<span class="nc" id="L151">                coursePage = courseRepository.findByLecturerId(lecturerId, pageable);</span>
+<span class="nc" id="L161">                coursePage = courseRepository.findByLecturerId(lecturerId, pageable);</span>
             }
-<span class="nc bnc" id="L153" title="All 2 branches missed.">        } else if (active != null) {</span>
-<span class="nc" id="L154">            coursePage = courseRepository.findByActive(active, pageable);</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        } else if (active != null) {</span>
+<span class="nc" id="L164">            coursePage = courseRepository.findByActive(active, pageable);</span>
         } else {
-<span class="nc" id="L156">            coursePage = courseRepository.findAll(pageable);</span>
+<span class="nc" id="L166">            coursePage = courseRepository.findAll(pageable);</span>
         }
 
-<span class="nc" id="L159">        return PagedResponse.&lt;CourseResponse&gt;builder()</span>
-<span class="nc" id="L160">            .content(coursePage.getContent().stream().map(this::toResponse).toList())</span>
-<span class="nc" id="L161">            .page(coursePage.getNumber())</span>
-<span class="nc" id="L162">            .size(coursePage.getSize())</span>
-<span class="nc" id="L163">            .totalElements(coursePage.getTotalElements())</span>
-<span class="nc" id="L164">            .totalPages(coursePage.getTotalPages())</span>
-<span class="nc" id="L165">            .isFirst(coursePage.isFirst())</span>
-<span class="nc" id="L166">            .isLast(coursePage.isLast())</span>
-<span class="nc" id="L167">            .hasContent(coursePage.hasContent())</span>
-<span class="nc" id="L168">            .build();</span>
+<span class="nc" id="L169">        return PagedResponse.&lt;CourseResponse&gt;builder()</span>
+<span class="nc" id="L170">            .content(coursePage.getContent().stream().map(this::toResponse).toList())</span>
+<span class="nc" id="L171">            .page(coursePage.getNumber())</span>
+<span class="nc" id="L172">            .size(coursePage.getSize())</span>
+<span class="nc" id="L173">            .totalElements(coursePage.getTotalElements())</span>
+<span class="nc" id="L174">            .totalPages(coursePage.getTotalPages())</span>
+<span class="nc" id="L175">            .isFirst(coursePage.isFirst())</span>
+<span class="nc" id="L176">            .isLast(coursePage.isLast())</span>
+<span class="nc" id="L177">            .hasContent(coursePage.hasContent())</span>
+<span class="nc" id="L178">            .build();</span>
     }
 
     private Pageable createPageable(Integer page, Integer size, String sort) {
-<span class="nc bnc" id="L172" title="All 4 branches missed.">        if (sort != null &amp;&amp; !sort.isEmpty()) {</span>
-<span class="nc" id="L173">            String[] sortParts = sort.split(&quot;,&quot;);</span>
-<span class="nc bnc" id="L174" title="All 4 branches missed.">            Sort.Direction direction = sortParts.length &gt; 1 &amp;&amp; &quot;desc&quot;.equalsIgnoreCase(sortParts[1])</span>
-<span class="nc" id="L175">                ? Sort.Direction.DESC</span>
-<span class="nc" id="L176">                : Sort.Direction.ASC;</span>
-<span class="nc" id="L177">            return PageRequest.of(page, size, Sort.by(direction, sortParts[0]));</span>
+<span class="nc bnc" id="L182" title="All 4 branches missed.">        if (sort != null &amp;&amp; !sort.isEmpty()) {</span>
+<span class="nc" id="L183">            String[] sortParts = sort.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L184" title="All 4 branches missed.">            Sort.Direction direction = sortParts.length &gt; 1 &amp;&amp; &quot;desc&quot;.equalsIgnoreCase(sortParts[1])</span>
+<span class="nc" id="L185">                ? Sort.Direction.DESC</span>
+<span class="nc" id="L186">                : Sort.Direction.ASC;</span>
+<span class="nc" id="L187">            return PageRequest.of(page, size, Sort.by(direction, sortParts[0]));</span>
         }
-<span class="nc" id="L179">        return PageRequest.of(page, size);</span>
+<span class="nc" id="L189">        return PageRequest.of(page, size);</span>
     }
 
     private CourseResponse toResponse(Course course) {
-<span class="nc" id="L183">        Integer enrolledCount = courseRepository.countActiveEnrollments(course.getId());</span>
+<span class="nc" id="L193">        Integer enrolledCount = courseRepository.countActiveEnrollments(course.getId());</span>
 
-<span class="nc" id="L185">        return CourseResponse.builder()</span>
-<span class="nc" id="L186">            .id(course.getId())</span>
-<span class="nc" id="L187">            .code(course.getCode())</span>
-<span class="nc" id="L188">            .name(course.getName())</span>
-<span class="nc" id="L189">            .description(course.getDescription())</span>
-<span class="nc" id="L190">            .credits(course.getCredits())</span>
-<span class="nc" id="L191">            .departmentId(course.getDepartment().getId())</span>
-<span class="nc" id="L192">            .departmentName(course.getDepartment().getName())</span>
-<span class="nc bnc" id="L193" title="All 2 branches missed.">            .lecturerId(course.getLecturer() != null ? course.getLecturer().getId() : null)</span>
-<span class="nc bnc" id="L194" title="All 2 branches missed.">            .lecturerName(course.getLecturer() != null ? course.getLecturer().getFirstName() + &quot; &quot; + course.getLecturer().getLastName() : null)</span>
-<span class="nc" id="L195">            .maxCapacity(course.getMaxCapacity())</span>
-<span class="nc" id="L196">            .enrolledCount(enrolledCount)</span>
-<span class="nc" id="L197">            .active(Boolean.TRUE.equals(course.getActive()))</span>
-<span class="nc" id="L198">            .createdAt(course.getCreatedAt().toLocalDateTime())</span>
-<span class="nc" id="L199">            .updatedAt(course.getUpdatedAt().toLocalDateTime())</span>
-<span class="nc" id="L200">            .build();</span>
+<span class="nc" id="L195">        return CourseResponse.builder()</span>
+<span class="nc" id="L196">            .id(course.getId())</span>
+<span class="nc" id="L197">            .code(course.getCode())</span>
+<span class="nc" id="L198">            .name(course.getName())</span>
+<span class="nc" id="L199">            .description(course.getDescription())</span>
+<span class="nc" id="L200">            .credits(course.getCredits())</span>
+<span class="nc" id="L201">            .departmentId(course.getDepartment().getId())</span>
+<span class="nc" id="L202">            .departmentName(course.getDepartment().getName())</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">            .lecturerId(course.getLecturer() != null ? course.getLecturer().getId() : null)</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">            .lecturerName(course.getLecturer() != null ? course.getLecturer().getFirstName() + &quot; &quot; + course.getLecturer().getLastName() : null)</span>
+<span class="nc" id="L205">            .maxCapacity(course.getMaxCapacity())</span>
+<span class="nc" id="L206">            .enrolledCount(enrolledCount)</span>
+<span class="nc" id="L207">            .active(Boolean.TRUE.equals(course.getActive()))</span>
+<span class="nc" id="L208">            .createdAt(course.getCreatedAt().toLocalDateTime())</span>
+<span class="nc" id="L209">            .updatedAt(course.getUpdatedAt().toLocalDateTime())</span>
+<span class="nc" id="L210">            .build();</span>
     }
+
+    private void audit(String action, Long entityId, Map&lt;String, Object&gt; details) {
+<span class="nc" id="L214">        auditLogRepository.save(AuditLog.builder()</span>
+<span class="nc" id="L215">            .user(securityUtils.getCurrentUser())</span>
+<span class="nc" id="L216">            .action(action)</span>
+<span class="nc" id="L217">            .entityType(&quot;COURSE&quot;)</span>
+<span class="nc" id="L218">            .entityId(entityId)</span>
+<span class="nc" id="L219">            .details(details)</span>
+<span class="nc" id="L220">            .build());</span>
+<span class="nc" id="L221">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

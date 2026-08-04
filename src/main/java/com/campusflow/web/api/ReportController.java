@@ -6,10 +6,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -28,10 +31,11 @@ public class ReportController {
     private final ReportService reportService;
 
     @GetMapping("/statistics")
-    @Operation(summary = "Get system statistics", description = "Retrieve overall system statistics")
-    public ResponseEntity<StatisticsResponse> getStatistics() {
-        StatisticsResponse response = reportService.getStatistics();
-        return ResponseEntity.ok(response);
+    @Operation(summary = "Get system statistics", description = "Retrieve overall system statistics; ADMIN may filter by department")
+    public ResponseEntity<StatisticsResponse> getStatistics(
+        @Parameter(description = "Department ID filter") @RequestParam(required = false) Long departmentId
+    ) {
+        return ResponseEntity.ok(reportService.getStatistics(departmentId));
     }
 
     @GetMapping("/students-per-course")
@@ -40,6 +44,19 @@ public class ReportController {
         @Parameter(description = "Department ID filter") @RequestParam(required = false) Long departmentId
     ) {
         return ResponseEntity.ok(reportService.getStudentsPerCourse(departmentId));
+    }
+
+    @GetMapping(value = "/students-per-course/export", produces = "text/csv")
+    @Operation(summary = "Export students per course as CSV")
+    public ResponseEntity<byte[]> exportStudentsPerCourse(
+        @Parameter(description = "Department ID filter") @RequestParam(required = false) Long departmentId
+    ) {
+        String csv = reportService.exportStudentsPerCourseCsv(departmentId);
+        byte[] body = csv.getBytes(StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"students-per-course.csv\"")
+            .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+            .body(body);
     }
 
     @GetMapping("/graduation-progress")

@@ -20,7 +20,7 @@ import java.util.Set;
 @Getter
 <span class="nc" id="L21">@Setter</span>
 <span class="nc" id="L22">@Builder</span>
-<span class="nc" id="L23">@NoArgsConstructor</span>
+<span class="fc" id="L23">@NoArgsConstructor</span>
 <span class="nc" id="L24">@AllArgsConstructor</span>
 public class Course extends AuditBase {
 
@@ -48,14 +48,14 @@ public class Course extends AuditBase {
     @JoinColumn(name = &quot;lecturer_id&quot;)
 <span class="nc" id="L49">    private User lecturer;</span>
 
-<span class="nc" id="L51">    @Column(name = &quot;max_capacity&quot;, nullable = false)</span>
-<span class="nc" id="L52">    private Integer maxCapacity = 30;</span>
+<span class="pc" id="L51">    @Column(name = &quot;max_capacity&quot;, nullable = false)</span>
+<span class="pc" id="L52">    private Integer maxCapacity = 30;</span>
 
-<span class="nc" id="L54">    @Column(name = &quot;active&quot;, nullable = false)</span>
-<span class="nc" id="L55">    private Boolean active = true;</span>
+<span class="pc" id="L54">    @Column(name = &quot;active&quot;, nullable = false)</span>
+<span class="pc" id="L55">    private Boolean active = true;</span>
 
     // One-to-many relationship with enrollments
-<span class="nc" id="L58">    @OneToMany(mappedBy = &quot;course&quot;, fetch = FetchType.LAZY, cascade = CascadeType.ALL)</span>
+<span class="pc" id="L58">    @OneToMany(mappedBy = &quot;course&quot;, fetch = FetchType.LAZY, cascade = CascadeType.ALL)</span>
 <span class="nc" id="L59">    private Set&lt;Enrollment&gt; enrollments = new HashSet&lt;&gt;();</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

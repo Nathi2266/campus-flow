@@ -20,7 +20,6 @@ import type { ReactNode } from 'react'
 import { Link as RouterLink, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   FiBarChart2,
-  FiBell,
   FiBook,
   FiClipboard,
   FiGrid,
@@ -57,7 +56,7 @@ const navItems: NavItem[] = [
   { to: '/users', label: 'Users', icon: <FiUserCheck />, roles: ['ADMIN'] },
   { to: '/reports', label: 'Reports', icon: <FiBarChart2 />, roles: ['ADMIN', 'LECTURER'] },
   { to: '/audit', label: 'Audit', icon: <FiShield />, roles: ['ADMIN'] },
-  { to: '/notifications', label: 'Notifications', icon: <FiBell /> },
+  // Notifications nav hidden until notifications API ships (route kept unlinked).
   { to: '/profile', label: 'Profile', icon: <FiUser /> },
   { to: '/settings', label: 'Settings', icon: <FiSettings /> },
 ]
@@ -81,18 +80,18 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
           px={3.5}
           py={2.5}
           borderRadius="md"
-          fontWeight="medium"
+          fontWeight="bold"
           fontSize="sm"
-          color="gray.600"
+          color="app-muted"
           position="relative"
           transition="all 0.15s ease"
           data-testid={`nav-${item.label.toLowerCase()}`}
-          _hover={{ bg: 'brand.50', color: 'brand.800', textDecoration: 'none' }}
+          _hover={{ bg: 'nav-hover-bg', color: 'brand.600', textDecoration: 'none' }}
           sx={{
             '&.active': {
-              bg: 'brand.50',
-              color: 'brand.800',
-              fontWeight: 'semibold',
+              bg: 'nav-active-bg',
+              color: 'var(--chakra-colors-brand-600)',
+              fontWeight: 'bold',
               boxShadow: 'inset 3px 0 0 var(--chakra-colors-brand-500)',
             },
           }}
@@ -103,6 +102,34 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
           {item.label}
         </CLink>
       ))}
+    </VStack>
+  )
+}
+
+function BrandMark() {
+  return (
+    <VStack
+      as={RouterLink}
+      to="/dashboard"
+      spacing={0.5}
+      align="center"
+      textAlign="center"
+      px={2}
+      _hover={{ textDecoration: 'none' }}
+    >
+      <Text
+        fontFamily="heading"
+        fontSize="lg"
+        fontWeight="700"
+        color="app-text"
+        letterSpacing="-0.02em"
+        lineHeight="1.2"
+      >
+        CampusFlow
+      </Text>
+      <Text fontSize="xs" color="app-muted" fontWeight="medium" lineHeight="1.3">
+        Student Management
+      </Text>
     </VStack>
   )
 }
@@ -125,34 +152,7 @@ export function AppLayout() {
 
   const sidebar = (
     <Flex direction="column" h="full" py={6} px={3} gap={7}>
-      <Box px={2}>
-        <HStack spacing={3} as={RouterLink} to="/dashboard" _hover={{ textDecoration: 'none' }}>
-          <Box
-            w="40px"
-            h="40px"
-            borderRadius="lg"
-            bgGradient="linear(135deg, brand.500, brand.700)"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            color="white"
-            fontFamily="heading"
-            fontWeight="700"
-            fontSize="sm"
-            shadow="sm"
-          >
-            CF
-          </Box>
-          <Box>
-            <Text fontFamily="heading" fontSize="lg" fontWeight="700" color="gray.900" letterSpacing="-0.02em">
-              CampusFlow
-            </Text>
-            <Text fontSize="xs" color="gray.500" fontWeight="medium">
-              Student Management
-            </Text>
-          </Box>
-        </HStack>
-      </Box>
+      <BrandMark />
       <Box flex="1" overflowY="auto" px={0.5}>
         <NavList onNavigate={onClose} />
       </Box>
@@ -160,17 +160,17 @@ export function AppLayout() {
         mx={1}
         p={3.5}
         borderRadius="lg"
-        bg="canvas.50"
+        bg="app-surface-muted"
         borderWidth="1px"
-        borderColor="blackAlpha.50"
+        borderColor="app-border"
       >
         <HStack spacing={3}>
           <Avatar size="sm" name={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`} bg="brand.500" />
           <Box flex="1" minW={0}>
-            <Text fontSize="sm" fontWeight="semibold" noOfLines={1}>
+            <Text fontSize="sm" fontWeight="semibold" noOfLines={1} color="app-text">
               {user?.firstName} {user?.lastName}
             </Text>
-            <Text fontSize="xs" color="brand.700" fontWeight="medium">
+            <Text fontSize="xs" color="brand.600" fontWeight="bold">
               {user?.role}
             </Text>
           </Box>
@@ -189,7 +189,7 @@ export function AppLayout() {
   )
 
   return (
-    <Flex minH="100vh" position="relative" bg="canvas.100">
+    <Flex minH="100vh" position="relative" bg="app-bg">
       <Box
         position="fixed"
         inset={0}
@@ -203,7 +203,7 @@ export function AppLayout() {
         href="#main-content"
         position="absolute"
         left="-9999px"
-        _focus={{ left: 4, top: 4, zIndex: 1000, bg: 'white', px: 3, py: 2, borderRadius: 'md', shadow: 'md' }}
+        _focus={{ left: 4, top: 4, zIndex: 1000, bg: 'app-surface', px: 3, py: 2, borderRadius: 'md', shadow: 'md' }}
       >
         Skip to content
       </CLink>
@@ -212,9 +212,9 @@ export function AppLayout() {
         as="aside"
         display={{ base: 'none', md: 'block' }}
         w="288px"
-        bg="white"
+        bg="app-surface"
         borderRightWidth="1px"
-        borderColor="blackAlpha.100"
+        borderColor="app-border"
         position="sticky"
         top={0}
         h="100vh"
@@ -226,10 +226,10 @@ export function AppLayout() {
 
       <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
         <DrawerOverlay backdropFilter="blur(4px)" />
-        <DrawerContent maxW="288px">
-          <DrawerHeader borderBottomWidth="1px">
+        <DrawerContent maxW="288px" bg="app-surface">
+          <DrawerHeader borderBottomWidth="1px" borderColor="app-border">
             <Flex justify="space-between" align="center">
-              <Text fontFamily="heading" fontWeight="700" color="brand.700">
+              <Text fontFamily="heading" fontWeight="700" color="brand.600">
                 CampusFlow
               </Text>
               <CloseButton onClick={onClose} />
@@ -247,15 +247,15 @@ export function AppLayout() {
           justify="space-between"
           px={4}
           py={3}
-          bg="white"
+          bg="app-surface"
           borderBottomWidth="1px"
-          borderColor="blackAlpha.100"
+          borderColor="app-border"
           position="sticky"
           top={0}
           zIndex={10}
         >
           <IconButton aria-label="Open menu" icon={<FiMenu />} variant="ghost" onClick={onOpen} />
-          <Text fontFamily="heading" fontWeight="700" color="brand.700">
+          <Text fontFamily="heading" fontWeight="700" color="brand.600">
             CampusFlow
           </Text>
           <Button size="sm" variant="ghost" onClick={handleLogout}>

@@ -139,7 +139,7 @@ export function DepartmentsPage() {
       {query.data && query.data.length > 0 ? (
         <DataTableShell
           toolbar={
-            <Text fontSize="sm" color="gray.500">
+            <Text fontSize="sm" color="app-muted">
               {query.data.length} department{query.data.length === 1 ? '' : 's'}
             </Text>
           }
@@ -159,7 +159,7 @@ export function DepartmentsPage() {
               {query.data.map((dept) => (
                 <Tr key={dept.id} _hover={{ bg: 'canvas.50' }}>
                   <Td fontWeight="semibold">{dept.name}</Td>
-                  <Td color="gray.600">{dept.description || '—'}</Td>
+                  <Td color="app-muted">{dept.description || '—'}</Td>
                   <Td>
                     <HStack>
                       <IconButton

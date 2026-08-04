@@ -20,7 +20,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping(&quot;/api/v1/reports&quot;)
-<span class="nc" id="L23">@RequiredArgsConstructor</span>
+<span class="fc" id="L23">@RequiredArgsConstructor</span>
 @PreAuthorize(&quot;hasAnyRole('ADMIN', 'LECTURER')&quot;)
 @Tag(name = &quot;Reports&quot;, description = &quot;Reporting and analytics endpoints&quot;)
 public class ReportController {
@@ -28,10 +28,11 @@ public class ReportController {
     private final ReportService reportService;
 
     @GetMapping(&quot;/statistics&quot;)
-    @Operation(summary = &quot;Get system statistics&quot;, description = &quot;Retrieve overall system statistics&quot;)
-    public ResponseEntity&lt;StatisticsResponse&gt; getStatistics() {
-<span class="nc" id="L33">        StatisticsResponse response = reportService.getStatistics();</span>
-<span class="nc" id="L34">        return ResponseEntity.ok(response);</span>
+    @Operation(summary = &quot;Get system statistics&quot;, description = &quot;Retrieve overall system statistics; ADMIN may filter by department&quot;)
+    public ResponseEntity&lt;StatisticsResponse&gt; getStatistics(
+        @Parameter(description = &quot;Department ID filter&quot;) @RequestParam(required = false) Long departmentId
+    ) {
+<span class="nc" id="L35">        return ResponseEntity.ok(reportService.getStatistics(departmentId));</span>
     }
 
     @GetMapping(&quot;/students-per-course&quot;)
@@ -39,7 +40,7 @@ public class ReportController {
     public ResponseEntity&lt;List&lt;StudentsPerCourseResponse&gt;&gt; getStudentsPerCourse(
         @Parameter(description = &quot;Department ID filter&quot;) @RequestParam(required = false) Long departmentId
     ) {
-<span class="nc" id="L42">        return ResponseEntity.ok(reportService.getStudentsPerCourse(departmentId));</span>
+<span class="nc" id="L43">        return ResponseEntity.ok(reportService.getStudentsPerCourse(departmentId));</span>
     }
 
     @GetMapping(&quot;/graduation-progress&quot;)
@@ -48,8 +49,8 @@ public class ReportController {
         @Parameter(description = &quot;Department ID filter&quot;) @RequestParam(required = false) Long departmentId,
         @Parameter(description = &quot;Year&quot;) @RequestParam(required = false) Integer year
     ) {
-<span class="nc" id="L51">        GraduationProgressResponse response = reportService.getGraduationProgress(departmentId, year);</span>
-<span class="nc" id="L52">        return ResponseEntity.ok(response);</span>
+<span class="nc" id="L52">        GraduationProgressResponse response = reportService.getGraduationProgress(departmentId, year);</span>
+<span class="nc" id="L53">        return ResponseEntity.ok(response);</span>
     }
 
     @GetMapping(&quot;/active-courses&quot;)
@@ -57,7 +58,7 @@ public class ReportController {
     public ResponseEntity&lt;List&lt;ActiveCourseResponse&gt;&gt; getActiveCourses(
         @Parameter(description = &quot;Department ID filter&quot;) @RequestParam(required = false) Long departmentId
     ) {
-<span class="nc" id="L60">        return ResponseEntity.ok(reportService.getActiveCourses(departmentId));</span>
+<span class="nc" id="L61">        return ResponseEntity.ok(reportService.getActiveCourses(departmentId));</span>
     }
 
     @GetMapping(&quot;/inactive-courses&quot;)
@@ -65,7 +66,7 @@ public class ReportController {
     public ResponseEntity&lt;List&lt;CourseResponse&gt;&gt; getInactiveCourses(
         @Parameter(description = &quot;Department ID filter&quot;) @RequestParam(required = false) Long departmentId
     ) {
-<span class="nc" id="L68">        return ResponseEntity.ok(reportService.getInactiveCourses(departmentId));</span>
+<span class="nc" id="L69">        return ResponseEntity.ok(reportService.getInactiveCourses(departmentId));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -20,7 +20,7 @@ import java.util.Set;
 @Getter
 <span class="nc" id="L21">@Setter</span>
 <span class="pc" id="L22">@Builder</span>
-<span class="nc" id="L23">@NoArgsConstructor</span>
+<span class="fc" id="L23">@NoArgsConstructor</span>
 <span class="fc" id="L24">@AllArgsConstructor</span>
 public class Department extends AuditBase {
 
@@ -34,10 +34,10 @@ public class Department extends AuditBase {
     @Column(name = &quot;description&quot;, columnDefinition = &quot;TEXT&quot;)
 <span class="nc" id="L35">    private String description;</span>
 
-<span class="pc" id="L37">    @OneToMany(mappedBy = &quot;department&quot;, fetch = FetchType.LAZY)</span>
+<span class="fc" id="L37">    @OneToMany(mappedBy = &quot;department&quot;, fetch = FetchType.LAZY)</span>
 <span class="nc" id="L38">    private Set&lt;Course&gt; courses = new HashSet&lt;&gt;();</span>
 
-<span class="pc" id="L40">    @OneToMany(mappedBy = &quot;department&quot;, fetch = FetchType.LAZY)</span>
+<span class="fc" id="L40">    @OneToMany(mappedBy = &quot;department&quot;, fetch = FetchType.LAZY)</span>
 <span class="nc" id="L41">    private Set&lt;User&gt; users = new HashSet&lt;&gt;();</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

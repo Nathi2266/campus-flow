@@ -18,7 +18,7 @@ import lombok.*;
 @Getter
 <span class="nc" id="L19">@Setter</span>
 <span class="nc" id="L20">@Builder</span>
-<span class="nc" id="L21">@NoArgsConstructor</span>
+<span class="fc" id="L21">@NoArgsConstructor</span>
 <span class="nc" id="L22">@AllArgsConstructor</span>
 public class Enrollment extends AuditBase {
 
@@ -34,10 +34,10 @@ public class Enrollment extends AuditBase {
     @JoinColumn(name = &quot;course_id&quot;, nullable = false)
 <span class="nc" id="L35">    private Course course;</span>
 
-<span class="nc" id="L37">    @Column(name = &quot;enrollment_date&quot;, nullable = false)</span>
-<span class="nc" id="L38">    private java.time.OffsetDateTime enrollmentDate = java.time.OffsetDateTime.now();</span>
+<span class="pc" id="L37">    @Column(name = &quot;enrollment_date&quot;, nullable = false)</span>
+<span class="pc" id="L38">    private java.time.OffsetDateTime enrollmentDate = java.time.OffsetDateTime.now();</span>
 
-<span class="nc" id="L40">    @Enumerated(EnumType.STRING)</span>
+<span class="pc" id="L40">    @Enumerated(EnumType.STRING)</span>
     @Column(name = &quot;status&quot;, nullable = false, length = 20)
 <span class="nc" id="L42">    private EnrollmentStatus status = EnrollmentStatus.ACTIVE;</span>
 

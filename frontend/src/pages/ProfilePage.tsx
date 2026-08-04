@@ -5,7 +5,13 @@ import {
   Button,
   HStack,
   SimpleGrid,
+  Table,
+  Tbody,
+  Td,
   Text,
+  Th,
+  Thead,
+  Tr,
   useToast,
   VStack,
 } from '@chakra-ui/react'
@@ -16,7 +22,9 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { getMe, updateProfile } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
+import { getStudent, listStudentCourses } from '@/api/resources'
 import { FormStack, TextField } from '@/components/FormFields'
+import { EnrollmentStatusBadge } from '@/components/StatusBadge'
 import { ErrorState, LoadingState, PageHeader } from '@/components/feedback'
 import { Surface } from '@/components/ui'
 import { useAuthStore } from '@/features/auth/authStore'
@@ -34,12 +42,12 @@ function ProfileField({ label, value }: { label: string; value: string }) {
     <Box
       p={4}
       borderRadius="md"
-      bg="canvas.50"
+      bg="app-surface-muted"
       borderWidth="1px"
-      borderColor="blackAlpha.50"
+      borderColor="app-border"
       minH="88px"
     >
-      <Text fontSize="xs" fontWeight="600" textTransform="uppercase" letterSpacing="0.08em" color="gray.500">
+      <Text fontSize="xs" fontWeight="600" textTransform="uppercase" letterSpacing="0.08em" color="app-muted">
         {label}
       </Text>
       <Text mt={2} fontWeight="600" fontSize="lg" letterSpacing="-0.01em" wordBreak="break-word">
@@ -99,6 +107,20 @@ export function ProfilePage() {
   })
 
   const user = meQuery.data ?? storeUser
+  const studentId = user?.studentId ?? null
+  const isStudent = user?.role === 'STUDENT'
+
+  const studentRecord = useQuery({
+    queryKey: ['students', studentId],
+    queryFn: () => getStudent(studentId!),
+    enabled: isStudent && studentId != null,
+  })
+
+  const academicCourses = useQuery({
+    queryKey: ['students', studentId, 'courses', { activeOnly: false }],
+    queryFn: () => listStudentCourses(studentId!, { activeOnly: false }),
+    enabled: isStudent && studentId != null,
+  })
 
   return (
     <>
@@ -148,6 +170,61 @@ export function ProfilePage() {
                 ) : null}
               </SimpleGrid>
             </Surface>
+
+            {isStudent && studentId != null ? (
+              <Surface p={{ base: 6, md: 8 }}>
+                <Text fontFamily="heading" fontWeight="600" fontSize="lg" mb={2} letterSpacing="-0.02em">
+                  Academic summary
+                </Text>
+                <Text fontSize="sm" color="app-muted" mb={4}>
+                  GPA:{' '}
+                  {studentRecord.data?.gpa != null
+                    ? Number(studentRecord.data.gpa).toFixed(2)
+                    : '—'}{' '}
+                  (stored, display only)
+                </Text>
+                {academicCourses.isLoading ? <LoadingState label="Loading courses…" /> : null}
+                {academicCourses.isError ? (
+                  <ErrorState
+                    message={getErrorMessage(academicCourses.error)}
+                    onRetry={() => academicCourses.refetch()}
+                  />
+                ) : null}
+                {academicCourses.data && academicCourses.data.content.length > 0 ? (
+                  <Table variant="simple" size="sm">
+                    <caption style={{ captionSide: 'top', paddingBottom: '0.5rem', textAlign: 'left' }}>
+                      Your courses
+                    </caption>
+                    <Thead>
+                      <Tr>
+                        <Th scope="col">Course</Th>
+                        <Th scope="col">Status</Th>
+                        <Th scope="col">Grade</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
+                      {academicCourses.data.content.slice(0, 8).map((row) => (
+                        <Tr key={row.id}>
+                          <Td>
+                            <Text as="span" fontWeight="bold" color="brand.700">
+                              {row.courseCode}
+                            </Text>
+                          </Td>
+                          <Td>
+                            <EnrollmentStatusBadge status={row.status} />
+                          </Td>
+                          <Td>{row.grade ?? '—'}</Td>
+                        </Tr>
+                      ))}
+                    </Tbody>
+                  </Table>
+                ) : academicCourses.data ? (
+                  <Text fontSize="sm" color="app-muted">
+                    No course history yet.
+                  </Text>
+                ) : null}
+              </Surface>
+            ) : null}
 
             <Surface p={{ base: 6, md: 8 }} as="form" onSubmit={handleSubmit((values) => saveMutation.mutate({
               firstName: values.firstName,

@@ -67,10 +67,10 @@ export function LoginPage() {
         <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="0.12em" color="brand.600">
           Welcome back
         </Text>
-        <Text as="h2" fontFamily="heading" fontSize="2.2rem" fontWeight="700" letterSpacing="-0.03em">
+        <Text as="h2" fontFamily="heading" fontSize="2.2rem" fontWeight="700" letterSpacing="-0.03em" color="app-text">
           Sign in
         </Text>
-        <Text color="gray.500">Use your CampusFlow account to continue.</Text>
+        <Text color="app-muted">Use your CampusFlow account to continue.</Text>
       </Stack>
       {submitError ? (
         <Alert status="error" borderRadius="md">
@@ -105,14 +105,14 @@ export function LoginPage() {
           </Button>
         </FormStack>
       </form>
-      <Text fontSize="sm" color="gray.600" textAlign="center">
+      <Text fontSize="sm" color="app-muted" textAlign="center">
         Need an account?{' '}
         <Link as={RouterLink} to="/register" color="brand.600" fontWeight="semibold">
           Register
         </Link>
       </Text>
-      <Text fontSize="sm" color="gray.500" textAlign="center">
-        <Link as={RouterLink} to="/" color="gray.600" fontWeight="medium">
+      <Text fontSize="sm" color="app-muted" textAlign="center">
+        <Link as={RouterLink} to="/" color="app-muted" fontWeight="medium">
           ← Back to CampusFlow
         </Link>
       </Text>

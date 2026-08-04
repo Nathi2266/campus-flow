@@ -1,2 +1,2 @@
-/app/src/test/java/com/campusflow/service/StudentServiceTest.java
-/app/src/test/java/com/campusflow/CampusFlowApplicationTests.java
+/build/src/test/java/com/campusflow/CampusFlowApplicationTests.java
+/build/src/test/java/com/campusflow/service/StudentServiceTest.java

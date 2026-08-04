@@ -1,5 +1,7 @@
 import {
   Button,
+  FormControl,
+  FormLabel,
   HStack,
   IconButton,
   Modal,
@@ -9,6 +11,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Select,
   Table,
   Tbody,
   Td,
@@ -24,7 +27,7 @@ import { useState } from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FiEdit2, FiPlus, FiPower, FiTrash2 } from 'react-icons/fi'
+import { FiEdit2, FiPlus, FiPower, FiTrash2, FiUsers } from 'react-icons/fi'
 import {
   activateCourse,
   createCourse,
@@ -36,7 +39,8 @@ import {
   updateCourse,
 } from '@/api/resources'
 import { getErrorMessage } from '@/api/client'
-import { ActiveBadge } from '@/components/StatusBadge'
+import { ActiveBadge, CapacityBadge } from '@/components/StatusBadge'
+import { CourseRosterDrawer } from '@/components/CourseRosterDrawer'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '@/components/feedback'
 import { FormStack, SelectField, TextAreaField, TextField } from '@/components/FormFields'
 import { DataTableShell } from '@/components/DataTableShell'
@@ -71,6 +75,7 @@ const editSchema = z.object({
 
 type CreateValues = z.infer<typeof createSchema>
 type EditValues = z.infer<typeof editSchema>
+type ActiveFilter = 'all' | 'active' | 'inactive'
 
 export function CoursesPage() {
   const toast = useToast()
@@ -79,18 +84,36 @@ export function CoursesPage() {
   const isAdmin = useAuthStore((s) => s.hasRole('ADMIN'))
   const isLecturer = useAuthStore((s) => s.hasRole('LECTURER'))
   const isStudent = useAuthStore((s) => s.hasRole('STUDENT'))
+  const canViewRoster = isAdmin || isLecturer
   const createModal = useDisclosure()
   const editModal = useDisclosure()
+  const rosterDrawer = useDisclosure()
   const [editing, setEditing] = useState<Course | null>(null)
+  const [rosterCourse, setRosterCourse] = useState<Course | null>(null)
   const [page, setPage] = useState(0)
+  const [departmentId, setDepartmentId] = useState<string>('')
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all')
+
+  const activeParam =
+    isStudent ? true : activeFilter === 'all' ? undefined : activeFilter === 'active'
 
   const query = useQuery({
-    queryKey: ['courses', isStudent ? 'active' : 'all', page],
+    queryKey: [
+      'courses',
+      {
+        page,
+        student: isStudent,
+        departmentId: isAdmin ? departmentId || null : null,
+        active: isStudent ? true : activeFilter,
+      },
+    ],
     queryFn: () =>
       listCourses({
         page,
         size: PAGE_SIZE,
         ...(isStudent ? { active: true } : {}),
+        ...(isAdmin && departmentId ? { departmentId: Number(departmentId) } : {}),
+        ...(isAdmin && activeParam !== undefined ? { active: activeParam } : {}),
       }),
   })
 
@@ -159,11 +182,16 @@ export function CoursesPage() {
     editModal.onOpen()
   }
 
+  function openRoster(course: Course) {
+    setRosterCourse(course)
+    rosterDrawer.onOpen()
+  }
+
   const description = isStudent
     ? 'Browse the active course catalogue.'
     : isLecturer
-      ? 'View your courses and update metadata on courses assigned to you.'
-      : 'Manage course catalogue, capacity, and activation.'
+      ? 'View your courses, open rosters, and update metadata on courses assigned to you.'
+      : 'Manage course catalogue, capacity, activation, and rosters.'
 
   return (
     <>
@@ -180,28 +208,60 @@ export function CoursesPage() {
         }
       />
 
-      {query.isLoading ? <LoadingState /> : null}
-      {query.isError ? (
-        <ErrorState message={getErrorMessage(query.error)} onRetry={() => query.refetch()} />
-      ) : null}
-      {query.data && !query.data.content.length ? (
-        <EmptyState
-          title="No courses"
-          description={
-            isStudent
-              ? 'No active courses are available yet.'
-              : 'Create a course to begin enrollments.'
-          }
-        />
-      ) : null}
-      {query.data && query.data.content.length > 0 ? (
-        <DataTableShell
-          toolbar={
-            <Text fontSize="sm" color="gray.500">
-              {query.data.totalElements} course{query.data.totalElements === 1 ? '' : 's'}
+      <DataTableShell
+        toolbar={
+          <HStack justify="space-between" flexWrap="wrap" gap={3}>
+            <Text fontSize="sm" color="app-muted">
+              {query.data?.totalElements ?? 0} course
+              {(query.data?.totalElements ?? 0) === 1 ? '' : 's'}
             </Text>
-          }
-          footer={
+            {isAdmin ? (
+              <HStack flexWrap="wrap" gap={3}>
+                <FormControl maxW="220px">
+                  <FormLabel htmlFor="course-department-filter" mb={1} fontSize="sm">
+                    Department
+                  </FormLabel>
+                  <Select
+                    id="course-department-filter"
+                    size="sm"
+                    value={departmentId}
+                    onChange={(e) => {
+                      setDepartmentId(e.target.value)
+                      setPage(0)
+                    }}
+                  >
+                    <option value="">All departments</option>
+                    {(departments.data ?? []).map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl maxW="180px">
+                  <FormLabel htmlFor="course-active-filter" mb={1} fontSize="sm">
+                    Status
+                  </FormLabel>
+                  <Select
+                    id="course-active-filter"
+                    size="sm"
+                    value={activeFilter}
+                    onChange={(e) => {
+                      setActiveFilter(e.target.value as ActiveFilter)
+                      setPage(0)
+                    }}
+                  >
+                    <option value="all">All</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </Select>
+                </FormControl>
+              </HStack>
+            ) : null}
+          </HStack>
+        }
+        footer={
+          query.data && query.data.content.length > 0 ? (
             <PaginationControls
               page={page}
               totalPages={query.data.totalPages ?? 0}
@@ -209,8 +269,26 @@ export function CoursesPage() {
               onPageChange={setPage}
               isLoading={query.isFetching}
             />
-          }
-        >
+          ) : undefined
+        }
+      >
+        {query.isLoading ? <LoadingState /> : null}
+        {query.isError ? (
+          <ErrorState message={getErrorMessage(query.error)} onRetry={() => query.refetch()} />
+        ) : null}
+        {query.data && !query.data.content.length ? (
+          <EmptyState
+            title="No courses"
+            description={
+              isStudent
+                ? 'No active courses are available yet.'
+                : departmentId || activeFilter !== 'all'
+                  ? 'No courses match the selected filters.'
+                  : 'Create a course to begin enrollments.'
+            }
+          />
+        ) : null}
+        {query.data && query.data.content.length > 0 ? (
           <Table variant="simple">
             <caption style={{ captionSide: 'top', padding: '0.75rem 1rem', textAlign: 'left' }}>
               Course catalogue
@@ -235,7 +313,12 @@ export function CoursesPage() {
                   <Td fontWeight="medium">{course.name}</Td>
                   <Td>{course.credits}</Td>
                   <Td>
-                    {course.enrolledCount ?? 0}/{course.maxCapacity}
+                    <HStack spacing={2}>
+                      <Text as="span">
+                        {course.enrolledCount ?? 0}/{course.maxCapacity}
+                      </Text>
+                      <CapacityBadge enrolled={course.enrolledCount} max={course.maxCapacity} />
+                    </HStack>
                   </Td>
                   <Td>{course.departmentName ?? course.departmentId}</Td>
                   <Td>
@@ -244,6 +327,15 @@ export function CoursesPage() {
                   {!isStudent ? (
                     <Td>
                       <HStack>
+                        {canViewRoster ? (
+                          <IconButton
+                            aria-label={`View roster for ${course.code}`}
+                            icon={<FiUsers />}
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openRoster(course)}
+                          />
+                        ) : null}
                         {canEditCourse(course) ? (
                           <IconButton
                             aria-label={`Edit ${course.code}`}
@@ -295,8 +387,17 @@ export function CoursesPage() {
               ))}
             </Tbody>
           </Table>
-        </DataTableShell>
-      ) : null}
+        ) : null}
+      </DataTableShell>
+
+      <CourseRosterDrawer
+        course={rosterCourse}
+        isOpen={rosterDrawer.isOpen}
+        onClose={() => {
+          rosterDrawer.onClose()
+          setRosterCourse(null)
+        }}
+      />
 
       <Modal isOpen={createModal.isOpen} onClose={createModal.onClose} size="lg" isCentered>
         <ModalOverlay backdropFilter="blur(4px)" />

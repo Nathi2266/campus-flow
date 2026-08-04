@@ -1,5 +1,7 @@
 import {
   Button,
+  FormControl,
+  FormLabel,
   HStack,
   IconButton,
   Modal,
@@ -9,6 +11,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Select,
   Table,
   Tbody,
   Td,
@@ -33,7 +36,7 @@ import {
   listStudents,
   updateEnrollmentGrade,
 } from '@/api/resources'
-import { getErrorMessage } from '@/api/client'
+import { getErrorMessage, isCourseFullError } from '@/api/client'
 import { EnrollmentStatusBadge } from '@/components/StatusBadge'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '@/components/feedback'
 import { FormStack, SelectField, TextField } from '@/components/FormFields'
@@ -61,6 +64,7 @@ const gradeSchema = z.object({
 type StaffValues = z.infer<typeof staffSchema>
 type StudentValues = z.infer<typeof studentSchema>
 type GradeValues = z.infer<typeof gradeSchema>
+type StatusFilter = 'ALL' | EnrollmentStatus
 
 export function EnrollmentsPage() {
   const toast = useToast()
@@ -72,10 +76,25 @@ export function EnrollmentsPage() {
   const gradeModal = useDisclosure()
   const [grading, setGrading] = useState<Enrollment | null>(null)
   const [page, setPage] = useState(0)
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
+  const [courseFilter, setCourseFilter] = useState('')
 
   const query = useQuery({
-    queryKey: ['enrollments', page],
-    queryFn: () => listEnrollments({ page, size: PAGE_SIZE }),
+    queryKey: [
+      'enrollments',
+      {
+        page,
+        status: statusFilter,
+        courseId: canManage ? courseFilter || null : null,
+      },
+    ],
+    queryFn: () =>
+      listEnrollments({
+        page,
+        size: PAGE_SIZE,
+        ...(statusFilter !== 'ALL' ? { status: statusFilter } : {}),
+        ...(canManage && courseFilter ? { courseId: Number(courseFilter) } : {}),
+      }),
   })
 
   const students = useQuery({
@@ -87,7 +106,7 @@ export function EnrollmentsPage() {
   const courses = useQuery({
     queryKey: ['courses', 'enroll-picker', isStudent],
     queryFn: () => listCourses({ page: 0, size: 100, ...(isStudent ? { active: true } : {}) }),
-    enabled: enrollModal.isOpen,
+    enabled: enrollModal.isOpen || canManage,
   })
 
   const staffForm = useForm<StaffValues>({
@@ -104,6 +123,7 @@ export function EnrollmentsPage() {
 
   const invalidate = async () => {
     await queryClient.invalidateQueries({ queryKey: ['enrollments'] })
+    await queryClient.invalidateQueries({ queryKey: ['courses'] })
   }
 
   const createMutation = useMutation({
@@ -115,7 +135,19 @@ export function EnrollmentsPage() {
       studentForm.reset()
       enrollModal.onClose()
     },
-    onError: (error) => toast({ title: getErrorMessage(error), status: 'error' }),
+    onError: (error) => {
+      if (isCourseFullError(error)) {
+        toast({
+          title: 'Course is full',
+          description: 'This course has reached maximum capacity. Choose another course or wait for a drop.',
+          status: 'error',
+          duration: 6000,
+          isClosable: true,
+        })
+        return
+      }
+      toast({ title: getErrorMessage(error), status: 'error' })
+    },
   })
 
   const gradeMutation = useMutation({
@@ -156,32 +188,56 @@ export function EnrollmentsPage() {
         }
       />
 
-      {query.isLoading ? <LoadingState /> : null}
-      {query.isError ? (
-        <ErrorState
-          title="Could not load enrollments"
-          message={getErrorMessage(query.error)}
-          onRetry={() => query.refetch()}
-        />
-      ) : null}
-      {query.data && !query.data.content?.length ? (
-        <EmptyState
-          title="No enrollments"
-          description={
-            isStudent
-              ? 'Browse the course catalogue and self-enroll to get started.'
-              : 'Create an enrollment to see it here.'
-          }
-          action={
-            <Button leftIcon={<FiPlus />} onClick={enrollModal.onOpen}>
-              {isStudent ? 'Self-enroll' : 'New enrollment'}
-            </Button>
-          }
-        />
-      ) : null}
-      {query.data?.content?.length ? (
-        <DataTableShell
-          footer={
+      <DataTableShell
+        toolbar={
+          <HStack justify="flex-end" flexWrap="wrap" gap={3} w="full">
+            <FormControl maxW="180px">
+              <FormLabel htmlFor="enrollment-status-filter" mb={1} fontSize="sm">
+                Status
+              </FormLabel>
+              <Select
+                id="enrollment-status-filter"
+                size="sm"
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as StatusFilter)
+                  setPage(0)
+                }}
+              >
+                <option value="ALL">All</option>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="COMPLETED">COMPLETED</option>
+                <option value="DROPPED">DROPPED</option>
+                <option value="FAILED">FAILED</option>
+              </Select>
+            </FormControl>
+            {canManage ? (
+              <FormControl maxW="260px">
+                <FormLabel htmlFor="enrollment-course-filter" mb={1} fontSize="sm">
+                  Course
+                </FormLabel>
+                <Select
+                  id="enrollment-course-filter"
+                  size="sm"
+                  value={courseFilter}
+                  onChange={(e) => {
+                    setCourseFilter(e.target.value)
+                    setPage(0)
+                  }}
+                >
+                  <option value="">All courses</option>
+                  {(courses.data?.content ?? []).map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.code} — {course.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+            ) : null}
+          </HStack>
+        }
+        footer={
+          query.data && query.data.content.length > 0 ? (
             <PaginationControls
               page={page}
               totalPages={query.data.totalPages ?? 0}
@@ -189,8 +245,37 @@ export function EnrollmentsPage() {
               onPageChange={setPage}
               isLoading={query.isFetching}
             />
-          }
-        >
+          ) : undefined
+        }
+      >
+        {query.isLoading ? <LoadingState /> : null}
+        {query.isError ? (
+          <ErrorState
+            title="Could not load enrollments"
+            message={getErrorMessage(query.error)}
+            onRetry={() => query.refetch()}
+          />
+        ) : null}
+        {query.data && !query.data.content?.length ? (
+          <EmptyState
+            title={statusFilter !== 'ALL' || courseFilter ? 'No matching enrollments' : 'No enrollments'}
+            description={
+              statusFilter !== 'ALL' || courseFilter
+                ? 'Try clearing status or course filters.'
+                : isStudent
+                  ? 'Browse the course catalogue and self-enroll to get started.'
+                  : 'Create an enrollment to see it here.'
+            }
+            action={
+              statusFilter === 'ALL' && !courseFilter ? (
+                <Button leftIcon={<FiPlus />} onClick={enrollModal.onOpen}>
+                  {isStudent ? 'Self-enroll' : 'New enrollment'}
+                </Button>
+              ) : undefined
+            }
+          />
+        ) : null}
+        {query.data?.content?.length ? (
           <Table variant="simple">
             <caption style={{ captionSide: 'top', padding: '0.75rem 1rem', textAlign: 'left' }}>
               Enrollment records
@@ -212,7 +297,7 @@ export function EnrollmentsPage() {
                     <Text as="span" fontWeight="bold" color="brand.700">
                       {row.courseCode}
                     </Text>
-                    <Text as="span" color="gray.500">
+                    <Text as="span" color="app-muted">
                       {' '}
                       — {row.courseName}
                     </Text>
@@ -254,8 +339,8 @@ export function EnrollmentsPage() {
               ))}
             </Tbody>
           </Table>
-        </DataTableShell>
-      ) : null}
+        ) : null}
+      </DataTableShell>
 
       <Modal isOpen={enrollModal.isOpen} onClose={enrollModal.onClose} isCentered>
         <ModalOverlay backdropFilter="blur(4px)" />

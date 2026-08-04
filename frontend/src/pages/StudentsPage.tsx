@@ -7,6 +7,8 @@ import {
   AlertDialogOverlay,
   Button,
   Code,
+  FormControl,
+  FormLabel,
   HStack,
   IconButton,
   Input,
@@ -19,6 +21,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Select,
   Table,
   Tbody,
   Td,
@@ -34,7 +37,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FiEdit2, FiPlus, FiSearch, FiTrash2 } from 'react-icons/fi'
+import { FiEdit2, FiEye, FiPlus, FiSearch, FiTrash2 } from 'react-icons/fi'
 import {
   createStudent,
   deleteStudent,
@@ -45,6 +48,7 @@ import {
 } from '@/api/resources'
 import { getErrorMessage } from '@/api/client'
 import { AcademicStatusBadge } from '@/components/StatusBadge'
+import { StudentAcademicDrawer } from '@/components/StudentAcademicDrawer'
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '@/components/feedback'
 import { FormStack, SelectField, TextField } from '@/components/FormFields'
 import { DataTableShell } from '@/components/DataTableShell'
@@ -78,13 +82,16 @@ export function StudentsPage() {
   const isAdmin = useAuthStore((s) => s.hasRole('ADMIN'))
   const createModal = useDisclosure()
   const editModal = useDisclosure()
+  const recordDrawer = useDisclosure()
   const tempPasswordModal = useDisclosure()
   const tempPasswordFocusRef = useRef<HTMLButtonElement>(null)
   const [editing, setEditing] = useState<Student | null>(null)
+  const [viewing, setViewing] = useState<Student | null>(null)
   const [tempPassword, setTempPassword] = useState<string | null>(null)
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [departmentId, setDepartmentId] = useState('')
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -100,12 +107,14 @@ export function StudentsPage() {
     enabled: isAdmin,
   })
 
+  const deptParam = isAdmin && departmentId ? { departmentId: Number(departmentId) } : {}
+
   const query = useQuery({
-    queryKey: ['students', debouncedSearch, page],
+    queryKey: ['students', debouncedSearch, page, isAdmin ? departmentId || null : null],
     queryFn: () =>
       debouncedSearch
-        ? searchStudents(debouncedSearch, { page, size: PAGE_SIZE })
-        : listStudents({ page, size: PAGE_SIZE }),
+        ? searchStudents(debouncedSearch, { page, size: PAGE_SIZE, ...deptParam })
+        : listStudents({ page, size: PAGE_SIZE, ...deptParam }),
   })
 
   const createForm = useForm<CreateValues>({
@@ -168,6 +177,11 @@ export function StudentsPage() {
     editModal.onOpen()
   }
 
+  function openRecord(student: Student) {
+    setViewing(student)
+    recordDrawer.onOpen()
+  }
+
   return (
     <>
       <PageHeader
@@ -190,21 +204,46 @@ export function StudentsPage() {
       <DataTableShell
         toolbar={
           <HStack justify="space-between" flexWrap="wrap" gap={3}>
-            <Text fontSize="sm" color="gray.500">
+            <Text fontSize="sm" color="app-muted">
               {query.data?.totalElements ?? 0} student
               {(query.data?.totalElements ?? 0) === 1 ? '' : 's'}
             </Text>
-            <InputGroup maxW="320px">
-              <InputLeftElement pointerEvents="none">
-                <FiSearch aria-hidden />
-              </InputLeftElement>
-              <Input
-                aria-label="Search students"
-                placeholder="Search by name or number"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </InputGroup>
+            <HStack flexWrap="wrap" gap={3}>
+              {isAdmin ? (
+                <FormControl maxW="220px">
+                  <FormLabel htmlFor="student-department-filter" mb={1} fontSize="sm">
+                    Department
+                  </FormLabel>
+                  <Select
+                    id="student-department-filter"
+                    size="sm"
+                    value={departmentId}
+                    onChange={(e) => {
+                      setDepartmentId(e.target.value)
+                      setPage(0)
+                    }}
+                  >
+                    <option value="">All departments</option>
+                    {(departments.data ?? []).map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+              ) : null}
+              <InputGroup maxW="320px" alignSelf="flex-end">
+                <InputLeftElement pointerEvents="none">
+                  <FiSearch aria-hidden />
+                </InputLeftElement>
+                <Input
+                  aria-label="Search students"
+                  placeholder="Search by name or number"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </InputGroup>
+            </HStack>
           </HStack>
         }
         footer={
@@ -254,7 +293,7 @@ export function StudentsPage() {
                 <Th scope="col">Email</Th>
                 <Th scope="col">Status</Th>
                 <Th scope="col">Department</Th>
-                {isAdmin ? <Th scope="col">Actions</Th> : null}
+                <Th scope="col">Actions</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -266,38 +305,56 @@ export function StudentsPage() {
                   <Td fontWeight="semibold">
                     {student.firstName} {student.lastName}
                   </Td>
-                  <Td color="gray.600">{student.email}</Td>
+                  <Td color="app-muted">{student.email}</Td>
                   <Td>
                     <AcademicStatusBadge status={student.academicStatus} />
                   </Td>
                   <Td>{student.departmentName ?? student.departmentId}</Td>
-                  {isAdmin ? (
-                    <Td>
-                      <HStack>
-                        <IconButton
-                          aria-label={`Edit ${student.firstName} ${student.lastName}`}
-                          icon={<FiEdit2 />}
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => openEdit(student)}
-                        />
-                        <IconButton
-                          aria-label={`Delete ${student.firstName} ${student.lastName}`}
-                          icon={<FiTrash2 />}
-                          size="sm"
-                          variant="ghost"
-                          colorScheme="red"
-                          onClick={() => deleteMutation.mutate(student.id)}
-                        />
-                      </HStack>
-                    </Td>
-                  ) : null}
+                  <Td>
+                    <HStack>
+                      <IconButton
+                        aria-label={`View record for ${student.firstName} ${student.lastName}`}
+                        icon={<FiEye />}
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openRecord(student)}
+                      />
+                      {isAdmin ? (
+                        <>
+                          <IconButton
+                            aria-label={`Edit ${student.firstName} ${student.lastName}`}
+                            icon={<FiEdit2 />}
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openEdit(student)}
+                          />
+                          <IconButton
+                            aria-label={`Delete ${student.firstName} ${student.lastName}`}
+                            icon={<FiTrash2 />}
+                            size="sm"
+                            variant="ghost"
+                            colorScheme="red"
+                            onClick={() => deleteMutation.mutate(student.id)}
+                          />
+                        </>
+                      ) : null}
+                    </HStack>
+                  </Td>
                 </Tr>
               ))}
             </Tbody>
           </Table>
         ) : null}
       </DataTableShell>
+
+      <StudentAcademicDrawer
+        student={viewing}
+        isOpen={recordDrawer.isOpen}
+        onClose={() => {
+          recordDrawer.onClose()
+          setViewing(null)
+        }}
+      />
 
       <Modal isOpen={createModal.isOpen} onClose={createModal.onClose} size="lg" isCentered>
         <ModalOverlay backdropFilter="blur(4px)" />

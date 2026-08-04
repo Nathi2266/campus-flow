@@ -20,8 +20,8 @@ import java.util.Set;
 })
 @Getter
 <span class="pc" id="L22">@Setter</span>
-<span class="pc" id="L23">@Builder</span>
-<span class="nc" id="L24">@NoArgsConstructor</span>
+<span class="pc bpc" id="L23" title="1 of 2 branches missed.">@Builder</span>
+<span class="fc" id="L24">@NoArgsConstructor</span>
 <span class="fc" id="L25">@AllArgsConstructor</span>
 public class User extends AuditBase {
 
@@ -52,12 +52,17 @@ public class User extends AuditBase {
     @Column(name = &quot;phone&quot;, length = 20)
 <span class="fc" id="L53">    private String phoneNumber;</span>
 
+    /** UI color mode preference: light or dark. */
+    @Column(name = &quot;preferred_theme&quot;, nullable = false, length = 10)
+    @Builder.Default
+<span class="nc" id="L58">    private String preferredTheme = &quot;light&quot;;</span>
+
     // One-to-one relationship with Student
     @OneToOne(mappedBy = &quot;user&quot;, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-<span class="nc" id="L57">    private Student student;</span>
+<span class="nc" id="L62">    private Student student;</span>
 
     // One-to-many relationship with courses (as lecturer)
-<span class="pc" id="L60">    @OneToMany(mappedBy = &quot;lecturer&quot;, fetch = FetchType.LAZY)</span>
-<span class="nc" id="L61">    private Set&lt;Course&gt; coursesAsLecturer = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L65">    @OneToMany(mappedBy = &quot;lecturer&quot;, fetch = FetchType.LAZY)</span>
+<span class="nc" id="L66">    private Set&lt;Course&gt; coursesAsLecturer = new HashSet&lt;&gt;();</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

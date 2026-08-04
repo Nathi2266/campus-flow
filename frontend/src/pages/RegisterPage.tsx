@@ -77,7 +77,7 @@ export function RegisterPage() {
         <Text as="h2" fontFamily="heading" fontSize="2.2rem" fontWeight="700" letterSpacing="-0.03em">
           Create student account
         </Text>
-        <Text color="gray.500">
+        <Text color="app-muted">
           Public registration creates a student account. Staff accounts are provisioned by an administrator.
         </Text>
       </Stack>
@@ -105,14 +105,14 @@ export function RegisterPage() {
           </Button>
         </FormStack>
       </form>
-      <Text fontSize="sm" color="gray.600" textAlign="center">
+      <Text fontSize="sm" color="app-muted" textAlign="center">
         Already registered?{' '}
         <Link as={RouterLink} to="/login" color="brand.600" fontWeight="semibold">
           Sign in
         </Link>
       </Text>
-      <Text fontSize="sm" color="gray.500" textAlign="center">
-        <Link as={RouterLink} to="/" color="gray.600" fontWeight="medium">
+      <Text fontSize="sm" color="app-muted" textAlign="center">
+        <Link as={RouterLink} to="/" color="app-muted" fontWeight="medium">
           ← Back to CampusFlow
         </Link>
       </Text>

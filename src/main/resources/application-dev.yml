@@ -2,9 +2,11 @@
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/campusflow_dev
-    username: campusflow
-    password: campusflow123
+    # Local default matches docker compose host port mapping (5433→5432) and DB name.
+    # Override with SPRING_DATASOURCE_URL if your Postgres differs.
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/campusflow}
+    username: ${SPRING_DATASOURCE_USERNAME:campusflow}
+    password: ${SPRING_DATASOURCE_PASSWORD:campusflow123}
 
   jpa:
     show-sql: true

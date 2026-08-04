@@ -52,6 +52,16 @@ public class User extends AuditBase {
     @Column(name = "phone", length = 20)
     private String phoneNumber;
 
+    /** UI color mode preference: light or dark. */
+    @Column(name = "preferred_theme", nullable = false, length = 10)
+    @Builder.Default
+    private String preferredTheme = "light";
+
+    /** Soft account status — inactive users cannot authenticate. */
+    @Column(name = "active", nullable = false)
+    @Builder.Default
+    private Boolean active = true;
+
     // One-to-one relationship with Student
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Student student;

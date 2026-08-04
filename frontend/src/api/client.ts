@@ -89,3 +89,15 @@ export function getErrorMessage(error: unknown, fallback = 'Something went wrong
   if (error instanceof Error) return error.message
   return fallback
 }
+
+export function isCourseFullError(error: unknown): boolean {
+  if (axios.isAxiosError<ApiErrorBody>(error)) {
+    const code = error.response?.data?.errorCode
+    const message = (error.response?.data?.message || error.message || '').toLowerCase()
+    return code === 'COURSE_FULL' || message.includes('full')
+  }
+  if (error instanceof Error) {
+    return error.message.toLowerCase().includes('full')
+  }
+  return false
+}

@@ -51,7 +51,7 @@ export function AuditPage() {
       {query.data && query.data.content.length > 0 ? (
         <DataTableShell
           toolbar={
-            <Text fontSize="sm" color="gray.500">
+            <Text fontSize="sm" color="app-muted">
               {query.data.totalElements} entr{query.data.totalElements === 1 ? 'y' : 'ies'}
             </Text>
           }
@@ -91,7 +91,7 @@ export function AuditPage() {
                     {row.entityType ?? '—'}
                     {row.entityId != null ? ` #${row.entityId}` : ''}
                   </Td>
-                  <Td maxW="280px" fontSize="sm" color="gray.600" title={formatDetails(row.details)}>
+                  <Td maxW="280px" fontSize="sm" color="app-muted" title={formatDetails(row.details)}>
                     <Text noOfLines={2}>{formatDetails(row.details)}</Text>
                   </Td>
                   <Td fontFamily="mono" fontSize="sm">
