@@ -2,11 +2,15 @@
 
 | Layer | Choices |
 |-------|---------|
-| Frontend | React 18, Vite 6, React Router 6, TanStack Query, Tailwind CSS, shadcn/Radix UI, Recharts, Zod, Framer Motion |
-| Backend | Express 5, JWT (`jsonwebtoken`), bcryptjs, Zod |
-| Database | PostgreSQL via Prisma 6 |
-| Client API | Local REST behind Base44-shaped facade (`src/api/base44Client.js`) |
-| Cloud automation | Base44 Deno functions for Teams / Outlook / email reminders |
-| Tooling | ESLint, `tsc` via jsconfig, concurrently for `npm run dev` |
+| Frontend | React 19, Vite, React Router, TanStack Query, Chakra UI, Zod, Zustand |
+| Backend | Java 21, Spring Boot 3.2, Spring Security, Spring Data JPA, MapStruct |
+| Auth | JWT (access + refresh rotation), BCrypt(12), method security (`@PreAuthorize`) |
+| Database | PostgreSQL 15, Flyway migrations |
+| API docs | springdoc OpenAPI (enabled in `dev` profile only) |
+| Frontend tooling | TypeScript, oxlint, Vitest, Playwright |
+| Backend tooling | Maven 3.9, JUnit 5, Mockito, JaCoCo, Testcontainers (available) |
+| Ops | Docker multi-stage + Compose (`docker/`); GitHub Actions CI |
 
-Ports: Vite **5173**, API **3001**.
+Ports (local Compose): UI **5173**, API host **8090** → container **8080**, Postgres host **5433** → **5432**.
+
+Canonical product specs: `.kiro/specs/campusflow-*.md`, `backend-java.md`, `database-schema.md`, `security-implementation.md`.

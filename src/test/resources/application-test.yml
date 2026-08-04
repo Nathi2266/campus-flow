@@ -9,10 +9,12 @@ spring:
 
   jpa:
     show-sql: false
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
         format_sql: false
 
   h2:
@@ -24,6 +26,7 @@ spring:
 
 jwt:
   secret: campusflow-test-secret-key-min-32-bytes!!
+  allow-insecure-default: false
 
 cors:
   allowed-origin-patterns: http://localhost:*

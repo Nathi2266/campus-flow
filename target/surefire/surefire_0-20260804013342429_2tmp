@@ -1,6 +1,0 @@
-#surefire_0
-#Tue Aug 04 01:33:42 UTC 2026
-basedir=/build
-localRepository=/root/.m2/repository
-skipITs=true
-test=AdminApiSecurityTest,StudentServiceTest,CampusFlowApplicationTests

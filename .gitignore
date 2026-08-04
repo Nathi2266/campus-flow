@@ -1,0 +1,67 @@
+# Maven / Java
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+*.iml
+
+# IDE / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Env & secrets (keep examples)
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.p12
+*.jks
+*.keystore
+credentials*.json
+**/application-local.yml
+**/application-local.properties
+
+# Logs / local runtime
+*.log
+logs/
+
+# Coverage / test dumps
+**/jacoco.exec
+**/surefire-reports/
+coverage/
+.nyc_output/
+
+# Frontend (reinforce frontend/.gitignore)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/playwright/.cache/
+frontend/e2e-artifacts/*.webm
+frontend/coverage/
+frontend/*.tsbuildinfo
+
+# Docker local overrides
+docker/.env
+
+# Misc
+*.tmp
+*.bak
+.cache/
+
+creds

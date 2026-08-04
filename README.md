@@ -122,15 +122,21 @@ UI: http://localhost:5173 (proxies `/api` to Spring Boot — default `http://loc
 | SERVER_PORT | 8080 | Application port |
 | SPRING_DATASOURCE_URL | jdbc:postgresql://localhost:5432/campusflow | Database URL |
 | SPRING_DATASOURCE_USERNAME | campusflow | Database username |
-| SPRING_DATASOURCE_PASSWORD | campusflow123 | Database password |
+| SPRING_DATASOURCE_PASSWORD | (dev profile only) | Database password — required in prod |
+| JWT_SECRET | (dev profile only) | JWT signing secret (≥32 chars) — required in prod |
+| CORS_ALLOWED_ORIGIN_PATTERNS | localhost patterns | Comma-separated origin patterns |
 | SPRING_JPA_HIBERNATE_DDL_AUTO | validate | Hibernate DDL mode |
+
+Dev defaults live in `application-dev.yml` / Compose only. Production (`SPRING_PROFILES_ACTIVE=prod`) fails closed without `JWT_SECRET` and datasource credentials.
 
 ## API Documentation
 
-Once the application is running, access the interactive API documentation at:
+With the **dev** profile (Compose default), interactive docs are at:
 
-- **Swagger UI:** `http://localhost:8080/swagger-ui.html`
-- **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
+- **Swagger UI:** `http://localhost:8090/swagger-ui.html` (Compose) or `:8080` (local Maven)
+- **OpenAPI JSON:** `http://localhost:8090/v3/api-docs`
+
+Swagger is disabled under the **prod** profile.
 
 ## Project Structure
 
@@ -149,9 +155,8 @@ campusflow/
 │   │   │   │   └── mapper/      # MapStruct mappers
 │   │   │   ├── repository/      # JPA Repositories
 │   │   │   ├── service/         # Business logic
-│   │   │   ├── web/             # REST Controllers
-│   │   │   │   ├── api/         # API controllers
-│   │   │   │   └── exception/   # Exception handlers
+│   │   │   ├── exception/       # Global exception handler
+│   │   │   ├── web/api/         # REST Controllers
 │   │   │   └── security/        # Security classes
 │   │   └── resources/
 │   │       ├── application.yml  # Main configuration
@@ -160,11 +165,13 @@ campusflow/
 │   │       └── db/migration/    # Flyway migrations
 │   └── test/
 │       └── java/com/campusflow/
-│           └── service/         # Service tests
+├── frontend/                # React + Vite UI + Playwright e2e
 ├── docker/
 │   ├── Dockerfile
 │   ├── docker-compose.yml
+│   ├── .env.example
 │   └── healthcheck.sh
+├── .github/workflows/ci.yml
 └── pom.xml
 ```
 
@@ -209,10 +216,14 @@ docker run -d -p 8080:8080 \
   -e SPRING_PROFILES_ACTIVE=prod \
   -e SPRING_DATASOURCE_URL=your-production-db-url \
   -e SPRING_DATASOURCE_USERNAME=your-username \
-  -e SPRING_DATASOURCE_PASSWORD=your-password \
+  -e SPRING_DATASOURCE_PASSWORD=your-strong-password \
+  -e JWT_SECRET=your-random-secret-at-least-32-chars \
+  -e CORS_ALLOWED_ORIGIN_PATTERNS=https://app.example.com \
   --name campusflow \
   campusflow:latest
 ```
+
+See `.kiro/specs/devops-deployment.md` for the production checklist. Flyway seed accounts (`Admin123!`) are for local/demo only.
 
 ## Contributing
 

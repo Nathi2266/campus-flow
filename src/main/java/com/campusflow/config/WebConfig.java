@@ -1,24 +1,13 @@
 package com.campusflow.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Web configuration for CampusFlow.
+ * Web MVC configuration for CampusFlow.
  *
- * @author CampusFlow Team
- * @version 1.0.0
+ * <p>CORS is owned exclusively by {@link SecurityConfig} (env-driven
+ * {@code cors.allowed-origin-patterns}) so Spring Security and MVC never diverge.
  */
 @Configuration
-public class WebConfig implements WebMvcConfigurer {
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
-            .allowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*", "https://*.campusflow.edu")
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-            .allowedHeaders("*")
-            .allowCredentials(true);
-    }
+public class WebConfig {
 }

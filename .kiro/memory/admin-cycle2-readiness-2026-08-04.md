@@ -21,8 +21,10 @@ Council: `.kiro/memory/council-review-admin-cycle2.md`
 | FE typecheck | Pass |
 | Playwright `roles-and-data-flow.spec.ts` | **15/15 passed** |
 | Playwright `full-app-walkthrough.spec.ts` | **1/1 passed** |
+| `AdminApiSecurityTest` | **8/8 passed** |
 | API Docker + Flyway V5 | Healthy; `users.active` present |
 | Login smoke | `admin@campusflow.edu` active=true |
+| AccessDenied → HTTP 403 | Fixed in `GlobalExceptionHandler` (was 500) |
 
 ## Ops note
 

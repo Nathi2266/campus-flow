@@ -15,6 +15,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:loop": "node scripts/e2e-loop.mjs",
     "test:e2e:walkthrough": "playwright test e2e/full-app-walkthrough.spec.ts && node scripts/preserve-e2e-video.mjs",
+    "test:e2e:full": "playwright test && node scripts/preserve-e2e-video.mjs",
     "test:e2e:preserve-video": "node scripts/preserve-e2e-video.mjs"
   },
   "dependencies": {

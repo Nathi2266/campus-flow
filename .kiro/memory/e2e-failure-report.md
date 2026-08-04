@@ -7,16 +7,20 @@
 
 | Suite | Result |
 |-------|--------|
-| `roles-and-data-flow.spec.ts` | **15/15 passed** |
-| `full-app-walkthrough.spec.ts` | **1/1 passed** |
+| Full system (`npm run test:e2e:full`) | **16/16 passed** |
+| Continuous walkthrough | included (1) |
+| Role / feature specs | 15 |
 
-## Durable walkthrough video
+## Durable recordings (not deleted)
 
-**Path:** `frontend/e2e-artifacts/campusflow-full-app-walkthrough.webm`  
+| What | Path |
+|------|------|
+| Continuous walkthrough | `frontend/e2e-artifacts/campusflow-full-app-walkthrough.webm` |
+| All clips this run | `frontend/e2e-artifacts/runs/20260804-111139/` |
+| Clip index | `frontend/e2e-artifacts/runs/20260804-111139/INDEX.md` |
 
-Continuous recording of ADMIN / LECTURER / STUDENT flows (nav, CRUD, grades, IDOR, enroll, register).  
-Not deleted when Playwright clears `test-results/`.
+`e2e-artifacts/` is **never auto-cleared**. Only `test-results/` is ephemeral.
 
-Regenerate: `cd frontend && npm run test:e2e:walkthrough`
+Regenerate: `cd frontend && npm run test:e2e:full`
 
 Loop may sign off.

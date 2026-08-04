@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   Button,
   CloseButton,
@@ -9,7 +8,6 @@ import {
   DrawerHeader,
   DrawerOverlay,
   Flex,
-  HStack,
   IconButton,
   Link as CLink,
   Text,
@@ -136,7 +134,6 @@ function BrandMark() {
 
 export function AppLayout() {
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const user = useAuthStore((s) => s.user)
   const refreshToken = useAuthStore((s) => s.refreshToken)
   const clearSession = useAuthStore((s) => s.clearSession)
   const navigate = useNavigate()
@@ -156,35 +153,24 @@ export function AppLayout() {
       <Box flex="1" overflowY="auto" px={0.5}>
         <NavList onNavigate={onClose} />
       </Box>
-      <Box
-        mx={1}
-        p={3.5}
-        borderRadius="lg"
-        bg="app-surface-muted"
-        borderWidth="1px"
-        borderColor="app-border"
+      <Button
+        leftIcon={<FiLogOut />}
+        variant="ghost"
+        justifyContent="flex-start"
+        w="full"
+        px={3.5}
+        py={2.5}
+        h="auto"
+        borderRadius="md"
+        fontWeight="bold"
+        fontSize="sm"
+        color="app-muted"
+        data-testid="sign-out"
+        onClick={handleLogout}
+        _hover={{ bg: 'nav-hover-bg', color: 'brand.600' }}
       >
-        <HStack spacing={3}>
-          <Avatar size="sm" name={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`} bg="brand.500" />
-          <Box flex="1" minW={0}>
-            <Text fontSize="sm" fontWeight="semibold" noOfLines={1} color="app-text">
-              {user?.firstName} {user?.lastName}
-            </Text>
-            <Text fontSize="xs" color="brand.600" fontWeight="bold">
-              {user?.role}
-            </Text>
-          </Box>
-          <IconButton
-            aria-label="Sign out"
-            icon={<FiLogOut />}
-            size="sm"
-            variant="ghost"
-            colorScheme="gray"
-            data-testid="sign-out"
-            onClick={handleLogout}
-          />
-        </HStack>
-      </Box>
+        Log out
+      </Button>
     </Flex>
   )
 
@@ -259,7 +245,7 @@ export function AppLayout() {
             CampusFlow
           </Text>
           <Button size="sm" variant="ghost" onClick={handleLogout}>
-            Sign out
+            Log out
           </Button>
         </Flex>
 

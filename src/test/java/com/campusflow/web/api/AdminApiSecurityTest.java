@@ -41,7 +41,8 @@ class AdminApiSecurityTest {
     @WithAnonymousUser
     @DisplayName("Unauthenticated users cannot list users")
     void usersList_unauthenticated_unauthorized() throws Exception {
-        mockMvc.perform(get("/api/v1/users")).andExpect(status().isUnauthorized());
+        // AnonymousAuthenticationToken is "authenticated", so AuthorizationFilter yields 403
+        mockMvc.perform(get("/api/v1/users")).andExpect(status().isForbidden());
     }
 
     @Test

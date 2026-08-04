@@ -1,21 +1,32 @@
 # Folder Structure
 
 ```
-khonofy/                 # Application package (repo root of this app)
-├── .kiro/               # AEOS (constitution, specs, skills, …)
-├── .cursor/             # Cursor rules + thin skill loaders
-├── src/                 # React frontend
-│   ├── api/             # Client facade
-│   ├── components/      # UI, layout, dashboards
-│   ├── hooks/
-│   ├── lib/             # Auth context, utils, query client
-│   ├── pages/           # Route pages
-│   └── utils/
-├── backend/             # Express + Prisma API
-│   ├── prisma/          # schema, seed
-│   └── src/             # index, lib, config
-├── base44/              # Entity defs & reminder cloud functions
+campus/                      # CampusFlow repo root
+├── .kiro/                   # AEOS (constitution, specs, skills, workflows, memory)
+├── .cursor/                 # Cursor rules + thin skill loaders
+├── .github/workflows/       # CI (Maven + frontend gates)
+├── src/                     # Spring Boot backend
+│   ├── main/java/com/campusflow/
+│   │   ├── config/          # Security, JPA, Web
+│   │   ├── domain/          # JPA entities + enums
+│   │   ├── dto/             # request/response + MapStruct mappers
+│   │   ├── exception/       # Global handler + domain exceptions
+│   │   ├── repository/      # Spring Data JPA repositories
+│   │   ├── security/        # JWT filter + token provider
+│   │   ├── service/         # Business logic
+│   │   └── web/api/         # REST controllers
+│   ├── main/resources/
+│   │   ├── application*.yml
+│   │   └── db/migration/    # Flyway SQL
+│   └── test/java/           # JUnit / Spring tests
+├── frontend/                # React + Vite UI
+│   ├── src/
+│   ├── e2e/                 # Playwright
+│   └── docker/              # nginx for containerized UI
+├── docker/                  # API Dockerfile, compose, healthcheck, .env.example
+├── pom.xml
 ├── AGENTS.md
-├── Khonofy.md           # Human index → .kiro/specs
-└── package.json
+└── README.md
 ```
+
+Legacy Khonofy Express/Prisma/`backend/`/`base44/` layouts do **not** apply to this repository.

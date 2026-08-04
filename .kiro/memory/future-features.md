@@ -46,10 +46,21 @@
 2. Bulk grade entry on roster
 3. GPA auto-recompute + transcript view (`campusflow-grades.md` update)
 4. Waitlists + academic term/year (schema)
-5. FORBIDDEN → HTTP 403 mapping; auth rate limiting; httpOnly cookies
+5. Auth rate limiting; httpOnly cookies
 6. Expand report CSV pack / user email invite delivery
 7. Course catalogue search (lists grow past first page — E2E already works around via API)
-8. Avoid nginx 502 during API cold start (FE should wait on app healthy / retry proxy)
+8. ~~Avoid nginx 502 during API cold start~~ (Compose FE waits on healthy app; optional nginx retry still useful)
+
+### Also shipped with Cycle 2 verify (2026-08-04)
+- `AccessDeniedException` → HTTP **403** (was incorrectly 500)
+- Courses/enrollments default list sort `id DESC` (newest first)
+
+### Production readiness hygiene loop (2026-08-04)
+- Root `.gitignore`; untrack `target/` + Playwright report; FE ignore `.env`/coverage
+- Fail-closed JWT/DB defaults outside `dev`; single CORS owner (`SecurityConfig`); safer error `path`
+- Repositories under `com/campusflow/repository/`; Compose FE waits on healthy API
+- CI workflow; JaCoCo package floor 10%; AEOS stack docs/DoD/devops grounded
+- Council: `.kiro/memory/council-review-production-readiness-2026-08-04.md`
 
 ## Spec hygiene
 

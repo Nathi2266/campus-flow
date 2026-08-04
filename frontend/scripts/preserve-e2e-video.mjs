@@ -1,6 +1,11 @@
 /**
- * Copy the full-app walkthrough Playwright video to e2e-artifacts/.
- * Run AFTER playwright exits so the .webm is fully flushed to disk.
+ * Archive ALL Playwright .webm recordings to e2e-artifacts/ (durable).
+ * Playwright clears test-results/ on the next run — this folder is never auto-deleted.
+ *
+ * Outputs:
+ * - e2e-artifacts/runs/<timestamp>/… individual clips + INDEX.md
+ * - e2e-artifacts/campusflow-full-app-walkthrough.webm (latest continuous walkthrough)
+ * - e2e-artifacts/README.md
  */
 import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -11,7 +16,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const frontendRoot = path.resolve(__dirname, '..')
 const resultsDir = path.join(frontendRoot, 'test-results')
 const artifactsDir = path.join(frontendRoot, 'e2e-artifacts')
-const outFile = path.join(artifactsDir, 'campusflow-full-app-walkthrough.webm')
 
 function findVideos(dir, acc = []) {
   if (!existsSync(dir)) return acc
@@ -29,39 +33,124 @@ function findVideos(dir, acc = []) {
   return acc
 }
 
+function slugFromPath(videoPath) {
+  const parent = path.basename(path.dirname(videoPath))
+  return parent
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 120) || 'clip'
+}
+
+function stamp() {
+  const d = new Date()
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`
+}
+
 mkdirSync(artifactsDir, { recursive: true })
 
-let source
-for (let attempt = 0; attempt < 20; attempt++) {
-  const videos = findVideos(resultsDir)
-  const walkthrough = videos.filter((v) => /full-app-walkthrough/i.test(v))
-  source = walkthrough.sort((a, b) => statSync(b).size - statSync(a).size)[0]
-  if (source && statSync(source).size > 50_000) break
+let videos = []
+for (let attempt = 0; attempt < 25; attempt++) {
+  videos = findVideos(resultsDir).filter((v) => statSync(v).size > 10_000)
+  if (videos.length > 0) break
   await sleep(300)
 }
 
-if (!source || statSync(source).size < 50_000) {
-  console.error('No full-app-walkthrough .webm found. Run: npm run test:e2e:walkthrough')
+if (videos.length === 0) {
+  console.error('No Playwright .webm videos found under test-results/. Ensure video: "on".')
   process.exit(1)
 }
 
-copyFileSync(source, outFile)
-const mb = (statSync(outFile).size / (1024 * 1024)).toFixed(2)
+const runId = stamp()
+const runDir = path.join(artifactsDir, 'runs', runId)
+mkdirSync(runDir, { recursive: true })
+
+const indexRows = []
+let walkthroughSource = null
+
+for (const src of videos.sort((a, b) => a.localeCompare(b))) {
+  const size = statSync(src).size
+  const name = `${slugFromPath(src)}.webm`
+  const dest = path.join(runDir, name)
+  // Avoid collisions
+  let finalDest = dest
+  let i = 2
+  while (existsSync(finalDest)) {
+    finalDest = path.join(runDir, `${slugFromPath(src)}-${i}.webm`)
+    i += 1
+  }
+  copyFileSync(src, finalDest)
+  const mb = (size / (1024 * 1024)).toFixed(2)
+  indexRows.push(`| \`${path.basename(finalDest)}\` | ${mb} MB | \`${path.relative(frontendRoot, src).replace(/\\/g, '/')}\` |`)
+  if (/full-app-walkthrough/i.test(src) && (!walkthroughSource || size > statSync(walkthroughSource).size)) {
+    walkthroughSource = src
+  }
+}
+
+if (walkthroughSource) {
+  const hero = path.join(artifactsDir, 'campusflow-full-app-walkthrough.webm')
+  copyFileSync(walkthroughSource, hero)
+  console.log(
+    `Updated hero walkthrough → ${hero} (${(statSync(hero).size / (1024 * 1024)).toFixed(2)} MB)`,
+  )
+}
+
+const indexBody = `# E2E recording run ${runId}
+
+**When:** ${new Date().toISOString()}  
+**Clips:** ${indexRows.length}  
+**Folder:** \`e2e-artifacts/runs/${runId}/\`
+
+Play any \`.webm\` in Chrome, Edge, or VLC. This archive is **never auto-deleted**.
+
+| File | Size | Source |
+|------|------|--------|
+${indexRows.join('\n')}
+
+## Continuous walkthrough
+
+If present this run, also copied to:
+
+\`e2e-artifacts/campusflow-full-app-walkthrough.webm\`
+`
+
+writeFileSync(path.join(runDir, 'INDEX.md'), indexBody, 'utf8')
+
 writeFileSync(
   path.join(artifactsDir, 'README.md'),
-  `# CampusFlow E2E artifacts
+  `# CampusFlow E2E artifacts (durable recordings)
 
-## Full walkthrough video (kept after test runs)
+Playwright may clear \`../test-results/\` on the next run.  
+**Nothing in this folder is deleted automatically.**
 
-**File:** \`campusflow-full-app-walkthrough.webm\`  
-**Updated:** ${new Date().toISOString()}  
-**Size:** ${mb} MB  
-**Source:** \`${path.relative(frontendRoot, source).replace(/\\\\/g, '/')}\`
+## Latest continuous walkthrough
 
-Play in Chrome, Edge, or VLC. This folder is **not** cleared by Playwright.
+**\`campusflow-full-app-walkthrough.webm\`** — one long video of all roles & features.
 
-Regenerate: \`npm run test:e2e:walkthrough\`
+## All clips from each run
+
+See \`runs/<timestamp>/INDEX.md\` for every per-test recording.
+
+### Latest run
+
+\`${runId}\` — ${indexRows.length} clip(s)
+
+### Regenerate
+
+\`\`\`bash
+cd frontend
+npm run test:e2e:full
+\`\`\`
+
+Or walkthrough only:
+
+\`\`\`bash
+npm run test:e2e:walkthrough
+\`\`\`
 `,
   'utf8',
 )
-console.log(`Preserved walkthrough video → ${outFile} (${mb} MB)`)
+
+console.log(`Archived ${indexRows.length} video(s) → ${runDir}`)
+console.log(`INDEX: ${path.join(runDir, 'INDEX.md')}`)

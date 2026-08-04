@@ -2,8 +2,13 @@
 
 | Item | Impact | Notes |
 |------|--------|-------|
-| Root `README.md` still Base44 boilerplate | Onboarding confusion | Prefer `specs/deployment.md` + `backend/README.md` |
-| Base44 SDK / vite plugin still in package | Extra surface | Reminder cloud functions still under `base44/` |
-| Backend largely single-file CRUD (`backend/src/index.js`) | Harder to scale modules | Extract when features demand |
-| Prisma `migrations/` may be thin/missing in repo history | Env drift risk | Always commit migrations going forward |
-| Limited automated test suite | Regressions caught late | Add tests with features per constitution |
+| JaCoCo package floor at 10% (was 95%) | Weak coverage gate | Raise per package as Auth/Enrollment/JWT tests land |
+| Thin automated backend suite | Regressions caught late | Only a few test classes; expand Auth + Enrollment + handler tests |
+| Flyway seed passwords (`Admin123!`) in V2/V3 | Prod bootstrap risk | Split seeds from schema / profile-gate before real prod DBs |
+| Auth rate limiting absent | Brute-force on login/register | Cycle 3+ (see `future-features.md`) |
+| Tokens in frontend `localStorage` | XSS session theft | Prefer httpOnly cookie refresh before public prod |
+| Nginx may 502 while API cold-starts | Ops UX | Frontend `depends_on` should wait for healthy `app` |
+| Legacy AEOS specs still describe Express/Prisma | Agent misrouting | Prefer `campusflow-*`; purge/retarget remaining indexes over time |
+| README Apache LICENSE badge vs missing LICENSE file | Legal clarity | Add LICENSE or remove badge |
+| `@SpringBootTest` context load slow | CI time | Prefer sliced tests / Testcontainers suite selectively |
+| Public registration in all profiles | Abuse surface | Disable or gate in prod if not required |

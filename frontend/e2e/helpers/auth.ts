@@ -57,7 +57,7 @@ export async function signOut(page: Page) {
   if (await desktop.isVisible().catch(() => false)) {
     await desktop.click()
   } else {
-    await page.getByRole('button', { name: 'Sign out' }).click()
+    await page.getByRole('button', { name: 'Log out' }).click()
   }
   await expect(page).toHaveURL(/\/login/)
 }

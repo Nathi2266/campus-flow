@@ -1,12 +1,29 @@
-# CampusFlow E2E artifacts
+# CampusFlow E2E artifacts (durable recordings)
 
-## Full walkthrough video (kept after test runs)
+Playwright may clear `../test-results/` on the next run.  
+**Nothing in this folder is deleted automatically.**
 
-**File:** `campusflow-full-app-walkthrough.webm`  
-**Updated:** 2026-08-04T01:36:08.482Z  
-**Size:** 4.37 MB  
-**Source:** `test-results\full-app-walkthrough-Campu-771c5-hrough-—-all-roles-features\video.webm`
+## Latest continuous walkthrough
 
-Play in Chrome, Edge, or VLC. This folder is **not** cleared by Playwright.
+**`campusflow-full-app-walkthrough.webm`** — one long video of all roles & features.
 
-Regenerate: `npm run test:e2e:walkthrough`
+## All clips from each run
+
+See `runs/<timestamp>/INDEX.md` for every per-test recording.
+
+### Latest run
+
+`20260804-111139` — 16 clip(s)
+
+### Regenerate
+
+```bash
+cd frontend
+npm run test:e2e:full
+```
+
+Or walkthrough only:
+
+```bash
+npm run test:e2e:walkthrough
+```
