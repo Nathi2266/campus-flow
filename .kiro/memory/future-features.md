@@ -104,6 +104,12 @@
 - Preserve-on-failure wrapper; hero size guard; role eyebrow assertions
 - Council: `council-review-full-system-e2e-2026-08-04-pm.md`
 
+### Secrets hygiene / .gitignore (2026-08-05)
+- Expanded root + frontend ignore: `.env`, certs, Azure local, `/creds`, credential JSON
+- Untracked committed `creds` dump (`git rm --cached`); file may remain local only
+- CI job `secrets` → `scripts/verify-no-secrets.mjs`
+- Council: `council-review-secrets-gitignore-2026-08-05.md`
+
 ## Spec hygiene
 
 - Prefer `campusflow-roles.md`, `campusflow-data-flows.md`, `campusflow-grades.md`

@@ -6,8 +6,20 @@ on:
   pull_request:
 
 jobs:
+  secrets:
+    name: Secrets hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify no secret paths tracked
+        run: node scripts/verify-no-secrets.mjs
+
   backend:
     name: Backend (Maven)
+    needs: secrets
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,6 +35,7 @@ jobs:
 
   frontend:
     name: Frontend (lint / typecheck / test / build)
+    needs: secrets
     runs-on: ubuntu-latest
     defaults:
       run:

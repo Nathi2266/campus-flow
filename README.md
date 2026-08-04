@@ -295,6 +295,22 @@ Production (`SPRING_PROFILES_ACTIVE=prod`) fails closed without `JWT_SECRET` and
 
 Shipped hygiene includes fail-closed secrets outside `dev`, CORS owned by security config, auth rate limiting (in-memory per node), registration gated for prod, and CI for Maven + frontend gates.
 
+### Secrets — do not commit
+
+| Never commit | Safe alternative |
+|--------------|------------------|
+| `.env`, `docker/.env` | [`docker/.env.example`](docker/.env.example) |
+| `/creds`, password dumps | Seed accounts documented in this README (demo only) |
+| `*.pem` / `*.key` / `*.p12` / `*.jks` / `*.pfx` | Keep certs outside the repo / secret store |
+| Azure `local.settings.json`, `.azure/`, `*.publishsettings` | Portal / Key Vault / CI secrets |
+| `application-local.yml` with real JWT/DB passwords | Env vars + prod profile |
+
+Root [`.gitignore`](.gitignore) blocks these patterns. CI runs `node scripts/verify-no-secrets.mjs` so secret-like paths cannot stay tracked. Local check before commit:
+
+```bash
+node scripts/verify-no-secrets.mjs
+```
+
 Still on the hardening roadmap (not done in this packaging slice):
 
 - httpOnly cookie sessions (tokens currently in frontend `localStorage`)

@@ -21,18 +21,66 @@ replay_pid*
 Thumbs.db
 desktop.ini
 
-# Env & secrets (keep examples)
+# ---------------------------------------------------------------------------
+# Env & secrets — NEVER commit these (keep *.example)
+# ---------------------------------------------------------------------------
 .env
 .env.*
 !.env.example
 !**/.env.example
 *.pem
+*.key
 *.p12
+*.pfx
 *.jks
 *.keystore
-credentials*.json
+*.crt
+*.cer
+*.der
+*.p8
+*.publishsettings
+*.secret
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+id_ecdsa
+id_ecdsa.pub
+*.ppk
+
+# Local credential dumps / scratch (seed passwords belong in README only)
+/creds
+**/creds
+credentials
+credentials.*
+**/credentials.*
+*credentials*.json
+**/serviceAccount*.json
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Azure / cloud local secrets
+local.settings.json
+**/local.settings.json
+appsettings.*.local.json
+**/appsettings.Development.json
+*.azurePubxml
+*.pubxml.user
+.azure/
+.azure-*/
+**/secrets/
+**/secret/
+
+# Spring local overrides (never commit real passwords/JWT here)
 **/application-local.yml
 **/application-local.properties
+**/application-secret.yml
+**/application-secret.properties
+
+# Docker local overrides (compose reads docker/.env — keep example only)
+docker/.env
+docker/.env.local
+docker/.env.*.local
 
 # Logs / local runtime
 *.log
@@ -53,15 +101,11 @@ frontend/playwright-report/
 frontend/blob-report/
 frontend/playwright/.cache/
 frontend/e2e-artifacts/*.webm
+frontend/e2e-artifacts/runs/**/*.webm
 frontend/coverage/
 frontend/*.tsbuildinfo
-
-# Docker local overrides
-docker/.env
 
 # Misc
 *.tmp
 *.bak
 .cache/
-
-creds
