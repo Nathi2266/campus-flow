@@ -41,7 +41,9 @@ API proxy: `/api` → `http://localhost:8080`
 
 ## E2E prerequisites
 
-1. API healthy on **8090** (`docker compose -f docker/docker-compose.yml up -d`)
+1. API with **demo seed** (E2E expects canned users):  
+   `docker compose -f docker/docker-compose.yml -f docker/docker-compose.e2e.yml up -d --build`  
+   Default Compose alone has **no mock data** (bootstrap admin only).
 2. Frontend on **5173** (Vite `npm run dev` **or** Compose `campusflow-frontend` — must match current source)
 3. Google Chrome installed (for `test:e2e:live`); `npx playwright install chromium` for headless suite
 

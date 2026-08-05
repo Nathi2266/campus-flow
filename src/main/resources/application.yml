@@ -45,6 +45,11 @@ spring:
       initialization-fail-timeout: -1
       pool-name: CampusFlowHikariPool
 
+  flyway:
+    # Demo seed location added at runtime when campusflow.seed.demo=true (see FlywayConfig)
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
   actuator:
     health:
       db:
@@ -102,6 +107,16 @@ campusflow:
     rate-limit:
       max-requests: ${CAMPUSFLOW_AUTH_RATE_LIMIT_MAX:20}
       window-seconds: ${CAMPUSFLOW_AUTH_RATE_LIMIT_WINDOW_SECONDS:60}
+  # Optional canned campus (departments/users/courses). Default OFF — clones use their own data.
+  seed:
+    demo: ${CAMPUSFLOW_SEED_DEMO:false}
+  # First ADMIN when users table is empty (set email+password via env).
+  bootstrap:
+    enabled: ${CAMPUSFLOW_BOOTSTRAP_ENABLED:true}
+    admin-email: ${CAMPUSFLOW_BOOTSTRAP_ADMIN_EMAIL:}
+    admin-password: ${CAMPUSFLOW_BOOTSTRAP_ADMIN_PASSWORD:}
+    admin-first-name: ${CAMPUSFLOW_BOOTSTRAP_ADMIN_FIRST_NAME:System}
+    admin-last-name: ${CAMPUSFLOW_BOOTSTRAP_ADMIN_LAST_NAME:Admin}
 
 springdoc:
   api-docs:

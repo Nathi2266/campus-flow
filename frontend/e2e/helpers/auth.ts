@@ -1,10 +1,25 @@
 import { expect, type Page } from '@playwright/test'
 
-/** Seeded users — password Admin123! after V3 migration. */
+/**
+ * E2E users from the optional demo pack (`docker-compose.e2e.yml` → CAMPUSFLOW_SEED_DEMO=true).
+ * Default Compose has no mock data — use bootstrap admin@example.com or enable the demo pack before E2E.
+ */
 export const USERS = {
-  admin: { email: 'admin@campusflow.edu', password: 'Admin123!', role: 'ADMIN' },
-  lecturer: { email: 'lecturer1@campusflow.edu', password: 'Admin123!', role: 'LECTURER' },
-  student: { email: 'student1@campusflow.edu', password: 'Admin123!', role: 'STUDENT' },
+  admin: {
+    email: process.env.E2E_ADMIN_EMAIL || 'admin@campusflow.edu',
+    password: process.env.E2E_ADMIN_PASSWORD || 'Admin123!',
+    role: 'ADMIN',
+  },
+  lecturer: {
+    email: process.env.E2E_LECTURER_EMAIL || 'lecturer1@campusflow.edu',
+    password: process.env.E2E_LECTURER_PASSWORD || 'Admin123!',
+    role: 'LECTURER',
+  },
+  student: {
+    email: process.env.E2E_STUDENT_EMAIL || 'student1@campusflow.edu',
+    password: process.env.E2E_STUDENT_PASSWORD || 'Admin123!',
+    role: 'STUDENT',
+  },
 } as const
 
 const live = process.env.E2E_LIVE === '1' || process.env.E2E_LIVE === 'true'

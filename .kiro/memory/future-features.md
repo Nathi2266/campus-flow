@@ -119,6 +119,10 @@
 - GitHub Actions disabled; ruleset blocks branch create/push/delete (admin bypass)
 - Others: view / clone / fork only — `council-review-github-readonly-public-2026-08-05.md`
 
+### No mock data by default (2026-08-05)
+- Demo campus removed from default Flyway; optional `CAMPUSFLOW_SEED_DEMO` + bootstrap ADMIN
+- Council: `council-review-no-mock-data-2026-08-05.md`
+
 
 ## Spec hygiene
 

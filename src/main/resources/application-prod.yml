@@ -50,3 +50,10 @@ campusflow:
     rate-limit:
       max-requests: ${CAMPUSFLOW_AUTH_RATE_LIMIT_MAX:10}
       window-seconds: ${CAMPUSFLOW_AUTH_RATE_LIMIT_WINDOW_SECONDS:60}
+  seed:
+    demo: false
+  bootstrap:
+    # Require explicit env in prod — no default password
+    enabled: ${CAMPUSFLOW_BOOTSTRAP_ENABLED:true}
+    admin-email: ${CAMPUSFLOW_BOOTSTRAP_ADMIN_EMAIL:}
+    admin-password: ${CAMPUSFLOW_BOOTSTRAP_ADMIN_PASSWORD:}

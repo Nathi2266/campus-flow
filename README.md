@@ -7,7 +7,7 @@ CampusFlow is a full-stack **Student Management System** for campus academics. A
 
 Built with **Java 21 / Spring Boot 3** and a **React + Vite** UI. Roles: `ADMIN` · `LECTURER` · `STUDENT`.
 
-> Self-hostable demo / MVP. Local Compose includes Flyway seed accounts for exploration — do not use those passwords in a real production database. See [Production notes](#production-notes).
+> Self-hostable MVP. **Default install has no mock campus data** — you bootstrap one ADMIN and create your own departments, users, courses, and enrollments. An optional demo pack exists for E2E only. See [Seed & bootstrap](#seed--bootstrap-your-own-data).
 
 ---
 
@@ -144,7 +144,7 @@ Profile:
 | Full role walkthrough (video) | [`frontend/e2e-artifacts/campusflow-full-app-walkthrough.webm`](frontend/e2e-artifacts/campusflow-full-app-walkthrough.webm) |
 | Re-capture gallery | `cd frontend && node scripts/capture-readme-screenshots.mjs` |
 
-After a local run, explore role UIs at `http://localhost:5173` using the demo accounts below.
+After a local run, sign in at `http://localhost:5173` with your bootstrap ADMIN (or optional demo pack accounts).
 
 ---
 
@@ -206,7 +206,21 @@ docker compose -f docker/docker-compose.yml logs -f app
 docker compose -f docker/docker-compose.yml down
 ```
 
-#### Demo logins (Flyway seed — local/demo only)
+#### Seed & bootstrap (your own data)
+
+**Default (`CAMPUSFLOW_SEED_DEMO=false`):** empty campus. On first boot, Compose creates one ADMIN from env:
+
+| Role | Email (default) | Password (default) |
+|------|-----------------|--------------------|
+| ADMIN | `admin@example.com` | `Admin123!` |
+
+Override via `docker/.env` (`CAMPUSFLOW_BOOTSTRAP_ADMIN_EMAIL` / `CAMPUSFLOW_BOOTSTRAP_ADMIN_PASSWORD`). Then create departments, lecturers, students, and courses in the UI — that data is yours.
+
+**Optional demo pack** (Playwright / exploration only):
+
+```powershell
+docker compose -f docker/docker-compose.yml -f docker/docker-compose.e2e.yml up -d --build
+```
 
 | Role | Email | Password |
 |------|-------|----------|
@@ -214,7 +228,14 @@ docker compose -f docker/docker-compose.yml down
 | LECTURER | `lecturer1@campusflow.edu` | `Admin123!` |
 | STUDENT | `student1@campusflow.edu` | `Admin123!` |
 
-These accounts are **not** shown in the login UI. Never reuse them for a shared or production database.
+Demo accounts are **not** shown in the login UI. Never use them on a real production database.
+
+**Migrating from an older local DB** that still has the old mandatory seed: reset the volume once so Flyway checksums match:
+
+```powershell
+docker compose -f docker/docker-compose.yml down -v
+docker compose -f docker/docker-compose.yml up -d --build
+```
 
 ### Option B — Local backend + frontend (Postgres via Docker)
 

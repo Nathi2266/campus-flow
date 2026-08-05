@@ -1,0 +1,12 @@
+# Optional override for Playwright / local exploration with canned demo data.
+# Usage:
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.e2e.yml up -d --build
+#
+# Default compose stays seed-free so clones create their own campus data.
+
+services:
+  app:
+    environment:
+      CAMPUSFLOW_SEED_DEMO: "true"
+      # Demo pack already creates admin@campusflow.edu — bootstrap is a no-op when users exist
+      CAMPUSFLOW_BOOTSTRAP_ENABLED: "true"
