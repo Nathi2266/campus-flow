@@ -343,6 +343,21 @@ This project is licensed under the **MIT License** — see [LICENSE](LICENSE).
 
 You may use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, including in closed-source and commercial products, provided you keep the copyright notice and license text.
 
+## Repository access (GitHub)
+
+Public showcase repo. **Others may view, clone, and fork.** Direct contribution to this repository is locked down:
+
+| Capability | Public / non-admin |
+|------------|--------------------|
+| Browse / clone / fork | Allowed |
+| Push to `main` (or any branch) | Blocked |
+| Create / delete branches on this repo | Blocked |
+| Run GitHub Actions | Disabled |
+
+Maintainer (admin) retains bypass to update the project. Prefer **forks** for your own changes; optional discussion via [Issues](https://github.com/Nathi2266/campus-flow/issues).
+
+Settings applied: Actions disabled; active ruleset *Public read-only — no push / no new branches* (see repo **Settings → Rules → Rulesets**).
+
 ---
 
 ## Contact

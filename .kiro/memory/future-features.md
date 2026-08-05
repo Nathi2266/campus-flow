@@ -110,6 +110,16 @@
 - CI job `secrets` → `scripts/verify-no-secrets.mjs`
 - Council: `council-review-secrets-gitignore-2026-08-05.md`
 
+### Live Chrome walkthrough @ 0.5× (2026-08-05)
+- `npm run test:e2e:live` — one Chrome window, real-user pace, all roles
+- Hero + `campusflow-full-app-walkthrough-0.5x.webm` via ffmpeg-static
+- Council: `council-review-live-walkthrough-0.5x-2026-08-05.md`
+
+### Public repo read-only for others (2026-08-05)
+- GitHub Actions disabled; ruleset blocks branch create/push/delete (admin bypass)
+- Others: view / clone / fork only — `council-review-github-readonly-public-2026-08-05.md`
+
+
 ## Spec hygiene
 
 - Prefer `campusflow-roles.md`, `campusflow-data-flows.md`, `campusflow-grades.md`
